@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Review - TTB COLA Registry</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/website_review.css">
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h1>TTB COLA Registry</h1>
+                <span class="nav-subtitle">Website Review Interface</span>
+            </div>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/dashboard">Dashboard</a>
+                <a href="/brands">Brands</a>
+                <a href="/importers">Importers</a>
+                <a href="/producers">Producers</a>
+                <a href="/data">Data</a>
+                <a href="/website_review" class="active">Review</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h2>🔍 Website Verification Queue</h2>
+            <p>Review and verify websites that need manual verification</p>
+        </div>
+
+        <!-- Statistics Bar -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-label">Total Pending:</span>
+                <span class="stat-value" id="total-pending">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Low Confidence:</span>
+                <span class="stat-value" id="low-confidence">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Flagged:</span>
+                <span class="stat-value" id="flagged-count">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Processed Today:</span>
+                <span class="stat-value" id="processed-today">0</span>
+            </div>
+        </div>
+
+        <!-- Filter Options -->
+        <div class="filter-section">
+            <h3>Filter Options</h3>
+            <div class="filter-controls">
+                <select id="filter-status" class="filter-select">
+                    <option value="all">All Status</option>
+                    <option value="unverified">Unverified</option>
+                    <option value="flagged">Flagged</option>
+                    <option value="rejected">Rejected</option>
+                </select>
+                <select id="filter-confidence" class="filter-select">
+                    <option value="all">All Confidence</option>
+                    <option value="low">Low (<50%)</option>
+                    <option value="medium">Medium (50-80%)</option>
+                    <option value="high">High (>80%)</option>
+                </select>
+                <input type="text" id="search-brand" class="filter-search" placeholder="Search by brand name...">
+                <button onclick="applyFilters()" class="btn btn-primary">Apply Filters</button>
+                <button onclick="resetFilters()" class="btn btn-secondary">Reset</button>
+            </div>
+        </div>
+
+        <!-- Bulk Actions -->
+        <div class="bulk-actions">
+            <h3>Bulk Actions</h3>
+            <div class="action-controls">
+                <button onclick="selectAll()" class="btn btn-outline">Select All</button>
+                <button onclick="deselectAll()" class="btn btn-outline">Deselect All</button>
+                <button onclick="bulkVerify()" class="btn btn-success" disabled id="bulk-verify-btn">
+                    ✅ Verify Selected (<span id="selected-count">0</span>)
+                </button>
+                <button onclick="bulkReject()" class="btn btn-danger" disabled id="bulk-reject-btn">
+                    ❌ Reject Selected
+                </button>
+                <button onclick="bulkFlag()" class="btn btn-warning" disabled id="bulk-flag-btn">
+                    ⚠️ Flag Selected
+                </button>
+            </div>
+        </div>
+
+        <!-- Review Table -->
+        <div class="review-table-container">
+            <table class="review-table" id="review-table">
+                <thead>
+                    <tr>
+                        <th class="checkbox-col">
+                            <input type="checkbox" id="select-all-checkbox" onchange="toggleSelectAll()">
+                        </th>
+                        <th>Brand Name</th>
+                        <th>Website Domain</th>
+                        <th>Confidence</th>
+                        <th>Status</th>
+                        <th>Source</th>
+                        <th>Updated</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="review-tbody">
+                    <!-- Websites will be loaded here -->
+                </tbody>
+            </table>
+            <div id="no-results" class="no-results" style="display: none;">
+                <p>No websites found needing review</p>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" id="pagination">
+            <!-- Pagination will be generated here -->
+        </div>
+
+        <!-- Quick Review Modal -->
+        <div id="quick-review-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Quick Review</h3>
+                    <button onclick="closeModal()" class="close-btn">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="review-details">
+                        <div class="detail-row">
+                            <span class="detail-label">Brand:</span>
+                            <span id="modal-brand" class="detail-value"></span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Website:</span>
+                            <a id="modal-website" class="detail-value" target="_blank"></a>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Confidence:</span>
+                            <span id="modal-confidence" class="detail-value"></span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Status:</span>
+                            <span id="modal-status" class="detail-value"></span>
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        <button onclick="quickVerify()" class="btn btn-success">✅ Verify</button>
+                        <button onclick="quickFlag()" class="btn btn-warning">⚠️ Flag</button>
+                        <button onclick="quickReject()" class="btn btn-danger">❌ Reject</button>
+                        <button onclick="closeModal()" class="btn btn-secondary">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/website_review.js"></script>
+</body>
+</html>

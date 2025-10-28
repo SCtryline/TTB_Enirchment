@@ -1,0 +1,32 @@
+{
+  "brand_suffixes": {
+    "distillery": 0.9,
+    "distilleries": 0.9,
+    "brewery": 0.9,
+    "brewing": 0.9,
+    "winery": 0.9,
+    "vineyard": 0.9,
+    "spirits": 0.85,
+    "whiskey": 0.8,
+    "bourbon": 0.8,
+    "vodka": 0.8,
+    "gin": 0.8,
+    "rum": 0.8,
+    "tequila": 0.8,
+    "mezcal": 0.8
+  },
+  "location_indicators": [
+    "california",
+    "kentucky",
+    "tennessee",
+    "texas",
+    "oregon",
+    "washington",
+    "new york",
+    "colorado",
+    "virginia"
+  ],
+  "year_pattern": "\\b(18|19|20)\\d{2}\\b",
+  "batch_pattern": "\\b(batch|lot|barrel|cask)\\s*#?\\s*\\d+\\b",
+  "special_edition_pattern": "\\b(limited|special|reserve|edition|select)\\b"
+}

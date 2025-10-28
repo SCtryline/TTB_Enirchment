@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brand Registry - TTB COLA System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/brands.css') }}">
+</head>
+<body>
+    <!-- Unified Navigation -->
+    <div class="container">
+        {% include 'includes/navigation.html' %}
+    </div>
+
+    <!-- Fixed Header for Brands Page -->
+    <header class="page-header">
+        <h1>Brand Registry</h1>
+    </header>
+
+    <!-- Floating Toggle Button (shown when sidebar is collapsed) -->
+    <button class="filter-toggle-float" id="filter-toggle-float">▶</button>
+
+    <div class="container-with-sidebar">
+        <!-- Advanced Filter Sidebar -->
+        <div class="filter-sidebar" id="filter-sidebar">
+            <div class="filter-header">
+                <h3>Advanced Filters</h3>
+                <button class="filter-toggle" id="toggle-filters">
+                    <span class="toggle-icon">◀</span>
+                </button>
+            </div>
+
+            <div class="filter-content">
+                <!-- Active Filters Display -->
+                <div class="active-filters" id="active-filters" style="display: none;">
+                    <div class="active-filters-header">
+                        <span>Active Filters</span>
+                        <button class="clear-all-btn" id="clear-all-filters">Clear All</button>
+                    </div>
+                    <div class="active-filter-tags" id="active-filter-tags"></div>
+                </div>
+
+                <!-- Importer Filter -->
+                <div class="filter-section">
+                    <div class="filter-section-header" onclick="toggleFilterSection('importer-filters')">
+                        <span>🏢 Importer</span>
+                        <span class="filter-count" id="importer-count"></span>
+                        <span class="chevron">►</span>
+                    </div>
+                    <div class="filter-section-content" id="importer-filters">
+                        <!-- Search Bar -->
+                        <div class="filter-search-section">
+                            <input type="text" class="filter-search" placeholder="Search importers..." 
+                                   id="importer-search" onkeyup="filterOptions('importer')">
+                        </div>
+                        
+                        <!-- Top 10 Quick Toggles -->
+                        <div class="quick-toggles">
+                            <div class="quick-toggles-header">
+                                <span>Top 10 Importers</span>
+                                <button class="toggle-all-btn" onclick="toggleAllQuick('importer')">Toggle All</button>
+                            </div>
+                            <div class="quick-toggle-grid" id="importer-quick-toggles">
+                                <!-- Dynamically populated with top 10 -->
+                            </div>
+                        </div>
+                        
+                        <!-- Full List (searchable) -->
+                        <div class="full-list-section">
+                            <div class="filter-options" id="importer-options" style="max-height: 300px; overflow-y: auto;">
+                                <!-- Dynamically populated with ALL importers -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alcohol Type Filter -->
+                <div class="filter-section">
+                    <div class="filter-section-header" onclick="toggleFilterSection('alcohol-filters')">
+                        <span>🍷 Alcohol Type</span>
+                        <span class="filter-count" id="alcohol-count"></span>
+                        <span class="chevron">►</span>
+                    </div>
+                    <div class="filter-section-content" id="alcohol-filters">
+                        <!-- Top 10 Quick Toggles -->
+                        <div class="quick-toggles">
+                            <div class="quick-toggles-header">
+                                <span>Top 10 Types</span>
+                                <button class="toggle-all-btn" onclick="toggleAllQuick('alcohol')">Toggle All</button>
+                            </div>
+                            <div class="quick-toggle-grid" id="alcohol-quick-toggles">
+                                <!-- Dynamically populated with top 10 -->
+                            </div>
+                        </div>
+                        
+                        <!-- Search and Full List -->
+                        <div class="full-list-section">
+                            <input type="text" class="filter-search" placeholder="Search all types..." 
+                                   id="alcohol-search" onkeyup="filterOptions('alcohol')">
+                            <div class="filter-options" id="alcohol-options">
+                                <!-- Dynamically populated with all options -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Producer Filter -->
+                <div class="filter-section">
+                    <div class="filter-section-header" onclick="toggleFilterSection('producer-filters')">
+                        <span>🏭 Producer</span>
+                        <span class="filter-count" id="producer-count"></span>
+                        <span class="chevron">►</span>
+                    </div>
+                    <div class="filter-section-content" id="producer-filters">
+                        <!-- Top 10 Quick Toggles -->
+                        <div class="quick-toggles">
+                            <div class="quick-toggles-header">
+                                <span>Top 10 Producers</span>
+                                <button class="toggle-all-btn" onclick="toggleAllQuick('producer')">Toggle All</button>
+                            </div>
+                            <div class="quick-toggle-grid" id="producer-quick-toggles">
+                                <!-- Dynamically populated with top 10 -->
+                            </div>
+                        </div>
+                        
+                        <!-- Search and Full List -->
+                        <div class="full-list-section">
+                            <input type="text" class="filter-search" placeholder="Search all producers..." 
+                                   id="producer-search" onkeyup="filterOptions('producer')">
+                            <div class="filter-options" id="producer-options">
+                                <!-- Dynamically populated with all options -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Country Filter -->
+                <div class="filter-section">
+                    <div class="filter-section-header" onclick="toggleFilterSection('country-filters')">
+                        <span>🌍 Country</span>
+                        <span class="filter-count" id="country-count"></span>
+                        <span class="chevron">►</span>
+                    </div>
+                    <div class="filter-section-content" id="country-filters">
+                        <!-- Top 10 Quick Toggles -->
+                        <div class="quick-toggles">
+                            <div class="quick-toggles-header">
+                                <span>Top 10 Countries</span>
+                                <button class="toggle-all-btn" onclick="toggleAllQuick('country')">Toggle All</button>
+                            </div>
+                            <div class="quick-toggle-grid" id="country-quick-toggles">
+                                <!-- Dynamically populated with top 10 -->
+                            </div>
+                        </div>
+                        
+                        <!-- Search and Full List -->
+                        <div class="full-list-section">
+                            <input type="text" class="filter-search" placeholder="Search all countries..." 
+                                   id="country-search" onkeyup="filterOptions('country')">
+                            <div class="filter-options" id="country-options">
+                                <!-- Dynamically populated with all options -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Website Status Filter -->
+                <div class="filter-section">
+                    <div class="filter-section-header" onclick="toggleFilterSection('website-filters')">
+                        <span>🌐 Website Status</span>
+                        <span class="filter-count" id="website-count"></span>
+                        <span class="chevron">►</span>
+                    </div>
+                    <div class="filter-section-content" id="website-filters">
+                        <div class="filter-options">
+                            <label class="filter-option">
+                                <input type="checkbox" value="has_website" onchange="applyFilters()">
+                                <span>Has Website</span>
+                                <span class="option-count" id="has-website-count"></span>
+                            </label>
+                            <label class="filter-option">
+                                <input type="checkbox" value="verified" onchange="applyFilters()">
+                                <span>Verified Website</span>
+                                <span class="option-count" id="verified-count"></span>
+                            </label>
+                            <label class="filter-option">
+                                <input type="checkbox" value="no_website" onchange="applyFilters()">
+                                <span>No Website</span>
+                                <span class="option-count" id="no-website-count"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Apply Filters Button -->
+                <div class="filter-actions">
+                    <button class="apply-filters-btn" onclick="applyFilters()">Apply Filters</button>
+                    <button class="reset-filters-btn" onclick="resetFilters()">Reset All</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <span class="stat-label">Showing</span>
+                    <span class="stat-value" id="filtered-brands">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">of</span>
+                    <span class="stat-value" id="total-brands">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Total SKUs</span>
+                    <span class="stat-value" id="total-skus">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Active Filters</span>
+                    <span class="stat-value" id="filter-count">0</span>
+                </div>
+            </div>
+
+            <div class="search-controls">
+                <div class="search-group">
+                    <input type="text" id="brand-search" placeholder="Quick search brands..." class="search-input">
+                    <button id="search-btn" class="search-btn">🔍 Search</button>
+                </div>
+                <div class="view-controls">
+                    <label for="per-page-select">Show:</label>
+                    <select id="per-page-select">
+                        <option value="12">12 per page</option>
+                        <option value="24" selected>24 per page</option>
+                        <option value="48">48 per page</option>
+                        <option value="all">All brands</option>
+                    </select>
+                    <label for="sort-select">Sort by:</label>
+                    <select id="sort-select">
+                        <option value="name">Brand Name</option>
+                        <option value="skus">SKU Count</option>
+                        <option value="matched">Match Status</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Bulk Actions Toolbar -->
+            <div class="bulk-actions-toolbar" id="bulk-actions-toolbar" style="display: none;">
+                <div class="bulk-actions-left">
+                    <span class="selected-count">
+                        <span id="selected-count">0</span> brands selected
+                    </span>
+                </div>
+                <div class="bulk-actions-right">
+                    <button class="bulk-action-btn bulk-verify" id="bulk-verify-btn" title="Verify selected websites">
+                        ✅ Verify Websites
+                    </button>
+                    <button class="bulk-action-btn bulk-reject" id="bulk-reject-btn" title="Reject selected websites">
+                        ❌ Reject Websites  
+                    </button>
+                    <button class="bulk-action-btn bulk-flag" id="bulk-flag-btn" title="Flag selected websites for review">
+                        🚩 Flag for Review
+                    </button>
+                    <button class="bulk-action-btn bulk-enrich" id="bulk-enrich-btn" title="Enrich selected brands">
+                        🔍 Bulk Enrich
+                    </button>
+                    <button class="bulk-action-btn bulk-export" id="bulk-export-btn" title="Export selected brands">
+                        📄 Export Selected
+                    </button>
+                    <button class="bulk-action-clear" id="clear-selection-btn" title="Clear selection">
+                        Clear Selection
+                    </button>
+                </div>
+            </div>
+
+            <div class="brands-table-container">
+                <table class="brands-table" id="brands-table">
+                    <thead>
+                        <tr>
+                            <th class="checkbox-column">
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="select-all-checkbox">
+                                    <span class="checkmark"></span>
+                                </label>
+                            </th>
+                            <th class="sortable" data-sort="name">
+                                <span class="th-content">
+                                    <span class="th-icon">🏷️</span>
+                                    <span class="th-text">Brand Name</span>
+                                    <span class="sort-indicator"></span>
+                                </span>
+                            </th>
+                            <th class="sortable" data-sort="countries">
+                                <span class="th-content">
+                                    <span class="th-icon">🌍</span>
+                                    <span class="th-text">Countries</span>
+                                    <span class="sort-indicator"></span>
+                                </span>
+                            </th>
+                            <th class="sortable" data-sort="types">
+                                <span class="th-content">
+                                    <span class="th-icon">🥃</span>
+                                    <span class="th-text">Types</span>
+                                    <span class="sort-indicator"></span>
+                                </span>
+                            </th>
+                            <th class="sortable" data-sort="producer">
+                                <span class="th-content">
+                                    <span class="th-icon">🏭</span>
+                                    <span class="th-text">Producer</span>
+                                    <span class="sort-indicator"></span>
+                                </span>
+                            </th>
+                            <th class="sortable" data-sort="importer">
+                                <span class="th-content">
+                                    <span class="th-icon">🏢</span>
+                                    <span class="th-text">Importer</span>
+                                    <span class="sort-indicator"></span>
+                                </span>
+                            </th>
+                            <th class="sortable" data-sort="website">
+                                <span class="th-content">
+                                    <span class="th-icon">🌐</span>
+                                    <span class="th-text">Website</span>
+                                    <span class="sort-indicator"></span>
+                                </span>
+                            </th>
+                            <th class="sortable" data-sort="contact">
+                                <span class="th-content">
+                                    <span class="th-icon">👤</span>
+                                    <span class="th-text">Primary Contact</span>
+                                    <span class="sort-indicator"></span>
+                                </span>
+                            </th>
+                            <th class="actions-header">
+                                <span class="th-content">
+                                    <span class="th-icon">⚡</span>
+                                    <span class="th-text">Actions</span>
+                                </span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="brands-tbody">
+                        <tr class="loading-row">
+                            <td colspan="7" class="loading-cell">
+                                <div class="loading-content">
+                                    <div class="loading-spinner"></div>
+                                    <span>Loading brands...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination-container" id="pagination-container">
+                <!-- Pagination will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <div id="brand-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="brand-detail-content"></div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/brands.js') }}"></script>
+</body>
+</html>

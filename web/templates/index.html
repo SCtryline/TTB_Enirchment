@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TTB COLA Registry System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation Header -->
+        {% include 'includes/navigation.html' %}
+
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <div class="hero-content">
+                <h2>Streamline Your TTB COLA Registry Management</h2>
+                <p>Efficiently match TTB COLA registries with importer data, organize brands, and manage alcohol import compliance with our professional-grade system.</p>
+                <div class="hero-stats" id="hero-stats">
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-brands-hero">0</div>
+                        <div class="stat-label">Brands Managed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-skus-hero">0</div>
+                        <div class="stat-label">SKUs Tracked</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-importers-hero">0</div>
+                        <div class="stat-label">Importers Registered</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Actions Section -->
+        <section class="quick-actions">
+            <h3>Quick Actions</h3>
+            <div class="action-grid">
+                <div class="action-card" onclick="window.location.href='/data'">
+                    <div class="action-icon">📁</div>
+                    <h4>Manage Data</h4>
+                    <p>Upload new files and export data in multiple formats</p>
+                    <span class="action-link">Go to Data Center →</span>
+                </div>
+                <div class="action-card" onclick="window.location.href='/brands'">
+                    <div class="action-icon">🏷️</div>
+                    <h4>Browse Brands</h4>
+                    <p>Explore brand cards with detailed SKU information</p>
+                    <span class="action-link">View Brands →</span>
+                </div>
+                <div class="action-card" onclick="window.location.href='/importers'">
+                    <div class="action-icon">🏢</div>
+                    <h4>Manage Importers</h4>
+                    <p>Search and organize your importer directory</p>
+                    <span class="action-link">View Importers →</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="features-section">
+            <h3>System Features</h3>
+            <div class="features-grid">
+                <div class="feature-item">
+                    <div class="feature-icon">🔄</div>
+                    <h5>Smart Deduplication</h5>
+                    <p>Automatically prevents duplicate entries across multiple uploads</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">🎯</div>
+                    <h5>Intelligent Matching</h5>
+                    <p>Matches COLA permits with importer data using advanced algorithms</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">📋</div>
+                    <h5>Brand Organization</h5>
+                    <p>Groups SKUs by brand with aggregated country and class information</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">🔍</div>
+                    <h5>Advanced Search</h5>
+                    <p>Powerful search and pagination across all brands and importers</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">📈</div>
+                    <h5>Version Tracking</h5>
+                    <p>Maintains history of all uploads with rollback capabilities</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">💾</div>
+                    <h5>Data Export</h5>
+                    <p>Export matched data and reports in multiple formats</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Recent Activity Section -->
+        <section class="recent-activity">
+            <h3>Recent Activity</h3>
+            <div class="activity-card">
+                <div id="files-list" class="files-container">
+                    <p class="placeholder">No recent activity</p>
+                </div>
+            </div>
+        </section>
+
+        <div id="preview-modal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h3>Data Preview</h3>
+                <div id="preview-table-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

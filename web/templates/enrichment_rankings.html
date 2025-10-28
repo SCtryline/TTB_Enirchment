@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enrichment Priority Rankings - TTB Registry</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .rankings-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2563eb;
+        }
+
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .tier-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .tier-tab {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+        }
+
+        .tier-tab.active {
+            color: #2563eb;
+            border-bottom-color: #2563eb;
+        }
+
+        .tier-1 { border-left: 4px solid #dc2626; }
+        .tier-2 { border-left: 4px solid #f59e0b; }
+        .tier-3 { border-left: 4px solid #10b981; }
+        .tier-4 { border-left: 4px solid #6b7280; }
+        .tier-5 { border-left: 4px solid #d1d5db; }
+
+        .rankings-table {
+            width: 100%;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .rankings-table th {
+            background: #f3f4f6;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .rankings-table td {
+            padding: 12px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .score-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .score-high { background: #fee2e2; color: #991b1b; }
+        .score-medium { background: #fed7aa; color: #9a3412; }
+        .score-low { background: #d1fae5; color: #065f46; }
+
+        .breakdown-details {
+            display: none;
+            padding: 10px;
+            background: #f9fafb;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+        }
+
+        .product-type-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+            margin: 2px;
+        }
+
+        .type-spirit { background: #dbeafe; color: #1e40af; }
+        .type-wine { background: #fce7f3; color: #9f1239; }
+        .type-beer { background: #fef3c7; color: #92400e; }
+
+        .enrichment-status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .status-enriched { background: #d1fae5; color: #065f46; }
+        .status-pending { background: #fed7aa; color: #9a3412; }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-small {
+            padding: 4px 8px;
+            font-size: 12px;
+            border: 1px solid #d1d5db;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-small:hover {
+            background: #f3f4f6;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        {% include 'includes/navigation.html' %}
+    </div>
+
+    <div class="rankings-container">
+        <h2>Enrichment Priority Rankings</h2>
+
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-value">-</div>
+                <div class="stat-label">Total Brands</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">-</div>
+                <div class="stat-label">Tier 1 (Critical)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">-</div>
+                <div class="stat-label">Tier 2 (High)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">-</div>
+                <div class="stat-label">Already Enriched</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">-</div>
+                <div class="stat-label">Spirits Brands</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">-</div>
+                <div class="stat-label">Strategic Partners</div>
+            </div>
+        </div>
+
+        <div class="tier-tabs">
+            <button class="tier-tab active" data-tier="all">All Tiers</button>
+            <button class="tier-tab" data-tier="1">Tier 1 - Critical</button>
+            <button class="tier-tab" data-tier="2">Tier 2 - High</button>
+            <button class="tier-tab" data-tier="3">Tier 3 - Standard</button>
+            <button class="tier-tab" data-tier="4">Tier 4 - Low</button>
+            <button class="tier-tab" data-tier="5">Tier 5 - Manual</button>
+        </div>
+
+        <div id="rankingsTableContainer">
+            <div class="loading">Loading rankings...</div>
+        </div>
+    </div>
+
+    <script>
+        let allRankings = [];
+        let currentTier = 'all';
+
+        async function loadStatistics() {
+            try {
+                const response = await fetch('/api/enrichment/ranking_stats');
+                const data = await response.json();
+
+                if (data.success) {
+                    const stats = data.statistics;
+                    const statsGrid = document.getElementById('statsGrid');
+
+                    statsGrid.innerHTML = `
+                        <div class="stat-card">
+                            <div class="stat-value">${stats.total_brands.toLocaleString()}</div>
+                            <div class="stat-label">Total Brands</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${stats.tier_distribution.tier_1.toLocaleString()}</div>
+                            <div class="stat-label">Tier 1 (Critical)</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${stats.tier_distribution.tier_2.toLocaleString()}</div>
+                            <div class="stat-label">Tier 2 (High)</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${Object.values(stats.enriched_by_tier).reduce((a,b) => a+b, 0).toLocaleString()}</div>
+                            <div class="stat-label">Already Enriched</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${stats.spirits_brands.toLocaleString()}</div>
+                            <div class="stat-label">Spirits Brands</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${stats.strategic_partner_brands.toLocaleString()}</div>
+                            <div class="stat-label">Strategic Partners</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${(stats.brands_with_websites || 0).toLocaleString()}</div>
+                            <div class="stat-label">Has Website (Apollo Ready)</div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+            }
+        }
+
+        async function loadRankings() {
+            try {
+                const response = await fetch('/api/enrichment/rankings?limit=100');
+                const data = await response.json();
+
+                if (data.success) {
+                    allRankings = data.rankings;
+                    displayRankings(allRankings);
+                }
+            } catch (error) {
+                console.error('Error loading rankings:', error);
+                document.getElementById('rankingsTableContainer').innerHTML =
+                    '<div class="error">Failed to load rankings</div>';
+            }
+        }
+
+        function displayRankings(rankings) {
+            const filteredRankings = currentTier === 'all'
+                ? rankings
+                : rankings.filter(r => r.tier === parseInt(currentTier));
+
+            if (filteredRankings.length === 0) {
+                document.getElementById('rankingsTableContainer').innerHTML =
+                    '<div class="loading">No brands in this tier</div>';
+                return;
+            }
+
+            const tableHTML = `
+                <table class="rankings-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px">Rank</th>
+                            <th>Brand Name</th>
+                            <th style="width: 80px">Score</th>
+                            <th style="width: 100px">Tier</th>
+                            <th>Product Types</th>
+                            <th style="width: 60px">SKUs</th>
+                            <th style="width: 100px">Website</th>
+                            <th style="width: 120px">Apollo Status</th>
+                            <th style="width: 200px">Breakdown</th>
+                            <th style="width: 160px">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${filteredRankings.map((brand, index) => `
+                            <tr class="tier-${brand.tier}">
+                                <td>${index + 1}</td>
+                                <td>
+                                    <a href="/brand/${encodeURIComponent(brand.brand_name)}"
+                                       style="color: #2563eb; text-decoration: none;">
+                                        ${brand.brand_name}
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="score-badge ${getScoreClass(brand.score)}">
+                                        ${brand.score}
+                                    </span>
+                                </td>
+                                <td>Tier ${brand.tier}</td>
+                                <td>
+                                    ${getProductTypeBadges(brand.class_types || [], brand.breakdown)}
+                                </td>
+                                <td style="text-align: center;">${brand.sku_count}</td>
+                                <td>
+                                    ${brand.has_website ?
+                                        '<span style="color: #10b981; font-size: 12px;">✓ Has URL</span>' :
+                                        '<span style="color: #ef4444; font-size: 12px;">✗ No URL</span>'}
+                                </td>
+                                <td>
+                                    <span id="apollo-status-${brand.brand_name.replace(/[^a-zA-Z0-9]/g, '_')}" class="apollo-status">
+                                        ${getApolloStatusBadge(brand)}
+                                    </span>
+                                </td>
+                                <td>
+                                    ${getBreakdownSummary(brand.breakdown)}
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-small" onclick="toggleBreakdown('${brand.brand_name}')">
+                                            Details
+                                        </button>
+                                        <span id="apollo-action-${brand.brand_name.replace(/[^a-zA-Z0-9]/g, '_')}">
+                                            ${getApolloActionButton(brand)}
+                                        </span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr id="breakdown-${brand.brand_name}" style="display: none;">
+                                <td colspan="10">
+                                    <div class="breakdown-details">
+                                        ${getDetailedBreakdown(brand.breakdown)}
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            document.getElementById('rankingsTableContainer').innerHTML = tableHTML;
+        }
+
+        function getScoreClass(score) {
+            if (score >= 70) return 'score-high';
+            if (score >= 50) return 'score-medium';
+            return 'score-low';
+        }
+
+        function getProductTypeBadges(classTypes, breakdown) {
+            if (!classTypes || classTypes.length === 0) return '-';
+
+            const productScore = breakdown.product_type || 0;
+            let typeClass = 'type-beer';
+
+            if (productScore >= 25) typeClass = 'type-spirit';
+            else if (productScore >= 12) typeClass = 'type-wine';
+
+            return classTypes.slice(0, 2).map(type =>
+                `<span class="product-type-badge ${typeClass}">${type}</span>`
+            ).join('');
+        }
+
+        function getBreakdownSummary(breakdown) {
+            const items = [];
+            if (breakdown.strategic_partner > 0) items.push('Strategic Partner');
+            else if (breakdown.importer > 0) items.push('Has Importer');
+            if (breakdown.has_website > 0) items.push('Has Website');
+            if (breakdown.product_type >= 25) items.push('Spirits');
+            else if (breakdown.product_type >= 12) items.push('Wine');
+            else if (breakdown.product_type >= 8) items.push('Beer');
+            if (breakdown.recent_activity > 0) items.push('Recent');
+
+            return items.join(', ') || 'Low Priority';
+        }
+
+        function getDetailedBreakdown(breakdown) {
+            return `
+                <div class="breakdown-item">
+                    <span>Strategic Partner:</span>
+                    <span>${breakdown.strategic_partner} pts</span>
+                </div>
+                <div class="breakdown-item">
+                    <span>Importer:</span>
+                    <span>${breakdown.importer} pts</span>
+                </div>
+                <div class="breakdown-item">
+                    <span>Has Website (Apollo Ready):</span>
+                    <span>${breakdown.has_website || 0} pts</span>
+                </div>
+                <div class="breakdown-item">
+                    <span>Product Type:</span>
+                    <span>${breakdown.product_type} pts</span>
+                </div>
+                <div class="breakdown-item">
+                    <span>SKU Volume:</span>
+                    <span>${breakdown.sku_volume} pts</span>
+                </div>
+                <div class="breakdown-item">
+                    <span>Recent Activity:</span>
+                    <span>${breakdown.recent_activity} pts</span>
+                </div>
+                <div class="breakdown-item">
+                    <span>Multiple Countries:</span>
+                    <span>${breakdown.multiple_countries} pts</span>
+                </div>
+                <div class="breakdown-item">
+                    <span>Multiple Permits:</span>
+                    <span>${breakdown.multiple_permits} pts</span>
+                </div>
+                <div class="breakdown-item">
+                    <span>Premium Segment:</span>
+                    <span>${breakdown.premium_segment} pts</span>
+                </div>
+                <div class="breakdown-item" style="border-top: 1px solid #e5e7eb; margin-top: 8px; padding-top: 8px; font-weight: bold;">
+                    <span>Total Score:</span>
+                    <span>${breakdown.total} pts</span>
+                </div>
+            `;
+        }
+
+        function toggleBreakdown(brandName) {
+            const row = document.getElementById(`breakdown-${brandName}`);
+            if (row) {
+                row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+            }
+        }
+
+        // Apollo Status Badge Function
+        function getApolloStatusBadge(brand) {
+            const status = brand.apollo_status || 'not_started';
+            switch (status) {
+                case 'verified':
+                    return '<span style="background: #d1fae5; color: #065f46; padding: 2px 6px; border-radius: 3px; font-size: 11px;">Verified</span>';
+                case 'pending_approval':
+                    return '<span style="background: #fef3c7; color: #92400e; padding: 2px 6px; border-radius: 3px; font-size: 11px;">Needs Review</span>';
+                case 'not_found':
+                    return '<span style="background: #fee2e2; color: #991b1b; padding: 2px 6px; border-radius: 3px; font-size: 11px;">Not Found</span>';
+                case 'manual_required':
+                    return '<span style="background: #e0e7ff; color: #3730a3; padding: 2px 6px; border-radius: 3px; font-size: 11px;">Manual</span>';
+                default:
+                    return '<span style="background: #f3f4f6; color: #374151; padding: 2px 6px; border-radius: 3px; font-size: 11px;">Not Started</span>';
+            }
+        }
+
+        // Apollo Action Button Function
+        function getApolloActionButton(brand) {
+            const status = brand.apollo_status || 'not_started';
+            const hasWebsite = brand.has_website;
+
+            switch (status) {
+                case 'verified':
+                    return `<button class="btn-small" style="background: #10b981; color: white;" onclick="viewContacts('${brand.brand_name}')">👥 Contacts</button>`;
+                case 'pending_approval':
+                    return `<button class="btn-small" style="background: #f59e0b; color: white;" onclick="reviewApolloMatch('${brand.brand_name}')">🔍 Review</button>`;
+                case 'not_found':
+                    return `<button class="btn-small" style="background: #ef4444; color: white;" onclick="manualApolloEntry('${brand.brand_name}')">📝 Manual</button>`;
+                default:
+                    if (hasWebsite) {
+                        return `<button class="btn-small" style="background: #3b82f6; color: white;" onclick="startApolloEnrichment('${brand.brand_name}', true)">🚀 Auto-Enrich</button>`;
+                    } else {
+                        return `<button class="btn-small" style="background: #6366f1; color: white;" onclick="startApolloEnrichment('${brand.brand_name}', false)">🔍 Find Contacts</button>`;
+                    }
+            }
+        }
+
+        // Start Apollo Enrichment
+        async function startApolloEnrichment(brandName, hasWebsite) {
+            console.log('startApolloEnrichment called for:', brandName);
+            const action = hasWebsite ? 'auto-enrich via website domain' : 'search for potential matches';
+            if (!confirm(`Start Apollo enrichment for "${brandName}"?\n\nThis will ${action}.`)) {
+                console.log('User cancelled');
+                return;
+            }
+            console.log('User confirmed, calling API...');
+
+            // Update UI to show loading
+            const statusElement = document.getElementById(`apollo-status-${brandName.replace(/[^a-zA-Z0-9]/g, '_')}`);
+            const actionElement = document.getElementById(`apollo-action-${brandName.replace(/[^a-zA-Z0-9]/g, '_')}`);
+
+            if (statusElement) statusElement.innerHTML = '<span style="color: #6366f1;">🔄 Searching...</span>';
+            if (actionElement) actionElement.innerHTML = '<button class="btn-small" disabled>⏳ Processing...</button>';
+
+            try {
+                const response = await fetch('/apollo/enrich_brand', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ brand_name: brandName })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    if (data.status === 'auto_completed') {
+                        // Auto-completed for website brands
+                        if (statusElement) statusElement.innerHTML = getApolloStatusBadge({ apollo_status: 'verified' });
+                        if (actionElement) actionElement.innerHTML = getApolloActionButton({ apollo_status: 'verified', brand_name: brandName });
+                        alert(`Apollo enrichment completed!\n\nCompany: ${data.company.name}\nTop contacts found: ${data.top_contacts.length}`);
+                    } else if (data.status === 'needs_approval') {
+                        // 100% match but needs approval
+                        if (statusElement) statusElement.innerHTML = getApolloStatusBadge({ apollo_status: 'pending_approval' });
+                        if (actionElement) actionElement.innerHTML = getApolloActionButton({ apollo_status: 'pending_approval', brand_name: brandName });
+                        showApprovalModal(brandName, data);
+                    } else if (data.status === 'needs_selection') {
+                        // Multiple recommendations
+                        console.log('Need selection - showing modal for:', brandName, data.recommendations);
+                        if (statusElement) statusElement.innerHTML = getApolloStatusBadge({ apollo_status: 'pending_approval' });
+                        if (actionElement) actionElement.innerHTML = getApolloActionButton({ apollo_status: 'pending_approval', brand_name: brandName });
+                        showRecommendationsModal(brandName, data.recommendations);
+                    }
+                } else {
+                    // Not found - flag for manual
+                    if (statusElement) statusElement.innerHTML = getApolloStatusBadge({ apollo_status: 'not_found' });
+                    if (actionElement) actionElement.innerHTML = getApolloActionButton({ apollo_status: 'not_found', brand_name: brandName });
+                    alert(`No matches found in Apollo for "${brandName}".\n\n${data.message}\n\nThis brand has been flagged for manual research.`);
+                }
+            } catch (error) {
+                // Reset UI on error
+                if (statusElement) statusElement.innerHTML = getApolloStatusBadge({ apollo_status: 'not_started' });
+                if (actionElement) actionElement.innerHTML = getApolloActionButton({ brand_name: brandName, has_website: hasWebsite });
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        // Placeholder functions
+        function viewContacts(brandName) {
+            window.location.href = `/brand/${encodeURIComponent(brandName)}#contacts`;
+        }
+
+        function reviewApolloMatch(brandName) {
+            alert(`Opening review interface for ${brandName}`);
+        }
+
+        function manualApolloEntry(brandName) {
+            alert(`Opening manual entry form for ${brandName}`);
+        }
+
+        // Legacy enrichment function
+        async function enrichBrand(brandName) {
+            if (confirm(`Enrich ${brandName}?`)) {
+                try {
+                    const response = await fetch('/enrichment/enrich_brand', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ brand_name: brandName })
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                        alert('Enrichment started successfully');
+                        loadRankings(); // Reload to update status
+                    } else {
+                        alert(`Enrichment failed: ${data.error}`);
+                    }
+                } catch (error) {
+                    alert(`Error: ${error.message}`);
+                }
+            }
+        }
+
+        // Initialize tier tabs
+        document.querySelectorAll('.tier-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.tier-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                currentTier = this.dataset.tier;
+                displayRankings(allRankings);
+            });
+        });
+
+        // Apollo Selection Modal Functions
+        function showRecommendationsModal(brandName, recommendations) {
+            console.log('showRecommendationsModal called with:', brandName, recommendations);
+            const modalHTML = `
+                <div id="apollo-selection-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; display: flex; align-items: center; justify-content: center;">
+                    <div style="background: white; border-radius: 12px; max-width: 900px; max-height: 90vh; overflow-y: auto; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+                        <h2 style="margin-top: 0; color: #2c3e50;">Select Company for "${brandName}"</h2>
+                        <p style="color: #666; margin-bottom: 20px;">Found ${recommendations.length} potential matches. Select the correct company:</p>
+
+                        <div id="company-options">
+                            ${recommendations.map((rec, idx) => `
+                                <div class="company-option" data-company-id="${rec.company.id}" style="border: 2px solid #e0e0e0; border-radius: 8px; padding: 20px; margin-bottom: 15px; cursor: pointer; transition: all 0.3s;" onmouseover="this.style.borderColor='#3498db'" onmouseout="this.style.borderColor='#e0e0e0'" onclick="selectCompanyFromRankings(${idx}, '${brandName}')">
+                                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                                        <div style="flex: 1;">
+                                            <h3 style="margin: 0 0 10px 0; color: #2c3e50;">${rec.company.name}</h3>
+                                            <div style="color: #666; font-size: 14px; margin-bottom: 8px;">
+                                                ${rec.company.domain ? `<span style="background: #e8f5e9; padding: 3px 8px; border-radius: 4px; margin-right: 8px;">🌐 ${rec.company.domain}</span>` : ''}
+                                                ${rec.company.industry ? `<span style="background: #e3f2fd; padding: 3px 8px; border-radius: 4px; margin-right: 8px;">🏭 ${rec.company.industry}</span>` : ''}
+                                                ${rec.company.employee_count ? `<span style="background: #fff3e0; padding: 3px 8px; border-radius: 4px;">👥 ${rec.company.employee_count} employees</span>` : ''}
+                                            </div>
+                                            ${rec.company.location && rec.company.location.city ? `<div style="color: #888; font-size: 13px;">📍 ${rec.company.location.city}, ${rec.company.location.state || ''} ${rec.company.location.country || ''}</div>` : ''}
+                                        </div>
+                                        <div style="text-align: right;">
+                                            <div style="background: ${rec.confidence >= 80 ? '#4caf50' : rec.confidence >= 60 ? '#ff9800' : '#999'}; color: white; padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 14px;">
+                                                ${rec.confidence}% Match
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    ${rec.contacts_preview && rec.contacts_preview.length > 0 ? `
+                                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e0e0e0;">
+                                            <strong style="color: #555; font-size: 13px;">Sample Contacts:</strong>
+                                            <div style="margin-top: 8px;">
+                                                ${rec.contacts_preview.map(contact => `
+                                                    <div style="background: #f5f5f5; padding: 8px 12px; border-radius: 6px; margin-top: 5px; font-size: 13px;">
+                                                        👤 <strong>${contact.name}</strong> - ${contact.title || 'No title'}
+                                                    </div>
+                                                `).join('')}
+                                            </div>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <div style="margin-top: 25px; padding-top: 20px; border-top: 2px solid #e0e0e0; display: flex; justify-content: space-between;">
+                            <button onclick="closeApolloModal()" style="background: #95a5a6; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold;">
+                                Cancel
+                            </button>
+                            <button onclick="manualApolloEntry('${brandName}')" style="background: #e67e22; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold;">
+                                None Match - Enter Manually
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            window.apolloRecommendations = recommendations;
+            window.apolloBrandName = brandName;
+        }
+
+        async function selectCompanyFromRankings(companyIndex, brandName) {
+            const recommendation = window.apolloRecommendations[companyIndex];
+
+            closeApolloModal();
+
+            // Show loading message - fetching contact list (no credits yet)
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = 'apollo-loading';
+            loadingDiv.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); z-index: 10001; text-align: center;';
+            loadingDiv.innerHTML = '<h3 style="margin: 0 0 15px 0;">⏳ Loading Contact List...</h3><p style="color: #666; margin: 0;">Fetching available contacts (no credits used yet)</p>';
+            document.body.appendChild(loadingDiv);
+
+            try {
+                // Fetch contact list WITHOUT revealing emails (preview only)
+                const response = await fetch('/apollo/get_contacts_preview', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        company_id: recommendation.company.id
+                    })
+                });
+
+                const result = await response.json();
+                document.body.removeChild(loadingDiv);
+
+                if (result.success && result.contacts) {
+                    // Show contact selection modal
+                    showContactSelectionModal(brandName, recommendation, result.contacts);
+                } else {
+                    alert('❌ Error: ' + (result.error || 'Failed to fetch contacts'));
+                }
+            } catch (error) {
+                document.body.removeChild(loadingDiv);
+                alert('❌ Error: ' + error.message);
+            }
+        }
+
+        function showContactSelectionModal(brandName, companyRecommendation, contacts) {
+            const modalHTML = `
+                <div id="contact-selection-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; display: flex; align-items: center; justify-content: center;">
+                    <div style="background: white; border-radius: 12px; max-width: 800px; max-height: 90vh; overflow-y: auto; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+                        <h2 style="margin-top: 0; color: #2c3e50;">Select Contacts to Unlock</h2>
+                        <p style="color: #666; margin-bottom: 5px;"><strong>Company:</strong> ${companyRecommendation.company.name}</p>
+                        <p style="color: #666; margin-bottom: 20px; font-size: 13px;">Select the contacts you want to unlock. <strong>Credits will only be charged for selected contacts.</strong></p>
+
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                            <label style="display: flex; align-items: center; cursor: pointer; font-weight: bold;">
+                                <input type="checkbox" id="select-all-contacts" onchange="toggleAllContacts(this.checked)" style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer;">
+                                Select All (${contacts.length} contacts)
+                            </label>
+                        </div>
+
+                        <div id="contacts-list" style="max-height: 400px; overflow-y: auto;">
+                            ${contacts.map((contact, idx) => `
+                                <div style="border: 2px solid #e0e0e0; border-radius: 8px; padding: 15px; margin-bottom: 10px; background: white;">
+                                    <label style="display: flex; align-items: start; cursor: pointer;">
+                                        <input type="checkbox" class="contact-checkbox" data-contact-index="${idx}" style="margin-right: 12px; margin-top: 3px; width: 18px; height: 18px; cursor: pointer;">
+                                        <div style="flex: 1;">
+                                            <div style="font-weight: bold; color: #2c3e50; margin-bottom: 5px;">${contact.name || 'Unknown'}</div>
+                                            <div style="color: #666; font-size: 14px; margin-bottom: 5px;">${contact.title || 'No title'}</div>
+                                            <div style="display: flex; gap: 10px; flex-wrap: wrap; font-size: 12px;">
+                                                ${contact.seniority ? `<span style="background: #e3f2fd; padding: 2px 8px; border-radius: 4px;">${contact.seniority}</span>` : ''}
+                                                ${contact.department ? `<span style="background: #f3e5f5; padding: 2px 8px; border-radius: 4px;">${contact.department}</span>` : ''}
+                                                ${contact.relevance_score ? `<span style="background: ${contact.relevance_score >= 80 ? '#c8e6c9' : '#fff3e0'}; padding: 2px 8px; border-radius: 4px;">Relevance: ${contact.relevance_score}%</span>` : ''}
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <div style="margin-top: 25px; padding-top: 20px; border-top: 2px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center;">
+                            <div style="color: #666; font-size: 14px;">
+                                <span id="selected-count">0</span> contacts selected
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button onclick="closeContactSelectionModal()" style="background: #95a5a6; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold;">
+                                    Cancel
+                                </button>
+                                <button onclick="unlockSelectedContacts('${brandName}')" style="background: #27ae60; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold;">
+                                    🔓 Unlock Selected Emails
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+            // Store data for later use
+            window.selectedCompany = companyRecommendation;
+            window.availableContacts = contacts;
+
+            // Update selected count when checkboxes change
+            document.querySelectorAll('.contact-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', updateSelectedCount);
+            });
+        }
+
+        function toggleAllContacts(checked) {
+            document.querySelectorAll('.contact-checkbox').forEach(checkbox => {
+                checkbox.checked = checked;
+            });
+            updateSelectedCount();
+        }
+
+        function updateSelectedCount() {
+            const selectedCount = document.querySelectorAll('.contact-checkbox:checked').length;
+            const countElement = document.getElementById('selected-count');
+            if (countElement) {
+                countElement.textContent = selectedCount;
+            }
+        }
+
+        async function unlockSelectedContacts(brandName) {
+            const selectedCheckboxes = document.querySelectorAll('.contact-checkbox:checked');
+
+            if (selectedCheckboxes.length === 0) {
+                alert('Please select at least one contact to unlock');
+                return;
+            }
+
+            const selectedIndices = Array.from(selectedCheckboxes).map(cb => parseInt(cb.dataset.contactIndex));
+            const selectedContacts = selectedIndices.map(idx => window.availableContacts[idx]);
+
+            closeContactSelectionModal();
+
+            // Show loading
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = 'apollo-loading';
+            loadingDiv.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); z-index: 10001; text-align: center;';
+            loadingDiv.innerHTML = `<h3 style="margin: 0 0 15px 0;">🔓 Unlocking ${selectedContacts.length} Contact${selectedContacts.length > 1 ? 's' : ''}...</h3><p style="color: #666; margin: 0;">Revealing emails and saving to database</p>`;
+            document.body.appendChild(loadingDiv);
+
+            try {
+                const response = await fetch('/apollo/unlock_contacts', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        brand_name: brandName,
+                        company_id: window.selectedCompany.company.id,
+                        company_data: window.selectedCompany.company,
+                        contact_ids: selectedContacts.map(c => c.id),
+                        confidence: window.selectedCompany.confidence,
+                        match_factors: window.selectedCompany.match_factors
+                    })
+                });
+
+                const result = await response.json();
+                document.body.removeChild(loadingDiv);
+
+                if (result.success) {
+                    alert(`✅ Successfully unlocked ${result.contacts_unlocked} contact${result.contacts_unlocked > 1 ? 's' : ''}!\\n\\nCredits used: ${result.credits_used}\\nSaved to database: ${result.contacts_saved} contacts`);
+                    loadRankings(); // Reload table
+                } else {
+                    alert('❌ Error: ' + (result.error || 'Failed to unlock contacts'));
+                }
+            } catch (error) {
+                document.body.removeChild(loadingDiv);
+                alert('❌ Error: ' + error.message);
+            }
+        }
+
+        function closeContactSelectionModal() {
+            const modal = document.getElementById('contact-selection-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        function closeApolloModal() {
+            const modal = document.getElementById('apollo-selection-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        // Load data on page load
+        loadStatistics();
+        loadRankings();
+    </script>
+</body>
+</html>

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ importer.owner_name or importer.operating_name or 'Unknown Importer' }} - Importer Details - TTB COLA System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/importer_detail.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation Header -->
+        <header>
+            <div class="nav-brand">
+                <h1><a href="/">TTB COLA Registry System</a></h1>
+            </div>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/dashboard">Dashboard</a>
+                <a href="/data">Data</a>
+                <a href="/brands">Brands</a>
+                <a href="/importers">Importers</a>
+            </div>
+        </header>
+
+        <!-- Breadcrumb Navigation -->
+        <nav class="breadcrumb">
+            <a href="/importers" class="breadcrumb-link">🏢 Importers</a>
+            <span class="breadcrumb-separator">›</span>
+            <span class="breadcrumb-current">{{ importer.owner_name or importer.operating_name or 'Unknown Importer' }}</span>
+        </nav>
+
+        <!-- Importer Header -->
+        <section class="importer-header">
+            <div class="importer-title">
+                <h1 class="importer-name">{{ importer.owner_name or importer.operating_name or 'Unknown Importer' }}</h1>
+                {% if importer.operating_name and importer.owner_name != importer.operating_name %}
+                    <div class="importer-subtitle">Operating as: {{ importer.operating_name }}</div>
+                {% endif %}
+                <div class="importer-badges">
+                    <span class="badge-permit">🆔 {{ permit_number }}</span>
+                    {% if importer.brands %}
+                        <span class="badge-brands">🏷️ {{ importer.brands|length }} Brands</span>
+                        <span class="badge-active">✅ Active</span>
+                    {% else %}
+                        <span class="badge-inactive">⚠️ No Brands</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="importer-actions">
+                <button class="btn btn-primary" onclick="window.history.back()">← Back to Importers</button>
+                <button class="btn btn-secondary" onclick="exportImporterData()">📄 Export Data</button>
+            </div>
+        </section>
+
+        <!-- Importer Details Grid -->
+        <section class="importer-details">
+            <div class="details-grid">
+                <!-- Company Information -->
+                <div class="detail-card">
+                    <div class="card-header">
+                        <h3>🏢 Company Information</h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="info-row">
+                            <span class="info-label">Owner Name:</span>
+                            <span class="info-value">{{ importer.owner_name or 'Not specified' }}</span>
+                        </div>
+                        {% if importer.operating_name and importer.owner_name != importer.operating_name %}
+                        <div class="info-row">
+                            <span class="info-label">Operating Name:</span>
+                            <span class="info-value">{{ importer.operating_name }}</span>
+                        </div>
+                        {% endif %}
+                        <div class="info-row">
+                            <span class="info-label">Permit Number:</span>
+                            <span class="info-value permit-code">{{ permit_number }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Type:</span>
+                            <span class="info-value">{{ importer.type or 'Importer' }}</span>
+                        </div>
+                        {% if importer.email %}
+                        <div class="info-row">
+                            <span class="info-label">Email:</span>
+                            <span class="info-value">{{ importer.email }}</span>
+                        </div>
+                        {% endif %}
+                        {% if importer.phone %}
+                        <div class="info-row">
+                            <span class="info-label">Phone:</span>
+                            <span class="info-value">{{ importer.phone }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Location Information -->
+                <div class="detail-card">
+                    <div class="card-header">
+                        <h3>📍 Location Information</h3>
+                    </div>
+                    <div class="card-content">
+                        {% if importer.address %}
+                        <div class="info-row">
+                            <span class="info-label">Address:</span>
+                            <span class="info-value">{{ importer.address }}</span>
+                        </div>
+                        {% endif %}
+                        <div class="info-row">
+                            <span class="info-label">City:</span>
+                            <span class="info-value">{{ importer.city or 'Not specified' }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">State:</span>
+                            <span class="info-value">{{ importer.state or 'Not specified' }}</span>
+                        </div>
+                        {% if importer.zip %}
+                        <div class="info-row">
+                            <span class="info-label">ZIP Code:</span>
+                            <span class="info-value">{{ importer.zip }}</span>
+                        </div>
+                        {% endif %}
+                        <div class="info-row">
+                            <span class="info-label">Country:</span>
+                            <span class="info-value">{{ importer.country or 'United States' }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activity Summary -->
+                <div class="detail-card">
+                    <div class="card-header">
+                        <h3>📊 Activity Summary</h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="info-row">
+                            <span class="info-label">Total Brands:</span>
+                            <span class="info-value">{{ importer.brands|length if importer.brands else 0 }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Status:</span>
+                            <span class="info-value">
+                                {% if importer.brands and importer.brands|length > 0 %}
+                                    <span class="status-active">✅ Active</span>
+                                {% else %}
+                                    <span class="status-inactive">⚠️ No Activity</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Brands Section -->
+        {% if importer.brands and importer.brands|length > 0 %}
+        <section class="brands-section">
+            <div class="section-header">
+                <h2>🏷️ Associated Brands</h2>
+                <div class="section-controls">
+                    <button class="toggle-btn" onclick="toggleView()" id="view-toggle">📋 Switch to Table View</button>
+                </div>
+            </div>
+
+            <!-- Grid View -->
+            <div id="brands-grid" class="brands-display grid-view">
+                <div class="brands-grid">
+                    {% for brand in importer.brands %}
+                    <div class="brand-card">
+                        <div class="brand-card-header">
+                            <a href="/brand/{{ brand|urlencode }}" class="brand-link">{{ brand }}</a>
+                        </div>
+                        <div class="brand-actions">
+                            <a href="/brand/{{ brand|urlencode }}" class="action-link">View Details →</a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Table View -->
+            <div id="brands-table" class="brands-display table-view" style="display: none;">
+                <div class="table-container">
+                    <table class="brands-table">
+                        <thead>
+                            <tr>
+                                <th>Brand Name</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for brand in importer.brands %}
+                            <tr>
+                                <td>
+                                    <a href="/brand/{{ brand|urlencode }}" class="brand-link">{{ brand }}</a>
+                                </td>
+                                <td>
+                                    <a href="/brand/{{ brand|urlencode }}" class="action-btn">👁️ View</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+        {% else %}
+        <section class="empty-brands-section">
+            <div class="empty-state">
+                <div class="empty-icon">📭</div>
+                <h3>No Associated Brands</h3>
+                <p>This importer is not currently associated with any brands in the system.</p>
+            </div>
+        </section>
+        {% endif %}
+    </div>
+
+    <script>
+        // Toggle between grid and table view
+        function toggleView() {
+            const gridView = document.getElementById('brands-grid');
+            const tableView = document.getElementById('brands-table');
+            const toggleBtn = document.getElementById('view-toggle');
+            
+            if (gridView.style.display === 'none') {
+                gridView.style.display = 'block';
+                tableView.style.display = 'none';
+                toggleBtn.innerHTML = '📋 Switch to Table View';
+            } else {
+                gridView.style.display = 'none';
+                tableView.style.display = 'block';
+                toggleBtn.innerHTML = '🎨 Switch to Grid View';
+            }
+        }
+
+        // Export importer data
+        function exportImporterData() {
+            const permitNumber = '{{ permit_number }}';
+            window.location.href = `/export_importer_detail/${permitNumber}`;
+        }
+    </script>
+</body>
+</html>

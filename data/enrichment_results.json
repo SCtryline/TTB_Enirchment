@@ -1,0 +1,527 @@
+{
+  "7 DEADLY": {
+    "brand_name": "7 DEADLY",
+    "class_type": null,
+    "timestamp": "2025-08-19T21:00:48.715497",
+    "founders": [
+      {
+        "name": "Kills Seven",
+        "source": "https://www.bing.com/ck/a?!&&p=4a16ada2d3ced018a1b4f63088744dbf94916340df4c50c4aefd1209887636cdJmltdHM9MTc1NTU2MTYwMA&ptn=3&ver=2&hsh=4&fclid=22c74a12-4d6a-6753-3418-5c5f4cc966e0&u=a1aHR0cHM6Ly93d3cuZm94bmV3cy5jb20vdXMvc2V2ZW4tZGVhZGx5LXNpbnMtYmlrZXItZ2FuZy1mb3VuZGVyLWtpbGxzLTctcGVvcGxlLWRvZz9tc29ja2lkPTIyYzc0YTEyNGQ2YTY3NTMzNDE4NWM1ZjRjYzk2NmUw&ntb=1",
+        "context": "\u2018Seven Deadly Sins\u2019 biker gang founder kills seven ",
+        "confidence": 0.7,
+        "sources": [
+          "https://www.bing.com/ck/a?!&&p=4a16ada2d3ced018a1b4f63088744dbf94916340df4c50c4aefd1209887636cdJmltdHM9MTc1NTU2MTYwMA&ptn=3&ver=2&hsh=4&fclid=22c74a12-4d6a-6753-3418-5c5f4cc966e0&u=a1aHR0cHM6Ly93d3cuZm94bmV3cy5jb20vdXMvc2V2ZW4tZGVhZGx5LXNpbnMtYmlrZXItZ2FuZy1mb3VuZGVyLWtpbGxzLTctcGVvcGxlLWRvZz9tc29ja2lkPTIyYzc0YTEyNGQ2YTY3NTMzNDE4NWM1ZjRjYzk2NmUw&ntb=1"
+        ],
+        "mention_count": 1
+      },
+      {
+        "name": "Biker Gang",
+        "source": "https://www.bing.com/ck/a?!&&p=4a16ada2d3ced018a1b4f63088744dbf94916340df4c50c4aefd1209887636cdJmltdHM9MTc1NTU2MTYwMA&ptn=3&ver=2&hsh=4&fclid=22c74a12-4d6a-6753-3418-5c5f4cc966e0&u=a1aHR0cHM6Ly93d3cuZm94bmV3cy5jb20vdXMvc2V2ZW4tZGVhZGx5LXNpbnMtYmlrZXItZ2FuZy1mb3VuZGVyLWtpbGxzLTctcGVvcGxlLWRvZz9tc29ja2lkPTIyYzc0YTEyNGQ2YTY3NTMzNDE4NWM1ZjRjYzk2NmUw&ntb=1",
+        "context": "\u2018Seven Deadly Sins\u2019 biker gang founder kills seven ",
+        "confidence": 0.7,
+        "sources": [
+          "https://www.bing.com/ck/a?!&&p=4a16ada2d3ced018a1b4f63088744dbf94916340df4c50c4aefd1209887636cdJmltdHM9MTc1NTU2MTYwMA&ptn=3&ver=2&hsh=4&fclid=22c74a12-4d6a-6753-3418-5c5f4cc966e0&u=a1aHR0cHM6Ly93d3cuZm94bmV3cy5jb20vdXMvc2V2ZW4tZGVhZGx5LXNpbnMtYmlrZXItZ2FuZy1mb3VuZGVyLWtpbGxzLTctcGVvcGxlLWRvZz9tc29ja2lkPTIyYzc0YTEyNGQ2YTY3NTMzNDE4NWM1ZjRjYzk2NmUw&ntb=1"
+        ],
+        "mention_count": 1
+      }
+    ],
+    "website": null,
+    "apollo_contacts": [],
+    "linkedin_profiles": [],
+    "status": "complete",
+    "confidence": 0.4
+  },
+  "A & J DEMIERE": {
+    "brand_name": "A & J DEMIERE",
+    "class_type": "SPARKLING WINE/CHAMPAGNE",
+    "timestamp": "2025-08-19T21:37:19.838297",
+    "founders": [],
+    "website": null,
+    "apollo_contacts": [],
+    "linkedin_profiles": [],
+    "status": "complete",
+    "confidence": 0.0
+  },
+  "93 OCTANE BREWERY": {
+    "brand_name": "93 OCTANE BREWERY",
+    "class_type": null,
+    "timestamp": "2025-08-19T21:39:04.093029",
+    "founders": [],
+    "website": {
+      "url": "https://93octanebrewery.com/",
+      "domain": "93octanebrewery.com",
+      "confidence": 0.7,
+      "title": "93 Octane Brewery - St Charles, IL",
+      "description": "93 Octane Brewery came about from a love of Craft Beer and wanting to make something exceptional for Family and Friends to enjoy. Our goal is to make great Beer, period.",
+      "search_strategy": "intelligent_context"
+    },
+    "apollo_contacts": [],
+    "linkedin_profiles": [],
+    "status": "complete",
+    "confidence": 0.2
+  },
+  "99 PERFECTLY PERUVIAN": {
+    "brand_name": "99 PERFECTLY PERUVIAN",
+    "class_type": "OTHER GRAPE BRANDY (PISCO, GRAPPA) FB",
+    "timestamp": "2025-08-19T21:43:51.010015",
+    "founders": [],
+    "website": null,
+    "apollo_contacts": [],
+    "linkedin_profiles": [],
+    "status": "complete",
+    "confidence": 0.0
+  },
+  "A BOAT WITH NO NAME": {
+    "brand_name": "A BOAT WITH NO NAME",
+    "class_type": "ALE",
+    "timestamp": "2025-08-19T21:46:42.541568",
+    "founders": [
+      {
+        "name": "For Sale By",
+        "source": "https://www.bing.com/ck/a?!&&p=77d818a636f6e443223590b41dcc655e8c3460544b98375312ced74001387d75JmltdHM9MTc1NTU2MTYwMA&ptn=3&ver=2&hsh=4&fclid=37a1c9ec-9c91-60d1-372d-dfa19dda61f6&u=a1aHR0cHM6Ly93d3cuYm9hdHRyYWRlci5jb20vYm9hdHMvc3RhdGUtbnkvY2l0eS1yb2NoZXN0ZXIv&ntb=1",
+        "context": "Boats for sale in Rochester-BoatTrader Find new and used boats for sale in Rochester, including boat prices, photos, and more. For sale by owner, boat dealers and manufacturers - find your boat at Boa",
+        "confidence": 0.7,
+        "sources": [
+          "https://www.bing.com/ck/a?!&&p=77d818a636f6e443223590b41dcc655e8c3460544b98375312ced74001387d75JmltdHM9MTc1NTU2MTYwMA&ptn=3&ver=2&hsh=4&fclid=37a1c9ec-9c91-60d1-372d-dfa19dda61f6&u=a1aHR0cHM6Ly93d3cuYm9hdHRyYWRlci5jb20vYm9hdHMvc3RhdGUtbnkvY2l0eS1yb2NoZXN0ZXIv&ntb=1"
+        ],
+        "mention_count": 1
+      },
+      {
+        "name": "Selling And",
+        "source": "https://www.bing.com/ck/a?!&&p=ad0afe23df29af6780580979335a08caf107cab6d1e1bf1c6ab975e4bb65eb9cJmltdHM9MTc1NTU2MTYwMA&ptn=3&ver=2&hsh=4&fclid=37a1c9ec-9c91-60d1-372d-dfa19dda61f6&u=a1aHR0cHM6Ly93d3cuYm9hdHMuY29tLw&ntb=1",
+        "context": "boats.com - new and used boats for sale #everythingboats Search new and used boats for sale locally, nationally and globally. Research boat buying, selling and ownership through a wealth of articles a",
+        "confidence": 0.7,
+        "sources": [
+          "https://www.bing.com/ck/a?!&&p=ad0afe23df29af6780580979335a08caf107cab6d1e1bf1c6ab975e4bb65eb9cJmltdHM9MTc1NTU2MTYwMA&ptn=3&ver=2&hsh=4&fclid=37a1c9ec-9c91-60d1-372d-dfa19dda61f6&u=a1aHR0cHM6Ly93d3cuYm9hdHMuY29tLw&ntb=1"
+        ],
+        "mention_count": 1
+      }
+    ],
+    "website": null,
+    "apollo_contacts": [],
+    "linkedin_profiles": [],
+    "status": "complete",
+    "confidence": 0.4
+  },
+  "ACOSTA TEQUILA": {
+    "brand_name": "ACOSTA TEQUILA",
+    "class_type": "TEQUILA FB",
+    "timestamp": "2025-08-19T21:50:22.921312",
+    "founders": [],
+    "website": null,
+    "apollo_contacts": [],
+    "linkedin_profiles": [],
+    "status": "complete",
+    "confidence": 0.0
+  },
+  "A.R. WHITEHEAD DISTILLERY": {
+    "brand_name": "A.R. WHITEHEAD DISTILLERY",
+    "class_type": "CORN WHISKY",
+    "timestamp": "2025-08-19T21:53:55.764103",
+    "founders": [],
+    "website": null,
+    "apollo_contacts": [],
+    "linkedin_profiles": [],
+    "status": "complete",
+    "confidence": 0.0
+  },
+  "AMERICAN SINGLE CASK": {
+    "brand_name": "AMERICAN SINGLE CASK",
+    "class_type": "AMERICAN SINGLE MALT WHISKEY",
+    "timestamp": "2025-08-19T21:56:10.121941",
+    "founders": [],
+    "website": null,
+    "apollo_contacts": [],
+    "linkedin_profiles": [],
+    "status": "complete",
+    "confidence": 0.0
+  },
+  "TEST CONFIDENCE BRAND": {
+    "brand_name": "TEST CONFIDENCE BRAND",
+    "class_type": null,
+    "timestamp": "2025-08-19T21:57:56.380121",
+    "founders": [],
+    "website": null,
+    "apollo_contacts": [],
+    "linkedin_profiles": [],
+    "status": "complete",
+    "confidence": 0.0
+  },
+  "1220 SPIRITS": {
+    "brand_name": "1220 SPIRITS",
+    "class_type": null,
+    "timestamp": "2025-08-19T21:58:35.128126",
+    "founders": [],
+    "website": null,
+    "apollo_contacts": [],
+    "linkedin_profiles": [],
+    "status": "complete",
+    "confidence": 0.0
+  },
+  "AGGREGATION DISTILLING": {
+    "brand_name": "AGGREGATION DISTILLING",
+    "timestamp": "2025-08-19T22:23:33.804663",
+    "website": {
+      "url": "https://aggregationdistilling.com",
+      "domain": "aggregationdistilling.com",
+      "title": "Direct Domain: aggregationdistilling.com",
+      "snippet": "Suggested official website for AGGREGATION DISTILLING. Click to check if this domain exists.",
+      "confidence": 1.0,
+      "source": "user_selection",
+      "selection_rank": 2,
+      "reasoning": "\ud83c\udf10 Appears to be official website"
+    },
+    "status": "completed",
+    "selection_method": "multi_choice",
+    "options_presented": 2
+  },
+  "TEST LOW CONFIDENCE BRAND": {
+    "brand_name": "TEST LOW CONFIDENCE BRAND",
+    "class_type": null,
+    "timestamp": "2025-08-19T22:05:25.442865",
+    "founders": [],
+    "website": null,
+    "apollo_contacts": [],
+    "linkedin_profiles": [],
+    "status": "complete",
+    "confidence": 0.0
+  },
+  "JAMESON": {
+    "brand_name": "JAMESON",
+    "class_type": null,
+    "timestamp": "2025-08-19T22:10:37.438540",
+    "founders": [
+      {
+        "name": "The Jameson",
+        "source": "https://www.bing.com/ck/a?!&&p=35c7dfdd22765ab8cdf5d5ce64b30cc63789831ca32e58dbf23f1a703de411a5JmltdHM9MTc1NTU2MTYwMA&ptn=3&ver=2&hsh=4&fclid=01654b44-94e8-672a-3138-5d0995b5667b&u=a1aHR0cHM6Ly90aGV0b3VyaXN0Y2hlY2tsaXN0LmNvbS9qYW1lc29uLWRpc3RpbGxlcnkv&ntb=1",
+        "context": "Jameson Distillery(Everything To Know Before A Visit) The Jameson Distillery, located at Bow St, Smithfield, Dublin 7, D07 N9VH, Ireland, embodies the heart of Irish whiskey culture. As one of the mos",
+        "confidence": 0.7,
+        "sources": [
+          "https://www.bing.com/ck/a?!&&p=35c7dfdd22765ab8cdf5d5ce64b30cc63789831ca32e58dbf23f1a703de411a5JmltdHM9MTc1NTU2MTYwMA&ptn=3&ver=2&hsh=4&fclid=01654b44-94e8-672a-3138-5d0995b5667b&u=a1aHR0cHM6Ly90aGV0b3VyaXN0Y2hlY2tsaXN0LmNvbS9qYW1lc29uLWRpc3RpbGxlcnkv&ntb=1"
+        ],
+        "mention_count": 1
+      }
+    ],
+    "website": null,
+    "apollo_contacts": [],
+    "linkedin_profiles": [],
+    "status": "complete",
+    "confidence": 0.3
+  },
+  "ALEXANDER MURRAY & CO.": {
+    "brand_name": "ALEXANDER MURRAY & CO.",
+    "class_type": "SINGLE MALT SCOTCH WHISKY",
+    "timestamp": "2025-08-19T22:26:29.774264",
+    "founders": [],
+    "website": null,
+    "apollo_contacts": [],
+    "linkedin_profiles": [],
+    "status": "complete",
+    "confidence": 0.0
+  },
+  "ADEGA VELLA": {
+    "brand_name": "ADEGA VELLA",
+    "class_type": "DESSERT /PORT/SHERRY/(COOKING) WINE",
+    "timestamp": "2025-08-19T22:27:51.595253",
+    "founders": [],
+    "website": null,
+    "apollo_contacts": [],
+    "linkedin_profiles": [],
+    "status": "complete",
+    "confidence": 0.0
+  },
+  "ADIR": {
+    "brand_name": "ADIR",
+    "class_type": "TABLE WHITE WINE",
+    "timestamp": "2025-08-19T22:31:48.428325",
+    "founders": [],
+    "website": {
+      "url": "https://adir.com",
+      "domain": "adir.com",
+      "confidence": 0.5,
+      "title": "Direct Domain: adir.com",
+      "description": "Suggested official website for ADIR. Click to check if this domain exists.",
+      "search_strategy": "intelligent_context"
+    },
+    "apollo_contacts": [],
+    "linkedin_profiles": [],
+    "status": "complete",
+    "confidence": 0.2
+  },
+  "A.E. DOR": {
+    "brand_name": "A.E. DOR",
+    "timestamp": "2025-08-19T22:34:34.130374",
+    "website": {
+      "url": "https://aedor.com/",
+      "domain": "aedor.com",
+      "title": "Selected: A.E. DOR",
+      "snippet": "User-selected website",
+      "confidence": 1.0,
+      "source": "user_selection",
+      "selection_rank": 2,
+      "reasoning": "User manual selection"
+    },
+    "status": "completed",
+    "selection_method": "multi_choice",
+    "options_presented": 2
+  },
+  "ADMIRAL'S RESERVE": {
+    "brand_name": "ADMIRAL'S RESERVE",
+    "class_type": "OTHER GIN",
+    "timestamp": "2025-08-19T22:35:58.331237",
+    "founders": [],
+    "website": null,
+    "apollo_contacts": [],
+    "linkedin_profiles": [],
+    "status": "complete",
+    "confidence": 0.0
+  },
+  "ABITA BREWING COMPANY": {
+    "brand_name": "ABITA BREWING COMPANY",
+    "timestamp": "2025-08-20T13:43:47.636579",
+    "website": {
+      "url": "https://abita.com/",
+      "domain": "abita.com",
+      "title": "Selected: ABITA BREWING COMPANY",
+      "snippet": "User-selected website",
+      "confidence": 1.0,
+      "source": "user_selection",
+      "selection_rank": 1,
+      "reasoning": "User manual selection"
+    },
+    "status": "completed",
+    "selection_method": "multi_choice",
+    "options_presented": 1
+  },
+  "ABBEY ROAD FARM": {
+    "brand_name": "ABBEY ROAD FARM",
+    "class_type": "TABLE RED WINE",
+    "timestamp": "2025-08-20T13:14:33.383718",
+    "founders": [],
+    "website": {
+      "url": "https://www.tripadvisor.com/Hotel_Review-g51793-d637359-Reviews-Abbey_Road_Farm_B_B_and_Winery-Carlton_Oregon.html",
+      "domain": "tripadvisor.com",
+      "confidence": 0.7999999999999999,
+      "title": "Abbey Road FarmB&B and Winery -Tripadvisor",
+      "description": "Set among the rolling hills of Yamhill County, Abbey Road Farm lies in the very heart of Oregon's Wine Country. We have converted three grain silos traditionally used for agricultural storage \u2026",
+      "search_strategy": "intelligent_context"
+    },
+    "apollo_contacts": [],
+    "linkedin_profiles": [],
+    "status": "complete",
+    "confidence": 0.2
+  },
+  "A HOMESTEAD BREW": {
+    "brand_name": "A HOMESTEAD BREW",
+    "timestamp": "2025-08-20T13:15:48.458221",
+    "website": {
+      "url": "https://ahomesteadbrew.com/",
+      "domain": "ahomesteadbrew.com",
+      "title": "Selected: A HOMESTEAD BREW",
+      "snippet": "User-selected website",
+      "confidence": 1.0,
+      "source": "user_selection",
+      "selection_rank": 2,
+      "reasoning": "User manual selection"
+    },
+    "status": "completed",
+    "selection_method": "multi_choice",
+    "options_presented": 2
+  },
+  "ABBOTT & WALLACE DISTILLING": {
+    "brand_name": "ABBOTT & WALLACE DISTILLING",
+    "class_type": "OTHER RUM (WHITE)",
+    "timestamp": "2025-08-20T13:21:08.467544",
+    "founders": [],
+    "website": null,
+    "apollo_contacts": [],
+    "linkedin_profiles": [],
+    "status": "complete",
+    "confidence": 0.0
+  },
+  "ACRES AWAY WINERY": {
+    "brand_name": "ACRES AWAY WINERY",
+    "class_type": null,
+    "timestamp": "2025-08-20T13:26:59.710255",
+    "founders": [],
+    "website": {
+      "url": "https://acresawaywinery.com/",
+      "domain": "acresawaywinery.com",
+      "confidence": 0.7999999999999999,
+      "title": "Acres Away Winery Based in Ashley Indiana",
+      "description": "Formerly known as Hartland Winery, Acres Away Winery is based in Ashley Indiana and offers an assortment of wines, pizza, sandwiches, and starters.",
+      "search_strategy": "intelligent_context"
+    },
+    "apollo_contacts": [],
+    "linkedin_profiles": [],
+    "status": "complete",
+    "confidence": 0.2
+  },
+  "A TO Z WINEWORKS": {
+    "brand_name": "A TO Z WINEWORKS",
+    "class_type": "ROSE WINE",
+    "timestamp": "2025-08-20T13:54:53.925653",
+    "founders": [
+      {
+        "name": "Oregon Wine Industry Veterans",
+        "source": "https://atozwineworks.com/our-company/our-story/",
+        "context": "Profile - Oregon Wines of Exceptional Quality | A to Z Wineworks In 2002, A to Z Wineworks was started by Oregon wine industry veterans. We are committed to offering the highest quality wines.",
+        "confidence": 0.7,
+        "sources": [
+          "https://atozwineworks.com/our-company/our-story/"
+        ],
+        "mention_count": 1
+      }
+    ],
+    "website": {
+      "url": "https://atozwineworks.com/",
+      "domain": "atozwineworks.com",
+      "confidence": 1.0,
+      "title": "Profile - Oregon Wines of Exceptional Quality | A to Z Wineworks",
+      "description": "Discover family-run A to Z Wineworks, a \u201cBest for the World\u201d B Corp focused on exceptional quality, value, and sustainability. Explore Oregon\u2019s best-selling wine brand.",
+      "search_strategy": "intelligent_context"
+    },
+    "apollo_contacts": [],
+    "linkedin_profiles": [],
+    "status": "complete",
+    "confidence": 0.5
+  },
+  "A to Z Wineworks": {
+    "brand_name": "A to Z Wineworks",
+    "class_type": "Wine",
+    "timestamp": "2025-08-20T13:58:14.982656",
+    "founders": [
+      {
+        "name": "Oregon Wine Industry Veterans",
+        "source": "https://atozwineworks.com/our-company/our-story/",
+        "context": "Profile - Oregon Wines of Exceptional Quality | A to Z Wineworks In 2002, A to Z Wineworks was started by Oregon wine industry veterans. We are committed to offering the highest quality wines.",
+        "confidence": 0.7,
+        "sources": [
+          "https://atozwineworks.com/our-company/our-story/"
+        ],
+        "mention_count": 1
+      }
+    ],
+    "website": {
+      "url": "https://atozwineworks.com/",
+      "domain": "atozwineworks.com",
+      "confidence": 1.0,
+      "title": "Profile - Oregon Wines of Exceptional Quality | A to Z Wineworks",
+      "description": "Discover family-run A to Z Wineworks, a \u201cBest for the World\u201d B Corp focused on exceptional quality, value, and sustainability. Explore Oregon\u2019s best-selling wine brand.",
+      "search_strategy": "intelligent_context"
+    },
+    "apollo_contacts": [],
+    "linkedin_profiles": [],
+    "status": "complete",
+    "confidence": 0.5
+  },
+  "The Macallan": {
+    "brand_name": "The Macallan",
+    "class_type": "Whiskey",
+    "timestamp": "2025-08-20T13:57:14.482979",
+    "founders": [],
+    "website": {
+      "url": "https://www.themacallan.com/en",
+      "domain": "themacallan.com",
+      "confidence": 0.7999999999999999,
+      "title": "The Macallan\u00ae | Incomparable Single Malt Scotch Whisky",
+      "description": "Each and every Macallan single malt whisky reveals our unrivalled commitment to the mastery of wood and spirit.",
+      "search_strategy": "intelligent_context"
+    },
+    "apollo_contacts": [],
+    "linkedin_profiles": [],
+    "status": "complete",
+    "confidence": 0.2
+  },
+  "ABUNDANCIA VINEYARDS": {
+    "brand_name": "ABUNDANCIA VINEYARDS",
+    "class_type": "TABLE RED WINE",
+    "timestamp": "2025-08-20T14:43:58.171811",
+    "founders": [],
+    "website": null,
+    "apollo_contacts": [],
+    "linkedin_profiles": [],
+    "status": "complete",
+    "confidence": 0.0
+  },
+  "AADLAND MOODY VINEYARDS": {
+    "brand_name": "AADLAND MOODY VINEYARDS",
+    "class_type": "DESSERT /PORT/SHERRY/(COOKING) WINE",
+    "timestamp": "2025-08-20T15:20:34.811800",
+    "founders": [],
+    "website": null,
+    "apollo_contacts": [],
+    "linkedin_profiles": [],
+    "status": "complete",
+    "confidence": 0.0
+  },
+  "AERONAUT BREWING CO.": {
+    "brand_name": "AERONAUT BREWING CO.",
+    "class_type": "ALE",
+    "timestamp": "2025-08-20T15:27:13.866585",
+    "founders": [],
+    "website": null,
+    "apollo_contacts": [],
+    "linkedin_profiles": [],
+    "status": "complete",
+    "confidence": 0.0
+  },
+  "ALTERED STATE BREWING COMPANY": {
+    "brand_name": "ALTERED STATE BREWING COMPANY",
+    "class_type": "ALE",
+    "timestamp": "2025-08-20T15:39:14.819780",
+    "founders": [],
+    "website": null,
+    "apollo_contacts": [],
+    "linkedin_profiles": [],
+    "status": "complete",
+    "confidence": 0.0
+  },
+  "ALLAGASH BREWING COMPANY": {
+    "brand_name": "ALLAGASH BREWING COMPANY",
+    "class_type": "MALT BEVERAGES SPECIALITIES - FLAVORED",
+    "timestamp": "2025-08-20T15:40:01.216868",
+    "founders": [],
+    "website": {
+      "url": "https://www.allagash.com/visit/portland-brewery/",
+      "domain": "allagash.com",
+      "confidence": 0.8999999999999999,
+      "title": "Tasting Room - Allagash Brewing Company",
+      "description": "The Allagash Flagship Tasting Room in Portland, Maine, features a wide selection of beer, wine, cider, and cocktails, as well as food & tours!",
+      "search_strategy": "intelligent_context"
+    },
+    "apollo_contacts": [],
+    "linkedin_profiles": [],
+    "status": "complete",
+    "confidence": 0.2
+  },
+  "ALLEY CAT": {
+    "brand_name": "ALLEY CAT",
+    "class_type": "BOURBON WHISKY",
+    "timestamp": "2025-08-20T15:40:49.632687",
+    "founders": [],
+    "website": null,
+    "apollo_contacts": [],
+    "linkedin_profiles": [],
+    "status": "complete",
+    "confidence": 0.0
+  },
+  "ALMANAC BEER CO.": {
+    "brand_name": "ALMANAC BEER CO.",
+    "class_type": null,
+    "timestamp": "2025-08-20T16:10:36.268662",
+    "founders": [],
+    "website": {
+      "url": "https://almanacbeer.com/",
+      "domain": "almanacbeer.com",
+      "confidence": 0.7,
+      "title": "Almanac Beer Co. | Alameda, California",
+      "description": "Almanac Beer Co. brews a bold and delicious range of fresh and barrel-aged beers with thoughtful ingredient sourcing from grain to glass. Proudly based in Alameda, California.",
+      "search_strategy": "intelligent_context"
+    },
+    "apollo_contacts": [],
+    "linkedin_profiles": [],
+    "status": "website_found",
+    "confidence": 0.7
+  }
+}

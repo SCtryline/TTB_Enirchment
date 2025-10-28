@@ -1,0 +1,852 @@
+[
+  {
+    "timestamp": "2025-08-28T23:01:17.989805",
+    "action": "consolidation_approved",
+    "proposal_id": "similarity_4_norsemen's_meadery",
+    "consolidation_type": "similarity",
+    "approval_method": "\ud83e\udd16 Auto-approved: 95%+ confidence",
+    "confidence": 0.95,
+    "canonical_name": "4 NORSEMEN'S MEADERY",
+    "brands_merged": [
+      "4 NORSEMEN'S MEAD",
+      "4 NORSEMEN'S MEADRY"
+    ],
+    "countries_count": 1,
+    "class_types_count": 1,
+    "total_permits_preserved": 2,
+    "consolidation_strategy": {
+      "verified_enrichment": null,
+      "best_website": null,
+      "highest_confidence": 0.0,
+      "most_complete_data": "4 NORSEMEN'S MEADRY",
+      "reasoning": [
+        "\ud83d\udcca 4 NORSEMEN'S MEAD has comprehensive data",
+        "\ud83d\udcca 4 NORSEMEN'S MEADRY has comprehensive data"
+      ]
+    },
+    "user": "agentic_system",
+    "reasoning": "Similar brand names detected (avg 95.0% similarity)"
+  },
+  {
+    "timestamp": "2025-08-28T23:34:03.023411",
+    "action": "consolidation_approved",
+    "proposal_id": "similarity_a_le_coq",
+    "consolidation_type": "similarity",
+    "approval_method": "\ud83d\udc64 Manual approval requested",
+    "confidence": 0.9285714285714287,
+    "canonical_name": "A LE COQ",
+    "brands_merged": [
+      "A.LE COQ"
+    ],
+    "countries_count": 1,
+    "class_types_count": 1,
+    "total_permits_preserved": 1,
+    "consolidation_strategy": {
+      "verified_enrichment": null,
+      "best_website": null,
+      "highest_confidence": 0.0,
+      "most_complete_data": "A.LE COQ",
+      "reasoning": [
+        "\ud83d\udcca A.LE COQ has comprehensive data"
+      ]
+    },
+    "user": "agentic_system",
+    "reasoning": "Similar brand names detected (avg 92.9% similarity)"
+  },
+  {
+    "timestamp": "2025-09-25T15:40:03.509999",
+    "action": "consolidation_approved",
+    "proposal_id": "similarity_appalachian_spirits,_llc",
+    "consolidation_type": "similarity",
+    "approval_method": "\ud83d\udc64 Manual approval requested",
+    "confidence": 0.7192691029900333,
+    "canonical_name": "APPALACHIAN SPIRITS, LLC",
+    "brands_merged": [
+      "APPALACHIAN SPIRITS"
+    ],
+    "countries_count": 1,
+    "class_types_count": 1,
+    "total_permits_preserved": 2,
+    "consolidation_strategy": {
+      "verified_enrichment": null,
+      "best_website": null,
+      "highest_confidence": 0.0,
+      "most_complete_data": "APPALACHIAN SPIRITS",
+      "reasoning": [
+        "\ud83d\udcca APPALACHIAN SPIRITS has comprehensive data"
+      ]
+    },
+    "user": "agentic_system",
+    "reasoning": "Similar brand names detected (avg 71.9% similarity)"
+  },
+  {
+    "timestamp": "2025-09-25T15:41:23.000496",
+    "action": "consolidation_approved",
+    "proposal_id": "similarity_ant\u00f3nio_lopes_ribeiro_wines",
+    "consolidation_type": "similarity",
+    "approval_method": "\ud83d\udc64 Manual approval requested",
+    "confidence": 0.8716931216931217,
+    "canonical_name": "ANT\u00d3NIO LOPES RIBEIRO WINES",
+    "brands_merged": [
+      "ANTONIO LOPES RIBEIRO WINES"
+    ],
+    "countries_count": 1,
+    "class_types_count": 2,
+    "total_permits_preserved": 1,
+    "consolidation_strategy": {
+      "verified_enrichment": null,
+      "best_website": null,
+      "highest_confidence": 0.0,
+      "most_complete_data": "ANTONIO LOPES RIBEIRO WINES",
+      "reasoning": [
+        "\ud83d\udcca ANTONIO LOPES RIBEIRO WINES has comprehensive data"
+      ]
+    },
+    "user": "agentic_system",
+    "reasoning": "Similar brand names detected (avg 87.2% similarity)"
+  },
+  {
+    "timestamp": "2025-09-25T15:59:27.083121",
+    "action": "consolidation_approved",
+    "proposal_id": "similarity_a._catena",
+    "consolidation_type": "similarity",
+    "approval_method": "\ud83d\udc64 Manual approval requested",
+    "confidence": 0.7521008403361346,
+    "canonical_name": "A. CATENA",
+    "brands_merged": [
+      "A CATENA"
+    ],
+    "countries_count": 1,
+    "class_types_count": 2,
+    "total_permits_preserved": 1,
+    "consolidation_strategy": {
+      "verified_enrichment": null,
+      "best_website": null,
+      "highest_confidence": 0.0,
+      "most_complete_data": "A CATENA",
+      "reasoning": [
+        "\ud83d\udcca A CATENA has comprehensive data"
+      ]
+    },
+    "user": "agentic_system",
+    "reasoning": "Similar brand names detected (avg 75.2% similarity)"
+  },
+  {
+    "timestamp": "2025-09-25T16:01:22.385615",
+    "action": "consolidation_approved",
+    "proposal_id": "similarity_agricola_mario_giribaldi",
+    "consolidation_type": "similarity",
+    "approval_method": "\ud83d\udc64 Manual approval requested",
+    "confidence": 0.7909407665505228,
+    "canonical_name": "AGRICOLA MARIO GIRIBALDI",
+    "brands_merged": [
+      "AGRICOLA BRANDINI"
+    ],
+    "countries_count": 1,
+    "class_types_count": 1,
+    "total_permits_preserved": 1,
+    "consolidation_strategy": {
+      "verified_enrichment": null,
+      "best_website": null,
+      "highest_confidence": 0.0,
+      "most_complete_data": "AGRICOLA BRANDINI",
+      "reasoning": [
+        "\ud83d\udcca AGRICOLA BRANDINI has comprehensive data"
+      ]
+    },
+    "user": "agentic_system",
+    "reasoning": "Similar brand names detected (avg 79.1% similarity)"
+  },
+  {
+    "timestamp": "2025-09-25T16:08:37.759273",
+    "action": "consolidation_approved",
+    "proposal_id": "similarity_7th_state",
+    "consolidation_type": "similarity",
+    "approval_method": "\ud83d\udc64 Manual approval requested",
+    "confidence": 0.8857142857142859,
+    "canonical_name": "7TH STATE",
+    "brands_merged": [
+      "7TH STATE GOLDEN LAGER"
+    ],
+    "countries_count": 1,
+    "class_types_count": 1,
+    "total_permits_preserved": 2,
+    "consolidation_strategy": {
+      "verified_enrichment": null,
+      "best_website": null,
+      "highest_confidence": 0.0,
+      "most_complete_data": "7TH STATE GOLDEN LAGER",
+      "reasoning": [
+        "\ud83d\udcca 7TH STATE GOLDEN LAGER has comprehensive data"
+      ]
+    },
+    "user": "agentic_system",
+    "reasoning": "Similar brand names detected (avg 88.6% similarity)"
+  },
+  {
+    "timestamp": "2025-09-25T16:08:41.835448",
+    "action": "consolidation_approved",
+    "proposal_id": "similarity_7th_state",
+    "consolidation_type": "similarity",
+    "approval_method": "\ud83d\udc64 Manual approval requested",
+    "confidence": 0.8857142857142859,
+    "canonical_name": "7TH STATE",
+    "brands_merged": [
+      "7TH STATE GOLDEN LAGER"
+    ],
+    "countries_count": 0,
+    "class_types_count": 0,
+    "total_permits_preserved": 0,
+    "consolidation_strategy": {
+      "verified_enrichment": null,
+      "best_website": null,
+      "highest_confidence": 0.0,
+      "most_complete_data": "7TH STATE GOLDEN LAGER",
+      "reasoning": [
+        "\ud83d\udcca 7TH STATE GOLDEN LAGER has comprehensive data"
+      ]
+    },
+    "user": "agentic_system",
+    "reasoning": "Similar brand names detected (avg 88.6% similarity)"
+  },
+  {
+    "timestamp": "2025-09-25T16:08:42.077510",
+    "action": "consolidation_approved",
+    "proposal_id": "similarity_7th_state",
+    "consolidation_type": "similarity",
+    "approval_method": "\ud83d\udc64 Manual approval requested",
+    "confidence": 0.8857142857142859,
+    "canonical_name": "7TH STATE",
+    "brands_merged": [
+      "7TH STATE GOLDEN LAGER"
+    ],
+    "countries_count": 0,
+    "class_types_count": 0,
+    "total_permits_preserved": 0,
+    "consolidation_strategy": {
+      "verified_enrichment": null,
+      "best_website": null,
+      "highest_confidence": 0.0,
+      "most_complete_data": "7TH STATE GOLDEN LAGER",
+      "reasoning": [
+        "\ud83d\udcca 7TH STATE GOLDEN LAGER has comprehensive data"
+      ]
+    },
+    "user": "agentic_system",
+    "reasoning": "Similar brand names detected (avg 88.6% similarity)"
+  },
+  {
+    "timestamp": "2025-09-25T16:08:42.084590",
+    "action": "consolidation_approved",
+    "proposal_id": "similarity_7th_state",
+    "consolidation_type": "similarity",
+    "approval_method": "\ud83d\udc64 Manual approval requested",
+    "confidence": 0.8857142857142859,
+    "canonical_name": "7TH STATE",
+    "brands_merged": [
+      "7TH STATE GOLDEN LAGER"
+    ],
+    "countries_count": 0,
+    "class_types_count": 0,
+    "total_permits_preserved": 0,
+    "consolidation_strategy": {
+      "verified_enrichment": null,
+      "best_website": null,
+      "highest_confidence": 0.0,
+      "most_complete_data": "7TH STATE GOLDEN LAGER",
+      "reasoning": [
+        "\ud83d\udcca 7TH STATE GOLDEN LAGER has comprehensive data"
+      ]
+    },
+    "user": "agentic_system",
+    "reasoning": "Similar brand names detected (avg 88.6% similarity)"
+  },
+  {
+    "timestamp": "2025-09-25T16:08:42.167266",
+    "action": "consolidation_approved",
+    "proposal_id": "similarity_7th_state",
+    "consolidation_type": "similarity",
+    "approval_method": "\ud83d\udc64 Manual approval requested",
+    "confidence": 0.8857142857142859,
+    "canonical_name": "7TH STATE",
+    "brands_merged": [
+      "7TH STATE GOLDEN LAGER"
+    ],
+    "countries_count": 0,
+    "class_types_count": 0,
+    "total_permits_preserved": 0,
+    "consolidation_strategy": {
+      "verified_enrichment": null,
+      "best_website": null,
+      "highest_confidence": 0.0,
+      "most_complete_data": "7TH STATE GOLDEN LAGER",
+      "reasoning": [
+        "\ud83d\udcca 7TH STATE GOLDEN LAGER has comprehensive data"
+      ]
+    },
+    "user": "agentic_system",
+    "reasoning": "Similar brand names detected (avg 88.6% similarity)"
+  },
+  {
+    "timestamp": "2025-09-25T16:08:42.888429",
+    "action": "consolidation_approved",
+    "proposal_id": "similarity_a_&_j_demiere",
+    "consolidation_type": "similarity",
+    "approval_method": "\ud83d\udc64 Manual approval requested",
+    "confidence": 0.8681318681318683,
+    "canonical_name": "A & J DEMIERE",
+    "brands_merged": [
+      "A&J . Demiere"
+    ],
+    "countries_count": 1,
+    "class_types_count": 1,
+    "total_permits_preserved": 1,
+    "consolidation_strategy": {
+      "verified_enrichment": null,
+      "best_website": null,
+      "highest_confidence": 0.0,
+      "most_complete_data": "A&J . Demiere",
+      "reasoning": [
+        "\ud83d\udcca A&J . Demiere has comprehensive data"
+      ]
+    },
+    "user": "agentic_system",
+    "reasoning": "Similar brand names detected (avg 86.8% similarity)"
+  },
+  {
+    "timestamp": "2025-09-25T16:11:53.024324",
+    "action": "consolidation_approved",
+    "proposal_id": "similarity_10_barrel_brewing_company",
+    "consolidation_type": "similarity",
+    "approval_method": "\ud83d\udc64 Manual approval requested",
+    "confidence": 0.8210818229615223,
+    "canonical_name": "10 BARREL BREWING COMPANY",
+    "brands_merged": [
+      "10 BARREL BREWING",
+      "10 BARREL BREWING CO",
+      "10 BARREL BREWING CO."
+    ],
+    "countries_count": 1,
+    "class_types_count": 3,
+    "total_permits_preserved": 4,
+    "consolidation_strategy": {
+      "verified_enrichment": null,
+      "best_website": null,
+      "highest_confidence": 0.0,
+      "most_complete_data": "10 BARREL BREWING CO.",
+      "reasoning": [
+        "\ud83d\udcca 10 BARREL BREWING has comprehensive data",
+        "\ud83d\udcca 10 BARREL BREWING CO has comprehensive data",
+        "\ud83d\udcca 10 BARREL BREWING CO. has comprehensive data"
+      ]
+    },
+    "user": "agentic_system",
+    "reasoning": "Similar brand names detected (avg 82.1% similarity)"
+  },
+  {
+    "timestamp": "2025-09-25T16:11:54.350416",
+    "action": "consolidation_approved",
+    "proposal_id": "similarity_10_barrel_brewing_company",
+    "consolidation_type": "similarity",
+    "approval_method": "\ud83d\udc64 Manual approval requested",
+    "confidence": 0.8210818229615223,
+    "canonical_name": "10 BARREL BREWING COMPANY",
+    "brands_merged": [
+      "10 BARREL BREWING",
+      "10 BARREL BREWING CO",
+      "10 BARREL BREWING CO."
+    ],
+    "countries_count": 0,
+    "class_types_count": 0,
+    "total_permits_preserved": 0,
+    "consolidation_strategy": {
+      "verified_enrichment": null,
+      "best_website": null,
+      "highest_confidence": 0.0,
+      "most_complete_data": "10 BARREL BREWING CO.",
+      "reasoning": [
+        "\ud83d\udcca 10 BARREL BREWING has comprehensive data",
+        "\ud83d\udcca 10 BARREL BREWING CO has comprehensive data",
+        "\ud83d\udcca 10 BARREL BREWING CO. has comprehensive data"
+      ]
+    },
+    "user": "agentic_system",
+    "reasoning": "Similar brand names detected (avg 82.1% similarity)"
+  },
+  {
+    "timestamp": "2025-09-25T16:15:55.280505",
+    "action": "consolidation_approved",
+    "proposal_id": "normalization_mill_lane_distilling_company",
+    "consolidation_type": "normalization",
+    "approval_method": "\ud83d\udc64 Manual approval requested",
+    "confidence": 0.85,
+    "canonical_name": "MILL LANE DISTILLING COMPANY",
+    "brands_merged": [
+      "10 MILL VODKA"
+    ],
+    "countries_count": 1,
+    "class_types_count": 1,
+    "total_permits_preserved": 2,
+    "consolidation_strategy": {
+      "verified_enrichment": "10 MILL VODKA",
+      "best_website": "10 MILL VODKA",
+      "highest_confidence": 1.0,
+      "most_complete_data": "10 MILL VODKA",
+      "reasoning": [
+        "\u2705 10 MILL VODKA has verified enrichment data",
+        "\ud83c\udfaf 10 MILL VODKA has highest confidence website (100.0%)",
+        "\ud83d\udcca 10 MILL VODKA has comprehensive data"
+      ]
+    },
+    "user": "agentic_system",
+    "reasoning": "Product name detected, should use company name"
+  },
+  {
+    "timestamp": "2025-09-25T16:15:55.971949",
+    "action": "consolidation_approved",
+    "proposal_id": "normalization_mill_lane_distilling_company",
+    "consolidation_type": "normalization",
+    "approval_method": "\ud83d\udc64 Manual approval requested",
+    "confidence": 0.85,
+    "canonical_name": "MILL LANE DISTILLING COMPANY",
+    "brands_merged": [
+      "10 MILL VODKA"
+    ],
+    "countries_count": 0,
+    "class_types_count": 0,
+    "total_permits_preserved": 0,
+    "consolidation_strategy": {
+      "verified_enrichment": "10 MILL VODKA",
+      "best_website": "10 MILL VODKA",
+      "highest_confidence": 1.0,
+      "most_complete_data": "10 MILL VODKA",
+      "reasoning": [
+        "\u2705 10 MILL VODKA has verified enrichment data",
+        "\ud83c\udfaf 10 MILL VODKA has highest confidence website (100.0%)",
+        "\ud83d\udcca 10 MILL VODKA has comprehensive data"
+      ]
+    },
+    "user": "agentic_system",
+    "reasoning": "Product name detected, should use company name"
+  },
+  {
+    "timestamp": "2025-09-25T16:20:20.216004",
+    "action": "consolidation_approved",
+    "proposal_id": "similarity_abita_brewing_company_llc",
+    "consolidation_type": "similarity",
+    "approval_method": "\ud83d\udc64 Manual approval requested",
+    "confidence": 0.8431677018633541,
+    "canonical_name": "ABITA BREWING COMPANY LLC",
+    "brands_merged": [
+      "ABITA BREWING COMPANY"
+    ],
+    "countries_count": 1,
+    "class_types_count": 2,
+    "total_permits_preserved": 2,
+    "consolidation_strategy": {
+      "verified_enrichment": "ABITA BREWING COMPANY",
+      "best_website": "ABITA BREWING COMPANY",
+      "highest_confidence": 1,
+      "most_complete_data": "ABITA BREWING COMPANY",
+      "reasoning": [
+        "\u2705 ABITA BREWING COMPANY has verified enrichment data",
+        "\ud83c\udfaf ABITA BREWING COMPANY has highest confidence website (100.0%)",
+        "\ud83d\udcca ABITA BREWING COMPANY has comprehensive data"
+      ]
+    },
+    "user": "agentic_system",
+    "reasoning": "Similar brand names detected (avg 84.3% similarity)"
+  },
+  {
+    "timestamp": "2025-09-25T16:20:20.281234",
+    "action": "consolidation_approved",
+    "proposal_id": "similarity_abita_brewing_company_llc",
+    "consolidation_type": "similarity",
+    "approval_method": "\ud83d\udc64 Manual approval requested",
+    "confidence": 0.8431677018633541,
+    "canonical_name": "ABITA BREWING COMPANY LLC",
+    "brands_merged": [
+      "ABITA BREWING COMPANY"
+    ],
+    "countries_count": 0,
+    "class_types_count": 0,
+    "total_permits_preserved": 0,
+    "consolidation_strategy": {
+      "verified_enrichment": "ABITA BREWING COMPANY",
+      "best_website": "ABITA BREWING COMPANY",
+      "highest_confidence": 1,
+      "most_complete_data": "ABITA BREWING COMPANY",
+      "reasoning": [
+        "\u2705 ABITA BREWING COMPANY has verified enrichment data",
+        "\ud83c\udfaf ABITA BREWING COMPANY has highest confidence website (100.0%)",
+        "\ud83d\udcca ABITA BREWING COMPANY has comprehensive data"
+      ]
+    },
+    "user": "agentic_system",
+    "reasoning": "Similar brand names detected (avg 84.3% similarity)"
+  },
+  {
+    "timestamp": "2025-09-25T16:21:33.075116",
+    "action": "consolidation_approved",
+    "proposal_id": "similarity_a.f._gros",
+    "consolidation_type": "similarity",
+    "approval_method": "\ud83d\udc64 Manual approval requested",
+    "confidence": 0.8214285714285716,
+    "canonical_name": "A.F. GROS",
+    "brands_merged": [
+      "AF GROS"
+    ],
+    "countries_count": 1,
+    "class_types_count": 1,
+    "total_permits_preserved": 1,
+    "consolidation_strategy": {
+      "verified_enrichment": null,
+      "best_website": null,
+      "highest_confidence": 0.0,
+      "most_complete_data": "AF GROS",
+      "reasoning": [
+        "\ud83d\udcca AF GROS has comprehensive data"
+      ]
+    },
+    "user": "agentic_system",
+    "reasoning": "Similar brand names detected (avg 82.1% similarity)"
+  },
+  {
+    "timestamp": "2025-09-25T16:21:33.417213",
+    "action": "consolidation_approved",
+    "proposal_id": "similarity_a.f._gros",
+    "consolidation_type": "similarity",
+    "approval_method": "\ud83d\udc64 Manual approval requested",
+    "confidence": 0.8214285714285716,
+    "canonical_name": "A.F. GROS",
+    "brands_merged": [
+      "AF GROS"
+    ],
+    "countries_count": 0,
+    "class_types_count": 0,
+    "total_permits_preserved": 0,
+    "consolidation_strategy": {
+      "verified_enrichment": null,
+      "best_website": null,
+      "highest_confidence": 0.0,
+      "most_complete_data": "AF GROS",
+      "reasoning": [
+        "\ud83d\udcca AF GROS has comprehensive data"
+      ]
+    },
+    "user": "agentic_system",
+    "reasoning": "Similar brand names detected (avg 82.1% similarity)"
+  },
+  {
+    "timestamp": "2025-09-25T16:23:27.930158",
+    "action": "consolidation_approved",
+    "proposal_id": "similarity_ac_golden_brewing_co.",
+    "consolidation_type": "similarity",
+    "approval_method": "\ud83d\udc64 Manual approval requested",
+    "confidence": 0.7717770034843207,
+    "canonical_name": "AC GOLDEN BREWING CO.",
+    "brands_merged": [
+      "AC GOLDEN BREWING CO"
+    ],
+    "countries_count": 1,
+    "class_types_count": 1,
+    "total_permits_preserved": 2,
+    "consolidation_strategy": {
+      "verified_enrichment": null,
+      "best_website": null,
+      "highest_confidence": 0.0,
+      "most_complete_data": "AC GOLDEN BREWING CO",
+      "reasoning": [
+        "\ud83d\udcca AC GOLDEN BREWING CO has comprehensive data"
+      ]
+    },
+    "user": "agentic_system",
+    "reasoning": "Similar brand names detected (avg 77.2% similarity)"
+  },
+  {
+    "timestamp": "2025-09-25T16:23:29.692182",
+    "action": "consolidation_approved",
+    "proposal_id": "similarity_ac_golden_brewing_co.",
+    "consolidation_type": "similarity",
+    "approval_method": "\ud83d\udc64 Manual approval requested",
+    "confidence": 0.7717770034843207,
+    "canonical_name": "AC GOLDEN BREWING CO.",
+    "brands_merged": [
+      "AC GOLDEN BREWING CO"
+    ],
+    "countries_count": 0,
+    "class_types_count": 0,
+    "total_permits_preserved": 0,
+    "consolidation_strategy": {
+      "verified_enrichment": null,
+      "best_website": null,
+      "highest_confidence": 0.0,
+      "most_complete_data": "AC GOLDEN BREWING CO",
+      "reasoning": [
+        "\ud83d\udcca AC GOLDEN BREWING CO has comprehensive data"
+      ]
+    },
+    "user": "agentic_system",
+    "reasoning": "Similar brand names detected (avg 77.2% similarity)"
+  },
+  {
+    "timestamp": "2025-09-25T16:23:30.030151",
+    "action": "consolidation_approved",
+    "proposal_id": "similarity_ac_golden_brewing_co.",
+    "consolidation_type": "similarity",
+    "approval_method": "\ud83d\udc64 Manual approval requested",
+    "confidence": 0.7717770034843207,
+    "canonical_name": "AC GOLDEN BREWING CO.",
+    "brands_merged": [
+      "AC GOLDEN BREWING CO"
+    ],
+    "countries_count": 0,
+    "class_types_count": 0,
+    "total_permits_preserved": 0,
+    "consolidation_strategy": {
+      "verified_enrichment": null,
+      "best_website": null,
+      "highest_confidence": 0.0,
+      "most_complete_data": "AC GOLDEN BREWING CO",
+      "reasoning": [
+        "\ud83d\udcca AC GOLDEN BREWING CO has comprehensive data"
+      ]
+    },
+    "user": "agentic_system",
+    "reasoning": "Similar brand names detected (avg 77.2% similarity)"
+  },
+  {
+    "timestamp": "2025-09-25T16:23:30.109119",
+    "action": "consolidation_approved",
+    "proposal_id": "similarity_ac_golden_brewing_co.",
+    "consolidation_type": "similarity",
+    "approval_method": "\ud83d\udc64 Manual approval requested",
+    "confidence": 0.7717770034843207,
+    "canonical_name": "AC GOLDEN BREWING CO.",
+    "brands_merged": [
+      "AC GOLDEN BREWING CO"
+    ],
+    "countries_count": 0,
+    "class_types_count": 0,
+    "total_permits_preserved": 0,
+    "consolidation_strategy": {
+      "verified_enrichment": null,
+      "best_website": null,
+      "highest_confidence": 0.0,
+      "most_complete_data": "AC GOLDEN BREWING CO",
+      "reasoning": [
+        "\ud83d\udcca AC GOLDEN BREWING CO has comprehensive data"
+      ]
+    },
+    "user": "agentic_system",
+    "reasoning": "Similar brand names detected (avg 77.2% similarity)"
+  },
+  {
+    "timestamp": "2025-09-25T16:23:54.104269",
+    "action": "consolidation_approved",
+    "proposal_id": "similarity_a._and_c._courvoisier",
+    "consolidation_type": "similarity",
+    "approval_method": "\ud83d\udc64 Manual approval requested",
+    "confidence": 0.9142857142857144,
+    "canonical_name": "A. AND C. COURVOISIER",
+    "brands_merged": [
+      "A ET C. COURVOISIER"
+    ],
+    "countries_count": 1,
+    "class_types_count": 1,
+    "total_permits_preserved": 1,
+    "consolidation_strategy": {
+      "verified_enrichment": null,
+      "best_website": null,
+      "highest_confidence": 0.0,
+      "most_complete_data": "A ET C. COURVOISIER",
+      "reasoning": [
+        "\ud83d\udcca A ET C. COURVOISIER has comprehensive data"
+      ]
+    },
+    "user": "agentic_system",
+    "reasoning": "Similar brand names detected (avg 91.4% similarity)"
+  },
+  {
+    "timestamp": "2025-09-25T16:23:54.275053",
+    "action": "consolidation_approved",
+    "proposal_id": "similarity_a._and_c._courvoisier",
+    "consolidation_type": "similarity",
+    "approval_method": "\ud83d\udc64 Manual approval requested",
+    "confidence": 0.9142857142857144,
+    "canonical_name": "A. AND C. COURVOISIER",
+    "brands_merged": [
+      "A ET C. COURVOISIER"
+    ],
+    "countries_count": 0,
+    "class_types_count": 0,
+    "total_permits_preserved": 0,
+    "consolidation_strategy": {
+      "verified_enrichment": null,
+      "best_website": null,
+      "highest_confidence": 0.0,
+      "most_complete_data": "A ET C. COURVOISIER",
+      "reasoning": [
+        "\ud83d\udcca A ET C. COURVOISIER has comprehensive data"
+      ]
+    },
+    "user": "agentic_system",
+    "reasoning": "Similar brand names detected (avg 91.4% similarity)"
+  },
+  {
+    "timestamp": "2025-09-25T16:24:54.803224",
+    "action": "consolidation_approved",
+    "proposal_id": "similarity_a.d._beckham",
+    "consolidation_type": "similarity",
+    "approval_method": "\ud83d\udc64 Manual approval requested",
+    "confidence": 0.8322981366459627,
+    "canonical_name": "A.D. BECKHAM",
+    "brands_merged": [
+      "A.D BECKHAM"
+    ],
+    "countries_count": 0,
+    "class_types_count": 0,
+    "total_permits_preserved": 0,
+    "consolidation_strategy": {
+      "verified_enrichment": null,
+      "best_website": null,
+      "highest_confidence": 0.0,
+      "most_complete_data": "A.D BECKHAM",
+      "reasoning": [
+        "\ud83d\udcca A.D BECKHAM has comprehensive data"
+      ]
+    },
+    "user": "agentic_system",
+    "reasoning": "Similar brand names detected (avg 83.2% similarity)"
+  },
+  {
+    "timestamp": "2025-09-25T16:24:55.059478",
+    "action": "consolidation_approved",
+    "proposal_id": "similarity_a.d._beckham",
+    "consolidation_type": "similarity",
+    "approval_method": "\ud83d\udc64 Manual approval requested",
+    "confidence": 0.8322981366459627,
+    "canonical_name": "A.D. BECKHAM",
+    "brands_merged": [
+      "A.D BECKHAM"
+    ],
+    "countries_count": 0,
+    "class_types_count": 0,
+    "total_permits_preserved": 0,
+    "consolidation_strategy": {
+      "verified_enrichment": null,
+      "best_website": null,
+      "highest_confidence": 0.0,
+      "most_complete_data": "A.D BECKHAM",
+      "reasoning": [
+        "\ud83d\udcca A.D BECKHAM has comprehensive data"
+      ]
+    },
+    "user": "agentic_system",
+    "reasoning": "Similar brand names detected (avg 83.2% similarity)"
+  },
+  {
+    "timestamp": "2025-09-25T16:24:55.201194",
+    "action": "consolidation_approved",
+    "proposal_id": "similarity_a.d._beckham",
+    "consolidation_type": "similarity",
+    "approval_method": "\ud83d\udc64 Manual approval requested",
+    "confidence": 0.8322981366459627,
+    "canonical_name": "A.D. BECKHAM",
+    "brands_merged": [
+      "A.D BECKHAM"
+    ],
+    "countries_count": 1,
+    "class_types_count": 2,
+    "total_permits_preserved": 2,
+    "consolidation_strategy": {
+      "verified_enrichment": null,
+      "best_website": null,
+      "highest_confidence": 0.0,
+      "most_complete_data": "A.D BECKHAM",
+      "reasoning": [
+        "\ud83d\udcca A.D BECKHAM has comprehensive data"
+      ]
+    },
+    "user": "agentic_system",
+    "reasoning": "Similar brand names detected (avg 83.2% similarity)"
+  },
+  {
+    "timestamp": "2025-09-25T16:24:55.627142",
+    "action": "consolidation_approved",
+    "proposal_id": "similarity_a.d._beckham",
+    "consolidation_type": "similarity",
+    "approval_method": "\ud83d\udc64 Manual approval requested",
+    "confidence": 0.8322981366459627,
+    "canonical_name": "A.D. BECKHAM",
+    "brands_merged": [
+      "A.D BECKHAM"
+    ],
+    "countries_count": 0,
+    "class_types_count": 0,
+    "total_permits_preserved": 0,
+    "consolidation_strategy": {
+      "verified_enrichment": null,
+      "best_website": null,
+      "highest_confidence": 0.0,
+      "most_complete_data": "A.D BECKHAM",
+      "reasoning": [
+        "\ud83d\udcca A.D BECKHAM has comprehensive data"
+      ]
+    },
+    "user": "agentic_system",
+    "reasoning": "Similar brand names detected (avg 83.2% similarity)"
+  },
+  {
+    "timestamp": "2025-10-28T16:24:47.921316",
+    "action": "consolidation_approved",
+    "proposal_id": "similarity_10_barrel_brewing_company",
+    "consolidation_type": "similarity",
+    "approval_method": "\ud83d\udc64 Manual approval requested",
+    "confidence": 0.7111801242236025,
+    "canonical_name": "10 BARREL BREWING COMPANY",
+    "brands_merged": [
+      "10 BARREL BREWING CO."
+    ],
+    "countries_count": 1,
+    "class_types_count": 1,
+    "total_permits_preserved": 2,
+    "consolidation_strategy": {
+      "verified_enrichment": null,
+      "best_website": null,
+      "highest_confidence": 0.0,
+      "most_complete_data": "10 BARREL BREWING CO.",
+      "reasoning": [
+        "\ud83d\udcca 10 BARREL BREWING CO. has comprehensive data"
+      ]
+    },
+    "user": "agentic_system",
+    "reasoning": "Similar brand names detected (avg 71.1% similarity)"
+  },
+  {
+    "timestamp": "2025-10-28T16:25:21.782638",
+    "action": "consolidation_approved",
+    "proposal_id": "similarity_alesmith_brewing_company",
+    "consolidation_type": "similarity",
+    "approval_method": "\ud83d\udc64 Manual approval requested",
+    "confidence": 0.7250000000000001,
+    "canonical_name": "ALESMITH BREWING COMPANY",
+    "brands_merged": [
+      "ALESMITH"
+    ],
+    "countries_count": 1,
+    "class_types_count": 1,
+    "total_permits_preserved": 2,
+    "consolidation_strategy": {
+      "verified_enrichment": null,
+      "best_website": null,
+      "highest_confidence": 0.0,
+      "most_complete_data": "ALESMITH",
+      "reasoning": [
+        "\ud83d\udcca ALESMITH has comprehensive data"
+      ]
+    },
+    "user": "agentic_system",
+    "reasoning": "Similar brand names detected (avg 72.5% similarity)"
+  }
+]

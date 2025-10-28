@@ -1,0 +1,19 @@
+{
+  "current_version": "882025",
+  "versions": [
+    {
+      "version": "20250808_164444",
+      "filename": "test_small.csv",
+      "uploaded": "2025-08-08T16:44:44.404119",
+      "row_count": 2,
+      "column_count": 10
+    },
+    {
+      "version": "882025",
+      "filename": "882025_Alcohol_Importer_Permit_List.csv",
+      "uploaded": "2025-08-08T16:49:13.344743",
+      "row_count": 20297,
+      "column_count": 10
+    }
+  ]
+}

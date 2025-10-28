@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - TTB COLA System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation Header -->
+        {% include 'includes/navigation.html' %}
+
+        <!-- Dashboard Header -->
+        <section class="dashboard-header">
+            <h2>System Analytics & Market Insights</h2>
+            <div class="header-actions">
+                <!-- Date Filter for PDF Export -->
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <select id="pdf-date-filter">
+                        <option value="all">All Time</option>
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                        <option value="2023">2023</option>
+                        <option value="last30">Last 30 Days</option>
+                        <option value="last90">Last 90 Days</option>
+                        <option value="custom">Custom Range...</option>
+                    </select>
+                    <input type="date" id="pdf-start-date" style="display: none;">
+                    <input type="date" id="pdf-end-date" style="display: none;">
+                    <button id="export-pdf" class="export-btn" onclick="handlePDFExportWithFilter();">
+                        📄 Export PDF Report
+                    </button>
+                </div>
+                <span id="last-updated" style="color: rgba(255, 255, 255, 0.9); font-size: 14px;">Loading...</span>
+            </div>
+        </section>
+
+        <!-- Key Metrics -->
+        <section class="metrics-section">
+            <div class="metrics-grid">
+                <div class="metric-card primary">
+                    <div class="metric-icon">🏷️</div>
+                    <div class="metric-content">
+                        <div class="metric-number" id="dashboard-brands">0</div>
+                        <div class="metric-label">Total Brands</div>
+                        <div class="metric-change" id="brands-change">+0 this month</div>
+                    </div>
+                </div>
+                
+                <div class="metric-card secondary">
+                    <div class="metric-icon">📦</div>
+                    <div class="metric-content">
+                        <div class="metric-number" id="dashboard-skus">0</div>
+                        <div class="metric-label">Active SKUs</div>
+                        <div class="metric-change" id="skus-change">+0 this month</div>
+                    </div>
+                </div>
+                
+                <div class="metric-card success">
+                    <div class="metric-icon">🏢</div>
+                    <div class="metric-content">
+                        <div class="metric-number" id="dashboard-importers">0</div>
+                        <div class="metric-label">Registered Importers</div>
+                        <div class="metric-change" id="importers-change">+0 this month</div>
+                    </div>
+                </div>
+                
+                <div class="metric-card warning">
+                    <div class="metric-icon">🔗</div>
+                    <div class="metric-content">
+                        <div class="metric-number" id="dashboard-matches">0%</div>
+                        <div class="metric-label">Match Rate</div>
+                        <div class="metric-change" id="matches-change">Quality Score</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts Section -->
+        <section class="charts-section">
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Geographic Distribution</h3>
+                        <div class="chart-controls">
+                            <select id="location-type-filter" onchange="updateLocationChart()">
+                                <option value="countries">By Country</option>
+                                <option value="usa-states">USA States Only</option>
+                                <option value="all-regions">All Regions</option>
+                            </select>
+                            <select id="location-limit-filter" onchange="updateLocationChart()">
+                                <option value="10">Top 10</option>
+                                <option value="15">Top 15</option>
+                                <option value="all">Show All</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="countryChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Alcohol Class Types</h3>
+                        <div class="chart-controls">
+                            <select id="class-limit-filter" onchange="updateClassChart()">
+                                <option value="8">Top 8</option>
+                                <option value="12" selected>Top 12</option>
+                                <option value="15">Top 15</option>
+                                <option value="20">Top 20</option>
+                            </select>
+                            <select id="class-detail-filter" onchange="updateClassChart()">
+                                <option value="simplified" selected>Simplified Categories</option>
+                                <option value="detailed">Detailed Categories</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="classChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Recent Activity & Quick Actions -->
+        <section class="activity-section">
+            <div class="activity-grid">
+                <div class="activity-card">
+                    <div class="card-header">
+                        <h3>Recent Activity</h3>
+                        <button class="refresh-btn" onclick="refreshActivity()">↻</button>
+                    </div>
+                    <div class="activity-list" id="activity-list">
+                        <div class="activity-item">
+                            <div class="activity-icon">📁</div>
+                            <div class="activity-content">
+                                <div class="activity-title">System initialized</div>
+                                <div class="activity-time">Ready for data upload</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="quick-actions-card">
+                    <div class="card-header">
+                        <h3>Quick Actions</h3>
+                    </div>
+                    <div class="quick-actions-list">
+                        <button class="action-btn upload" onclick="window.location.href='/data'">
+                            <span class="action-icon">📤</span>
+                            Manage Data
+                        </button>
+                        <button class="action-btn search" onclick="openQuickSearch()">
+                            <span class="action-icon">🔍</span>
+                            Search Brands
+                        </button>
+                        <button class="action-btn export" onclick="exportData()">
+                            <span class="action-icon">💾</span>
+                            Export Reports
+                        </button>
+                        <button class="action-btn settings" onclick="showSystemInfo()">
+                            <span class="action-icon">⚙️</span>
+                            System Info
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tables Section -->
+        <section class="top-brands-section">
+            <div class="tables-grid">
+                <!-- Top Brands Table -->
+                <div class="table-card">
+                    <div class="card-header">
+                        <h3>Top Brands by SKU Count</h3>
+                        <div class="table-controls">
+                            <select id="brands-per-page" onchange="updateBrandsTable()">
+                                <option value="10">10 per page</option>
+                                <option value="20">20 per page</option>
+                                <option value="50">50 per page</option>
+                            </select>
+                            <button class="view-all-btn" onclick="window.location.href='/brands'">View All →</button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table" id="top-brands-table">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Brand Name</th>
+                                    <th>SKUs</th>
+                                    <th>Countries</th>
+                                    <th>Importer</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="top-brands-body">
+                                <tr>
+                                    <td colspan="6" class="loading">Loading top brands...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="table-pagination">
+                        <button id="brands-prev" class="pagination-btn" onclick="changeBrandsPage(-1)">← Previous</button>
+                        <span id="brands-page-info" class="page-info">Page 1 of 1</span>
+                        <button id="brands-next" class="pagination-btn" onclick="changeBrandsPage(1)">Next →</button>
+                    </div>
+                </div>
+
+                <!-- Importer Leaderboard -->
+                <div class="table-card">
+                    <div class="card-header">
+                        <h3>🏆 Top Importers by Brand Count</h3>
+                        <div class="table-controls">
+                            <select id="importers-per-page" onchange="updateImporterTable()">
+                                <option value="10">10 per page</option>
+                                <option value="20">20 per page</option>
+                                <option value="50">50 per page</option>
+                            </select>
+                            <button class="view-all-btn" onclick="window.location.href='/importers'">View All →</button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table" id="importer-leaderboard-table">
+                            <thead>
+                                <tr>
+                                    <th width="50px">Rank</th>
+                                    <th style="cursor: pointer;" onclick="sortImporters('name')">
+                                        Importer Name <span id="importer-name-sort-indicator"></span>
+                                    </th>
+                                    <th style="cursor: pointer;" onclick="sortImporters('brands')">
+                                        Total Brands <span id="importer-brands-sort-indicator">▼</span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="importer-leaderboard-body">
+                                <tr>
+                                    <td colspan="3" class="loading">Loading importer leaderboard...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="table-pagination">
+                        <button id="importers-prev" class="pagination-btn" onclick="changeImportersPage(-1)">← Previous</button>
+                        <span id="importers-page-info" class="page-info">Page 1 of 1</span>
+                        <button id="importers-next" class="pagination-btn" onclick="changeImportersPage(1)">Next →</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- System Health -->
+        <section class="system-health-section">
+            <div class="health-card">
+                <div class="card-header">
+                    <h3>System Health</h3>
+                    <div class="health-status" id="system-status">
+                        <span class="status-indicator good"></span>
+                        <span class="status-text">All Systems Operational</span>
+                    </div>
+                </div>
+                <div class="health-metrics">
+                    <div class="health-item">
+                        <span class="health-label">Database</span>
+                        <span class="health-value good">✓ Connected</span>
+                    </div>
+                    <div class="health-item">
+                        <span class="health-label">Data Quality</span>
+                        <span class="health-value good" id="data-quality">✓ Good</span>
+                    </div>
+                    <div class="health-item">
+                        <span class="health-label">Last Backup</span>
+                        <span class="health-value" id="last-backup">Auto-saved</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Search Modal -->
+        <div id="quick-search-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Quick Search</h3>
+                    <span class="close" onclick="closeQuickSearch()">&times;</span>
+                </div>
+                <div class="search-container">
+                    <input type="text" id="quick-search-input" placeholder="Search brands, importers, or permit numbers..." class="search-input">
+                    <div id="search-results" class="search-results"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Modal -->
+        <div id="export-modal" class="modal">
+            <div class="modal-content" style="max-width: 600px;">
+                <div class="modal-header">
+                    <h3>🗂️ Export Data</h3>
+                    <span class="close" onclick="closeExportModal()">&times;</span>
+                </div>
+                <div class="export-options">
+                    <div class="export-section">
+                        <h4>Export Type</h4>
+                        <select id="export-type" class="export-select" onchange="updateExportOptions()">
+                            <option value="brands">Brands</option>
+                            <option value="importers">Importers</option>
+                            <option value="skus">SKUs/Products</option>
+                            <option value="matched">Matched Data</option>
+                            <option value="unmatched">Unmatched Data</option>
+                        </select>
+                    </div>
+
+                    <div class="export-section">
+                        <h4>Date Range</h4>
+                        <div class="date-range-options">
+                            <label>
+                                <input type="radio" name="date-range" value="all" checked onchange="updateDateRange()">
+                                All Time
+                            </label>
+                            <label>
+                                <input type="radio" name="date-range" value="year" onchange="updateDateRange()">
+                                By Year
+                            </label>
+                            <label>
+                                <input type="radio" name="date-range" value="month" onchange="updateDateRange()">
+                                By Month
+                            </label>
+                            <label>
+                                <input type="radio" name="date-range" value="custom" onchange="updateDateRange()">
+                                Custom Range
+                            </label>
+                        </div>
+                        <div id="date-inputs" style="display: none; margin-top: 10px;">
+                            <select id="year-select" class="export-select" style="display: none;">
+                                <option value="2025">2025</option>
+                                <option value="2024">2024</option>
+                                <option value="2023">2023</option>
+                            </select>
+                            <select id="month-select" class="export-select" style="display: none;">
+                                <option value="01">January</option>
+                                <option value="02">February</option>
+                                <option value="03">March</option>
+                                <option value="04">April</option>
+                                <option value="05">May</option>
+                                <option value="06">June</option>
+                                <option value="07">July</option>
+                                <option value="08">August</option>
+                                <option value="09">September</option>
+                                <option value="10">October</option>
+                                <option value="11">November</option>
+                                <option value="12">December</option>
+                            </select>
+                            <div id="custom-date-inputs" style="display: none;">
+                                <input type="date" id="start-date" class="export-input">
+                                <span> to </span>
+                                <input type="date" id="end-date" class="export-input">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="export-section" id="importer-filter-section">
+                        <h4>Filter by Importer</h4>
+                        <select id="importer-filter" class="export-select">
+                            <option value="all">All Importers</option>
+                            <option value="with-brands">Importers with Brands</option>
+                            <option value="specific">Specific Importer...</option>
+                        </select>
+                        <input type="text" id="specific-importer" class="export-input" placeholder="Enter importer name or permit number" style="display: none; margin-top: 10px;">
+                    </div>
+
+                    <div class="export-section" id="status-filter-section">
+                        <h4>Match Status</h4>
+                        <select id="status-filter" class="export-select">
+                            <option value="all">All</option>
+                            <option value="matched">Matched Only</option>
+                            <option value="unmatched">Unmatched Only</option>
+                        </select>
+                    </div>
+
+                    <div class="export-section" id="additional-filters">
+                        <h4>Additional Filters</h4>
+                        <div class="checkbox-group">
+                            <label>
+                                <input type="checkbox" id="include-skus" checked>
+                                Include SKU Details
+                            </label>
+                            <label>
+                                <input type="checkbox" id="include-importers" checked>
+                                Include Importer Info
+                            </label>
+                            <label>
+                                <input type="checkbox" id="include-countries" checked>
+                                Include Country Data
+                            </label>
+                            <label>
+                                <input type="checkbox" id="include-class-types" checked>
+                                Include Class Types
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="export-section">
+                        <h4>Format</h4>
+                        <select id="export-format" class="export-select">
+                            <option value="csv">CSV (Excel Compatible)</option>
+                            <option value="json">JSON</option>
+                            <option value="xlsx">Excel Workbook</option>
+                        </select>
+                    </div>
+
+                    <div class="export-actions">
+                        <button class="export-btn cancel" onclick="closeExportModal()">Cancel</button>
+                        <button class="export-btn primary" onclick="performExport()">
+                            <span id="export-btn-text">Export Data</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>

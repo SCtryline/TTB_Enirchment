@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brand Consolidation - TTB COLA Registry</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/consolidation.css') }}">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <h1 class="logo">TTB COLA Registry</h1>
+                <span class="page-title">Brand Consolidation</span>
+            </div>
+            <nav class="header-nav">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/dashboard" class="nav-link">Dashboard</a>
+                <a href="/brands" class="nav-link">Brands</a>
+                <a href="/importers" class="nav-link">Importers</a>
+                <a href="/producers" class="nav-link">Producers</a>
+                <a href="/consolidation" class="nav-link active">Consolidation</a>
+                <a href="/data" class="nav-link">Data</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <!-- System Status Card -->
+            <div class="consolidation-header">
+                <div class="status-card">
+                    <h2>🔍 Brand Consolidation System</h2>
+                    <p>Intelligent brand grouping with white label protection and producer awareness</p>
+                    <div class="status-indicators">
+                        <div class="status-indicator">
+                            <span class="indicator-label">Status:</span>
+                            <span class="indicator-value" id="system-status">Loading...</span>
+                        </div>
+                        <div class="status-indicator">
+                            <span class="indicator-label">Producer Data:</span>
+                            <span class="indicator-value" id="producer-data">Loading...</span>
+                        </div>
+                        <div class="status-indicator">
+                            <span class="indicator-label">White Label Detection:</span>
+                            <span class="indicator-value" id="white-label-status">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controls Section -->
+            <div class="controls-section">
+                <div class="controls-card">
+                    <h3>Consolidation Controls</h3>
+                    <div class="control-group">
+                        <label for="analysis-limit">Analysis Limit:</label>
+                        <select id="analysis-limit">
+                            <option value="100">100 brands (fast)</option>
+                            <option value="500" selected>500 brands (balanced)</option>
+                            <option value="1000">1,000 brands (comprehensive)</option>
+                            <option value="2500">2,500 brands (full analysis)</option>
+                        </select>
+                        <button id="run-analysis" class="btn btn-primary">Find Consolidation Groups</button>
+                        <button id="generate-proposals" class="btn btn-primary">Generate Proposals</button>
+                        <button id="test-extraction" class="btn btn-secondary">Test Brand Extraction</button>
+                        <button id="analyze-white-labels" class="btn btn-secondary">Analyze White Labels</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="results-section">
+                <!-- Consolidation Groups -->
+                <div class="results-card" id="consolidation-results" style="display: none;">
+                    <div class="card-header">
+                        <h3>🎯 Consolidation Groups Found</h3>
+                        <div class="summary-stats">
+                            <span id="groups-count">0 groups</span>
+                            <span id="brands-affected">0 brands affected</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="consolidation-groups-container">
+                            <!-- Groups will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Brand Extraction Results -->
+                <div class="results-card" id="extraction-results" style="display: none;">
+                    <div class="card-header">
+                        <h3>🔤 Brand Extraction Analysis</h3>
+                        <div class="summary-stats">
+                            <span id="extraction-count">0 brands analyzed</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table id="extraction-table" class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Original Brand</th>
+                                        <th>Core Brand</th>
+                                        <th>Producer</th>
+                                        <th>Category</th>
+                                        <th>SKUs</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="extraction-table-body">
+                                    <!-- Extraction results will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- White Label Analysis -->
+                <div class="results-card" id="white-label-results" style="display: none;">
+                    <div class="card-header">
+                        <h3>🏪 White Label Analysis</h3>
+                        <div class="summary-stats">
+                            <span id="white-label-count">0 white label brands</span>
+                            <span id="white-label-percentage">0%</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="white-label-grid">
+                            <div class="white-label-section">
+                                <h4>White Label Brands</h4>
+                                <div id="white-label-list" class="brand-list">
+                                    <!-- White label brands will be listed here -->
+                                </div>
+                            </div>
+                            <div class="regular-label-section">
+                                <h4>Regular Brands (Sample)</h4>
+                                <div id="regular-label-list" class="brand-list">
+                                    <!-- Regular brands will be listed here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Consolidation Proposals -->
+                <div class="results-card" id="proposals-results" style="display: none;">
+                    <div class="card-header">
+                        <h3>📋 Consolidation Proposals</h3>
+                        <div class="summary-stats">
+                            <span id="proposals-count">0 proposals</span>
+                            <span id="auto-approve-count">0 auto-approve</span>
+                            <span id="manual-review-count">0 manual review</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="proposals-filter">
+                            <label for="proposal-filter">Filter:</label>
+                            <select id="proposal-filter">
+                                <option value="all">All Proposals</option>
+                                <option value="manual_review">Manual Review Required</option>
+                                <option value="auto_approve">Auto-Approve Ready</option>
+                                <option value="high_confidence">High Confidence</option>
+                                <option value="low_confidence">Low Confidence</option>
+                            </select>
+                        </div>
+                        <div id="proposals-container">
+                            <!-- Proposals will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Confidence Checker -->
+            <div class="tools-section">
+                <div class="tool-card">
+                    <h3>🎯 Confidence Checker</h3>
+                    <p>Check consolidation confidence between two specific brands</p>
+                    <div class="confidence-form">
+                        <div class="form-group">
+                            <label for="brand1">Brand 1:</label>
+                            <input type="text" id="brand1" placeholder="Enter first brand name">
+                        </div>
+                        <div class="form-group">
+                            <label for="brand2">Brand 2:</label>
+                            <input type="text" id="brand2" placeholder="Enter second brand name">
+                        </div>
+                        <button id="check-confidence" class="btn btn-primary">Check Confidence</button>
+                    </div>
+                    <div id="confidence-result" class="confidence-result" style="display: none;">
+                        <!-- Confidence result will be shown here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/consolidation.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Management - TTB COLA System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/data.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation Header -->
+        {% include 'includes/navigation.html' %}
+
+        <!-- Page Header -->
+        <section class="page-header">
+            <div class="header-content">
+                <h2>Data Management Center</h2>
+                <p>Upload new data files and export existing data for analysis</p>
+            </div>
+        </section>
+
+        <!-- Upload Section -->
+        <section class="upload-section">
+            <h3>📤 Data Upload</h3>
+            <div class="upload-grid">
+                <!-- Importers Upload -->
+                <div class="upload-card">
+                    <div class="upload-header">
+                        <div class="upload-icon">🏢</div>
+                        <h4>Upload Importers List</h4>
+                        <span class="step-badge">Step 1</span>
+                    </div>
+                    <p>Upload your TTB importer permit list CSV file. This should contain permit numbers, company names, and addresses.</p>
+                    
+                    <div class="current-status" id="importers-status">
+                        <div class="status-info">
+                            <span class="status-label">Current Status:</span>
+                            <span class="status-value" id="importers-count">Loading...</span>
+                        </div>
+                    </div>
+
+                    <form class="upload-form" id="importers-form">
+                        <div class="file-input-wrapper">
+                            <input type="file" id="importersFile" name="file" accept=".csv,.xlsx,.xls">
+                            <label for="importersFile" class="file-label">
+                                📁 Choose Importers CSV File
+                            </label>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            Upload Importers
+                        </button>
+                    </form>
+
+                    <div class="results-container" id="importers-results"></div>
+                </div>
+
+                <!-- COLA Upload -->
+                <div class="upload-card">
+                    <div class="upload-header">
+                        <div class="upload-icon">🍷</div>
+                        <h4>Upload COLA Registry</h4>
+                        <span class="step-badge">Step 2</span>
+                    </div>
+                    <p>Upload your TTB COLA registry CSV file. This will be matched with importers and organized into brands.</p>
+
+                    <div class="current-status" id="cola-status">
+                        <div class="status-info">
+                            <span class="status-label">Current Status:</span>
+                            <span class="status-value" id="brands-count">Loading...</span>
+                        </div>
+                    </div>
+
+                    <form class="upload-form" id="cola-form">
+                        <div class="file-input-wrapper">
+                            <input type="file" id="colaFile" name="file" accept=".csv,.xlsx,.xls">
+                            <label for="colaFile" class="file-label">
+                                📁 Choose COLA Registry CSV File
+                            </label>
+                        </div>
+                        <button type="submit" class="btn btn-secondary">
+                            Process COLA Data
+                        </button>
+                    </form>
+
+                    <div class="results-container" id="cola-results"></div>
+                </div>
+
+                <!-- Spirit Producer Upload -->
+                <div class="upload-card">
+                    <div class="upload-header">
+                        <div class="upload-icon">🥃</div>
+                        <h4>Upload Spirit Producers</h4>
+                        <span class="step-badge">Optional</span>
+                    </div>
+                    <p>Upload TTB Spirit Producer and Bottler permit list (DSP permits) to enhance brand consolidation.</p>
+
+                    <div class="current-status" id="spirit-producers-status">
+                        <div class="status-info">
+                            <span class="status-label">Current Status:</span>
+                            <span class="status-value" id="spirit-producers-count">Loading...</span>
+                        </div>
+                    </div>
+
+                    <form class="upload-form" id="spirit-producers-form">
+                        <div class="file-input-wrapper">
+                            <input type="file" id="spiritProducersFile" name="file" accept=".csv">
+                            <label for="spiritProducersFile" class="file-label">
+                                📁 Choose Spirit Producers CSV File
+                            </label>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            Upload Spirit Producers
+                        </button>
+                    </form>
+
+                    <div class="results-container" id="spirit-producers-results"></div>
+                </div>
+
+                <!-- Wine Producer Upload -->
+                <div class="upload-card">
+                    <div class="upload-header">
+                        <div class="upload-icon">🍷</div>
+                        <h4>Upload Wine Producers</h4>
+                        <span class="step-badge">Optional</span>
+                    </div>
+                    <p>Upload TTB Wine Producer and Blender permit list (BWN permits) to enhance brand consolidation.</p>
+
+                    <div class="current-status" id="wine-producers-status">
+                        <div class="status-info">
+                            <span class="status-label">Current Status:</span>
+                            <span class="status-value" id="wine-producers-count">Loading...</span>
+                        </div>
+                    </div>
+
+                    <form class="upload-form" id="wine-producers-form">
+                        <div class="file-input-wrapper">
+                            <input type="file" id="wineProducersFile" name="file" accept=".csv">
+                            <label for="wineProducersFile" class="file-label">
+                                📁 Choose Wine Producers CSV File
+                            </label>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            Upload Wine Producers
+                        </button>
+                    </form>
+
+                    <div class="results-container" id="wine-producers-results"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Export Section -->
+        <section class="export-section">
+            <h3>💾 Data Export</h3>
+            <div class="export-grid">
+                <!-- Brand Exports -->
+                <div class="export-card">
+                    <div class="export-header">
+                        <div class="export-icon">🏷️</div>
+                        <h4>Brand Data Exports</h4>
+                    </div>
+                    <p>Export brand information, SKU details, and matching data in various formats.</p>
+                    
+                    <div class="export-options">
+                        <button class="export-btn" onclick="exportData('brands-csv')">
+                            <span class="btn-icon">📄</span>
+                            All Brands with Importers (CSV)
+                        </button>
+                        <button class="export-btn" onclick="exportData('brands-no-importers')">
+                            <span class="btn-icon">🏷️</span>
+                            All Brands without Importers (CSV)
+                        </button>
+                        <button class="export-btn" onclick="exportData('brands-with-skus')">
+                            <span class="btn-icon">📊</span>
+                            Brands with SKU Details (CSV)
+                        </button>
+                        <button class="export-btn" onclick="exportData('unmatched-brands')">
+                            <span class="btn-icon">❌</span>
+                            Unmatched Brands Only (CSV)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Importer Exports -->
+                <div class="export-card">
+                    <div class="export-header">
+                        <div class="export-icon">🏢</div>
+                        <h4>Importer Data Exports</h4>
+                    </div>
+                    <p>Export importer information and their associated brands.</p>
+                    
+                    <div class="export-options">
+                        <button class="export-btn" onclick="exportData('importers-csv')">
+                            <span class="btn-icon">📄</span>
+                            All Importers (CSV)
+                        </button>
+                        <button class="export-btn" onclick="exportData('importers-with-brands')">
+                            <span class="btn-icon">🎯</span>
+                            Active Importers Only (CSV)
+                        </button>
+                        <button class="export-btn" onclick="exportData('importer-rankings')">
+                            <span class="btn-icon">🏆</span>
+                            Importer Leaderboard (CSV)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Matched Data Exports -->
+                <div class="export-card">
+                    <div class="export-header">
+                        <div class="export-icon">📜</div>
+                        <h4>Upload History</h4>
+                    </div>
+                    <p>View your COLA file upload and processing history.</p>
+                    
+                    <div class="export-options" id="matched-files-list">
+                        <div class="loading-export">Loading upload history...</div>
+                    </div>
+                </div>
+
+                <!-- Apollo.io Integration -->
+                <div class="export-card" style="border: 2px solid #2563eb;">
+                    <div class="export-header">
+                        <div class="export-icon">🚀</div>
+                        <h4>Apollo.io Enrichment</h4>
+                        <span class="badge" style="background: #2563eb; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">NEW</span>
+                    </div>
+                    <p>Export brands for Apollo.io bulk enrichment to find company websites and contact data.</p>
+                    
+                    <div class="apollo-status" id="apollo-status" style="background: #f3f4f6; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                        <div style="font-size: 0.875rem; color: #6b7280;">
+                            <span>Loading enrichment status...</span>
+                        </div>
+                    </div>
+                    
+                    <div class="export-options">
+                        <h5 style="font-size: 0.875rem; margin-bottom: 8px; color: #374151;">Step 1: Export for Apollo</h5>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="export-btn" onclick="exportApollo()" style="background: #2563eb; color: white; flex: 1;">
+                                <span class="btn-icon">📤</span>
+                                Export All Brands
+                            </button>
+                            <button class="export-btn" onclick="openApolloFilterModal()" style="background: #7c3aed; color: white; flex: 1;">
+                                <span class="btn-icon">🎯</span>
+                                Export with Filters
+                            </button>
+                        </div>
+                        
+                        <h5 style="font-size: 0.875rem; margin: 16px 0 8px 0; color: #374151;">Step 2: Import Enriched Data</h5>
+                        <form id="apollo-import-form" style="display: flex; flex-direction: column; gap: 8px;">
+                            <div class="file-input-wrapper" style="margin: 0;">
+                                <input type="file" id="apolloFile" name="file" accept=".csv">
+                                <label for="apolloFile" class="file-label" style="background: #10b981; color: white;">
+                                    📁 Choose Apollo Enriched CSV
+                                </label>
+                            </div>
+                            <button type="submit" class="btn" style="background: #10b981; color: white;">
+                                Import Apollo Data
+                            </button>
+                        </form>
+                        
+                        <h5 style="font-size: 0.875rem; margin: 16px 0 8px 0; color: #374151;">Step 3: Export Final</h5>
+                        <button class="export-btn" onclick="exportApolloFinal()" id="apollo-final-btn">
+                            <span class="btn-icon">✅</span>
+                            Export Brands with Websites
+                        </button>
+                    </div>
+                </div>
+
+                <!-- System Reports -->
+                <div class="export-card">
+                    <div class="export-header">
+                        <div class="export-icon">📈</div>
+                        <h4>System Reports</h4>
+                    </div>
+                    <p>Generate comprehensive reports and analytics summaries.</p>
+                    
+                    <div class="export-options">
+                        <button class="export-btn" onclick="exportData('system-summary')">
+                            <span class="btn-icon">📋</span>
+                            System Summary Report (PDF)
+                        </button>
+                        <button class="export-btn" onclick="exportData('analytics-report')">
+                            <span class="btn-icon">📊</span>
+                            Analytics Report (CSV)
+                        </button>
+                        <button class="export-btn" onclick="exportData('all-data-package')">
+                            <span class="btn-icon">📦</span>
+                            Complete Data Package (ZIP)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- System Management -->
+        <section class="management-section">
+            <h3>⚙️ System Management</h3>
+            <div class="management-grid">
+                <div class="management-card">
+                    <h4>Database Status</h4>
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <span class="status-label">Total Brands:</span>
+                            <span class="status-value" id="status-brands">-</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Total SKUs:</span>
+                            <span class="status-value" id="status-skus">-</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Total Importers:</span>
+                            <span class="status-value" id="status-importers">-</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Last Upload:</span>
+                            <span class="status-value" id="status-last-upload">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="management-card">
+                    <h4>Quick Actions</h4>
+                    <div class="actions-list">
+                        <button class="action-btn" onclick="refreshStatus()">
+                            <span class="action-icon">🔄</span>
+                            Refresh Status
+                        </button>
+                        <button class="action-btn" onclick="viewUploadHistory()">
+                            <span class="action-icon">📜</span>
+                            Upload History
+                        </button>
+                        <button class="action-btn warning" onclick="resetDatabase()">
+                            <span class="action-icon">🗑️</span>
+                            Reset Database
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Apollo Filter Modal -->
+    <div id="apollo-filter-modal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid #e5e7eb;">
+                <h3 style="margin: 0; font-size: 1.25rem; font-weight: 600;">🎯 Filter Brands for Apollo Export</h3>
+                <span class="close" onclick="closeApolloFilterModal()" style="cursor: pointer; font-size: 1.5rem;">&times;</span>
+            </div>
+            
+            <div class="modal-body" style="padding: 20px;">
+                <!-- Filter Stats -->
+                <div id="filter-stats" style="background: #f3f4f6; padding: 12px; border-radius: 8px; margin-bottom: 20px;">
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; font-size: 0.875rem;">
+                        <div>
+                            <span style="color: #6b7280;">Total Brands:</span>
+                            <strong id="stats-total">0</strong>
+                        </div>
+                        <div>
+                            <span style="color: #6b7280;">Selected:</span>
+                            <strong id="stats-selected" style="color: #2563eb;">0</strong>
+                        </div>
+                        <div>
+                            <span style="color: #6b7280;">Already Enriched:</span>
+                            <strong id="stats-enriched" style="color: #10b981;">0</strong>
+                        </div>
+                        <div>
+                            <span style="color: #6b7280;">Not Enriched:</span>
+                            <strong id="stats-not-enriched" style="color: #f59e0b;">0</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search Filter -->
+                <div class="filter-section" style="margin-bottom: 20px;">
+                    <h4 style="font-size: 0.875rem; margin-bottom: 8px; color: #374151;">Search Brands</h4>
+                    <input type="text" id="apollo-search" placeholder="Search by brand name..." 
+                           style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px;">
+                </div>
+
+                <!-- SKU Count Filter -->
+                <div class="filter-section" style="margin-bottom: 20px;">
+                    <h4 style="font-size: 0.875rem; margin-bottom: 8px; color: #374151;">SKU Count Range</h4>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="number" id="min-skus" placeholder="Min" value="0" min="0"
+                               style="flex: 1; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px;">
+                        <span>to</span>
+                        <input type="number" id="max-skus" placeholder="Max" value="9999" min="0"
+                               style="flex: 1; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px;">
+                    </div>
+                </div>
+
+                <!-- Enrichment Status Filter -->
+                <div class="filter-section" style="margin-bottom: 20px;">
+                    <h4 style="font-size: 0.875rem; margin-bottom: 8px; color: #374151;">Enrichment Status</h4>
+                    <div style="display: flex; gap: 10px;">
+                        <label style="display: flex; align-items: center; gap: 5px;">
+                            <input type="radio" name="enrichment-status" value="all" checked>
+                            All Brands
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 5px;">
+                            <input type="radio" name="enrichment-status" value="not_enriched">
+                            Not Enriched Only
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 5px;">
+                            <input type="radio" name="enrichment-status" value="enriched">
+                            Already Enriched
+                        </label>
+                    </div>
+                    <label style="display: flex; align-items: center; gap: 5px; margin-top: 8px;">
+                        <input type="checkbox" id="exclude-enriched">
+                        <span style="color: #6b7280; font-size: 0.875rem;">Exclude brands that already have websites</span>
+                    </label>
+                </div>
+
+                <!-- Match Status Filter -->
+                <div class="filter-section" style="margin-bottom: 20px;">
+                    <h4 style="font-size: 0.875rem; margin-bottom: 8px; color: #374151;">Importer Match Status</h4>
+                    <div style="display: flex; gap: 10px;">
+                        <label style="display: flex; align-items: center; gap: 5px;">
+                            <input type="radio" name="match-status" value="all" checked>
+                            All
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 5px;">
+                            <input type="radio" name="match-status" value="matched">
+                            With Importers
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 5px;">
+                            <input type="radio" name="match-status" value="unmatched">
+                            Without Importers
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Countries Filter -->
+                <div class="filter-section" style="margin-bottom: 20px;">
+                    <h4 style="font-size: 0.875rem; margin-bottom: 8px; color: #374151;">Countries (Multi-select)</h4>
+                    <div id="countries-filter" style="max-height: 150px; overflow-y: auto; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px;">
+                        <div style="color: #6b7280;">Loading countries...</div>
+                    </div>
+                </div>
+
+                <!-- Class Types Filter -->
+                <div class="filter-section" style="margin-bottom: 20px;">
+                    <h4 style="font-size: 0.875rem; margin-bottom: 8px; color: #374151;">Class Types (Multi-select)</h4>
+                    <div id="class-types-filter" style="max-height: 150px; overflow-y: auto; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px;">
+                        <div style="color: #6b7280;">Loading class types...</div>
+                    </div>
+                </div>
+
+                <!-- Specific Importers Filter -->
+                <div class="filter-section" style="margin-bottom: 20px;">
+                    <h4 style="font-size: 0.875rem; margin-bottom: 8px; color: #374151;">Specific Importers (Optional)</h4>
+                    <div id="importers-filter" style="max-height: 150px; overflow-y: auto; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px;">
+                        <div style="color: #6b7280;">Loading importers...</div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div style="display: flex; gap: 10px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+                    <button onclick="resetApolloFilters()" style="padding: 10px 20px; background: #6b7280; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                        Reset Filters
+                    </button>
+                    <button onclick="previewFilteredBrands()" style="padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                        Preview Selection
+                    </button>
+                    <button onclick="closeApolloFilterModal()" style="padding: 10px 20px; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                        Cancel
+                    </button>
+                    <button onclick="exportFilteredApollo()" style="padding: 10px 20px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                        Export Filtered Brands
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/data.js') }}"></script>
+</body>
+</html>

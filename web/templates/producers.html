@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Producers - TTB COLA System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/producers.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Unified Navigation -->
+        {% include 'includes/navigation.html' %}
+
+        <header>
+            <h1>Producers Directory</h1>
+        </header>
+
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-label">Total Producers</span>
+                <span class="stat-value" id="total-producers">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Spirit Producers</span>
+                <span class="stat-value" id="spirit-producers">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Wine Producers</span>
+                <span class="stat-value" id="wine-producers">0</span>
+            </div>
+        </div>
+
+        <div class="search-controls">
+            <div class="search-group">
+                <input type="text" id="producer-search" placeholder="Search producers by name, permit, city, or state..." class="search-input">
+                <button id="search-btn" class="search-btn">🔍 Search</button>
+            </div>
+            <div class="view-controls">
+                <label for="per-page-select">Show:</label>
+                <select id="per-page-select">
+                    <option value="12">12 per page</option>
+                    <option value="24" selected>24 per page</option>
+                    <option value="48">48 per page</option>
+                    <option value="96">96 per page</option>
+                </select>
+                
+                <label for="type-filter">Type:</label>
+                <select id="type-filter">
+                    <option value="all">All Types</option>
+                    <option value="Spirit">Spirit Producers</option>
+                    <option value="Wine">Wine Producers</option>
+                </select>
+                
+                <label for="sort-select">Sort by:</label>
+                <select id="sort-select">
+                    <option value="name">Company Name</option>
+                    <option value="permit">Permit Number</option>
+                    <option value="state">State</option>
+                    <option value="city">City</option>
+                    <option value="type">Producer Type</option>
+                </select>
+                
+                <select id="direction-select">
+                    <option value="asc">A-Z</option>
+                    <option value="desc">Z-A</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table class="producers-table">
+                <thead>
+                    <tr>
+                        <th class="sortable" data-sort="name">
+                            <span class="th-content">
+                                Company Name
+                                <span class="sort-indicator">⇅</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-sort="permit">
+                            <span class="th-content">
+                                Permit Number
+                                <span class="sort-indicator">⇅</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-sort="operating_name">
+                            <span class="th-content">
+                                Operating Name
+                                <span class="sort-indicator">⇅</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-sort="type">
+                            <span class="th-content">
+                                Type
+                                <span class="sort-indicator">⇅</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-sort="city">
+                            <span class="th-content">
+                                Location
+                                <span class="sort-indicator">⇅</span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-sort="state">
+                            <span class="th-content">
+                                State
+                                <span class="sort-indicator">⇅</span>
+                            </span>
+                        </th>
+                        <th>Brands</th>
+                    </tr>
+                </thead>
+                <tbody id="producers-table-body">
+                    <!-- Table rows will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="loading-indicator" id="loading-indicator">
+            <div class="loading-spinner"></div>
+            <span>Loading producers...</span>
+        </div>
+
+        <div class="no-results" id="no-results" style="display: none;">
+            <div class="no-results-icon">🔍</div>
+            <h3>No producers found</h3>
+            <p>Try adjusting your search criteria or filters.</p>
+        </div>
+
+        <div class="pagination-container">
+            <div class="pagination-info">
+                <span id="pagination-info">Showing 0-0 of 0 producers</span>
+            </div>
+            <div class="pagination-controls" id="pagination-controls">
+                <!-- Pagination buttons will be generated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/producers.js') }}"></script>
+</body>
+</html>

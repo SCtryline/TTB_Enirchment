@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ producer.owner_name }} - Producer Details</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/producers.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Producer Details</h1>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/dashboard">Dashboard</a>
+                <a href="/data">Data</a>
+                <a href="/brands">Brands</a>
+                <a href="/importers">Importers</a>
+                <a href="/producers">Producers</a>
+            </div>
+        </header>
+
+        <div class="breadcrumb">
+            <a href="/producers">← Back to Producers</a>
+        </div>
+
+        <div class="producer-details">
+            <div class="producer-header">
+                <h2>{{ producer.owner_name }}</h2>
+                {% if producer.operating_name %}
+                <p class="operating-name">Operating as: {{ producer.operating_name }}</p>
+                {% endif %}
+            </div>
+
+            <div class="producer-info-grid">
+                <div class="info-section">
+                    <h3>Permit Information</h3>
+                    <div class="info-row">
+                        <span class="label">Permit Number:</span>
+                        <span class="value"><code>{{ producer.permit_number }}</code></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Industry Type:</span>
+                        <span class="value">{{ producer.industry_type }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Producer Type:</span>
+                        <span class="value status-badge status-{{ producer.type.lower() if producer.type else 'unknown' }}">
+                            {{ '🥃' if producer.type == 'Spirit' else '🍷' if producer.type == 'Wine' else '❓' }} {{ producer.type or 'Unknown' }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h3>Location</h3>
+                    <div class="info-row">
+                        <span class="label">Address:</span>
+                        <span class="value">{{ producer.street or 'N/A' }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">City:</span>
+                        <span class="value">{{ producer.city or 'N/A' }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">State:</span>
+                        <span class="value">{{ producer.state or 'N/A' }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">ZIP Code:</span>
+                        <span class="value">{{ producer.zip_code or 'N/A' }}</span>
+                    </div>
+                    {% if producer.county %}
+                    <div class="info-row">
+                        <span class="label">County:</span>
+                        <span class="value">{{ producer.county }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="info-section">
+                    <h3>Brand Associations</h3>
+                    <div class="info-row">
+                        <span class="label">Associated Brands:</span>
+                        <span class="value brand-count {{ 'has-brands' if producer.brands and producer.brands|length > 0 else '' }}">
+                            {{ producer.brands|length if producer.brands else 0 }}
+                        </span>
+                    </div>
+                    {% if producer.brands and producer.brands|length > 0 %}
+                    <div class="brands-list">
+                        {% for brand in producer.brands %}
+                        <a href="/brand/{{ brand|urlencode }}" class="brand-link">{{ brand }}</a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="no-brands">No brands currently associated with this producer.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .breadcrumb {
+            margin-bottom: 2rem;
+        }
+        
+        .breadcrumb a {
+            color: var(--primary-blue);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .producer-details {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        
+        .producer-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        
+        .producer-header h2 {
+            color: var(--gray-900);
+            margin-bottom: 0.5rem;
+        }
+        
+        .operating-name {
+            color: var(--gray-600);
+            font-style: italic;
+        }
+        
+        .producer-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .info-section h3 {
+            color: var(--gray-900);
+            margin-bottom: 1rem;
+            font-size: 1.125rem;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--gray-100);
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .label {
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+        
+        .value {
+            color: var(--gray-900);
+        }
+        
+        .brands-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .brand-link {
+            display: inline-block;
+            background: var(--primary-blue-light);
+            color: var(--primary-blue);
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .brand-link:hover {
+            background: var(--primary-blue);
+            color: white;
+        }
+        
+        .no-brands {
+            color: var(--gray-500);
+            font-style: italic;
+            margin-top: 1rem;
+        }
+    </style>
+</body>
+</html>

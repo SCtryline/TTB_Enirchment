@@ -1,0 +1,38 @@
+[
+  {
+    "timestamp": "2025-08-20T22:26:09.664861",
+    "brand_group": [
+      "BORGEOIS-DIAZ",
+      "BOUGEOIS-DIAZ",
+      "BOURGEOIS-DIAZ"
+    ],
+    "canonical_brand": "BOURGEOIS-DIAZ",
+    "user_action": "approved",
+    "confidence_predicted": 0.95,
+    "reason": "Clear spelling variations of same brand"
+  },
+  {
+    "timestamp": "2025-08-20T22:29:34.589030",
+    "brand_group": [
+      "BORGEOIS-DIAZ",
+      "BOUGEOIS-DIAZ",
+      "BOURGEOIS-DIAZ"
+    ],
+    "canonical_brand": "BOURGEOIS-DIAZ",
+    "user_action": "approved",
+    "confidence_predicted": 0.95,
+    "reason": "Clear spelling variations of same brand"
+  },
+  {
+    "timestamp": "2025-08-20T22:48:04.919427",
+    "brand_group": [
+      "BORGEOIS-DIAZ",
+      "BOUGEOIS-DIAZ",
+      "BOURGEOIS-DIAZ"
+    ],
+    "canonical_brand": "BORGEOIS-DIAZ",
+    "user_action": "approve",
+    "confidence_predicted": 0.94,
+    "reason": "Clear spelling variations"
+  }
+]

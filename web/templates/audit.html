@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Audit Dashboard - TTB COLA Registry</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/audit.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Unified Navigation -->
+        {% include 'includes/navigation.html' %}
+
+        <!-- Page Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1>Data Audit Dashboard</h1>
+            </div>
+        </header>
+
+        <!-- Enhanced Data Health Dashboard -->
+        <section class="health-dashboard">
+            <div class="dashboard-header">
+                <h2>📊 Enhanced Database Health & Rankings Overview</h2>
+                <div class="refresh-indicator">
+                    <span id="last-updated">Loading...</span>
+                    <button id="refresh-health" class="refresh-btn">🔄 Refresh</button>
+                    <a href="/enrichment_rankings" class="view-rankings-btn">📋 View Priority Rankings</a>
+                </div>
+            </div>
+
+            <!-- Health Score Cards -->
+            <div class="health-cards">
+                <div class="health-card overall">
+                    <div class="card-header">
+                        <h3>Overall Health</h3>
+                        <div class="health-score" id="overall-score">--</div>
+                    </div>
+                    <div class="health-ring" id="overall-ring">
+                        <svg viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="45" class="ring-bg"></circle>
+                            <circle cx="50" cy="50" r="45" class="ring-progress" id="overall-progress"></circle>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- NEW: Priority Ranking Health Card -->
+                <div class="health-card ranking clickable" data-metric="ranking">
+                    <div class="card-header">
+                        <h3>🎯 Priority Rankings</h3>
+                        <div class="ranking-summary" id="ranking-summary">--</div>
+                    </div>
+                    <div class="ranking-breakdown" id="ranking-breakdown">
+                        <div class="tier-stat">
+                            <span class="tier-label">Tier 1 (Critical)</span>
+                            <span class="tier-count" id="tier1-count">--</span>
+                        </div>
+                        <div class="tier-stat">
+                            <span class="tier-label">Tier 2 (High)</span>
+                            <span class="tier-count" id="tier2-count">--</span>
+                        </div>
+                        <div class="tier-stat">
+                            <span class="tier-label">Apollo Ready</span>
+                            <span class="tier-count" id="apollo-ready-count">--</span>
+                        </div>
+                    </div>
+                    <div class="click-hint">Click for details</div>
+                </div>
+
+                <div class="health-card completeness clickable" data-metric="completeness">
+                    <div class="card-header">
+                        <h3>Data Completeness</h3>
+                        <div class="health-score" id="completeness-score">--</div>
+                    </div>
+                    <div class="completeness-breakdown" id="completeness-breakdown">
+                        <div class="metric">
+                            <span class="label">Website Coverage</span>
+                            <span class="value" id="website-coverage">--</span>
+                        </div>
+                        <div class="metric">
+                            <span class="label">Importer Links</span>
+                            <span class="value" id="importer-links">--</span>
+                        </div>
+                        <div class="metric">
+                            <span class="label">Country Data</span>
+                            <span class="value" id="country-data">--</span>
+                        </div>
+                    </div>
+                    <div class="click-hint">Click for details</div>
+                </div>
+
+                <div class="health-card quality clickable" data-metric="quality">
+                    <div class="card-header">
+                        <h3>Data Quality</h3>
+                        <div class="health-score" id="quality-score">--</div>
+                    </div>
+                    <div class="quality-issues" id="quality-issues">
+                        <div class="issue">
+                            <span class="label">🔄 Potential Duplicates</span>
+                            <span class="count" id="duplicates-count">--</span>
+                        </div>
+                        <div class="issue">
+                            <span class="label">⚠️ Missing Critical Data</span>
+                            <span class="count" id="missing-data-count">--</span>
+                        </div>
+                        <div class="issue">
+                            <span class="label">❌ Data Inconsistencies</span>
+                            <span class="count" id="inconsistencies-count">--</span>
+                        </div>
+                    </div>
+                    <div class="click-hint">Click for details</div>
+                </div>
+
+                <div class="health-card enrichment clickable" data-metric="enrichment">
+                    <div class="card-header">
+                        <h3>Smart Enrichment Status</h3>
+                        <div class="enrichment-rate" id="enrichment-rate">--</div>
+                    </div>
+                    <div class="enrichment-stats" id="enrichment-stats">
+                        <div class="stat">
+                            <span class="label">✅ Enriched</span>
+                            <span class="value" id="enriched-count">--</span>
+                        </div>
+                        <div class="stat">
+                            <span class="label">🎯 High Priority</span>
+                            <span class="value" id="high-priority-pending">--</span>
+                        </div>
+                        <div class="stat">
+                            <span class="label">🤖 Apollo Ready</span>
+                            <span class="value" id="apollo-ready-enrichment">--</span>
+                        </div>
+                    </div>
+                    <div class="click-hint">Click for details</div>
+                </div>
+
+                <!-- NEW: Agentic Learning Insights -->
+                <div class="health-card agentic clickable" data-metric="agentic">
+                    <div class="card-header">
+                        <h3>🧠 AI Learning Insights</h3>
+                        <div class="learning-accuracy" id="learning-accuracy">--</div>
+                    </div>
+                    <div class="learning-stats" id="learning-stats">
+                        <div class="stat">
+                            <span class="label">📚 Patterns Learned</span>
+                            <span class="value" id="patterns-learned">--</span>
+                        </div>
+                        <div class="stat">
+                            <span class="label">🎯 Success Rate</span>
+                            <span class="value" id="success-rate">--</span>
+                        </div>
+                        <div class="stat">
+                            <span class="label">🔄 Auto Consolidated</span>
+                            <span class="value" id="auto-consolidated">--</span>
+                        </div>
+                    </div>
+                    <div class="click-hint">Click for details</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Consolidation Review Queue -->
+        <section class="consolidation-review">
+            <div class="review-header">
+                <h2>🤖 AI-Powered Consolidation Review</h2>
+                <div class="review-controls">
+                    <select id="confidence-filter" class="confidence-select">
+                        <option value="0.6">Show 60%+ Confidence</option>
+                        <option value="0.7" selected>Show 70%+ Confidence</option>
+                        <option value="0.8">Show 80%+ Confidence</option>
+                        <option value="0.9">Show 90%+ Confidence</option>
+                    </select>
+                    <button id="refresh-queue" class="refresh-btn">🔄 Refresh Queue</button>
+                </div>
+            </div>
+
+            <!-- Queue Summary -->
+            <div class="queue-summary" id="queue-summary">
+                <div class="summary-stat high-priority">
+                    <span class="label">🔴 High Priority</span>
+                    <span class="count" id="high-priority-count">--</span>
+                </div>
+                <div class="summary-stat medium-priority">
+                    <span class="label">🟡 Medium Priority</span>
+                    <span class="count" id="medium-priority-count">--</span>
+                </div>
+                <div class="summary-stat low-priority">
+                    <span class="label">🟢 Low Priority</span>
+                    <span class="count" id="low-priority-count">--</span>
+                </div>
+                <div class="summary-stat total">
+                    <span class="label">📋 Total Pending</span>
+                    <span class="count" id="total-pending-count">--</span>
+                </div>
+            </div>
+
+            <!-- Review Queue -->
+            <div class="review-queue" id="review-queue">
+                <div class="loading-message">Loading consolidation opportunities...</div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination-controls" id="pagination-controls" style="display: none;">
+                <button id="prev-page" class="page-btn" disabled>← Previous</button>
+                <span class="page-info" id="page-info">Page 1 of 1</span>
+                <button id="next-page" class="page-btn" disabled>Next →</button>
+            </div>
+        </section>
+
+        <!-- Health Details Modal -->
+        <div id="health-modal" class="modal">
+            <div class="modal-content large">
+                <div class="modal-header">
+                    <h3 id="health-modal-title">Health Details</h3>
+                    <button id="close-health-modal" class="close-btn">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="health-details" id="health-modal-details">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="close-health-details" class="btn-primary">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Modal -->
+        <div id="action-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modal-title">Review Consolidation</h3>
+                    <button id="close-modal" class="close-btn">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="consolidation-details" id="modal-details">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                    <div class="action-form">
+                        <label for="action-select">Action:</label>
+                        <select id="action-select" class="action-select">
+                            <option value="approve">✅ Approve Consolidation</option>
+                            <option value="reject">❌ Reject Consolidation</option>
+                            <option value="modify">📝 Modify & Approve</option>
+                        </select>
+                        
+                        <label for="action-reason">Reason (optional):</label>
+                        <textarea id="action-reason" class="action-reason" placeholder="Add notes about your decision..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="cancel-action" class="btn-secondary">Cancel</button>
+                    <button id="submit-action" class="btn-primary">Submit Decision</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/audit.js') }}"></script>
+</body>
+</html>

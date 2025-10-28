@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ brand_name }} - Brand Details - TTB COLA System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/brand_detail.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation Header -->
+        <header>
+            <div class="nav-brand">
+                <h1><a href="/">TTB COLA Registry System</a></h1>
+            </div>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/dashboard">Dashboard</a>
+                <a href="/data">Data</a>
+                <a href="/brands">Brands</a>
+                <a href="/importers">Importers</a>
+            </div>
+        </header>
+
+        <!-- Breadcrumb Navigation -->
+        <nav class="breadcrumb">
+            <a href="/brands" class="breadcrumb-link">🏷️ Brands</a>
+            <span class="breadcrumb-separator">›</span>
+            <span class="breadcrumb-current">{{ brand_name }}</span>
+        </nav>
+
+        <!-- Brand Header -->
+        <section class="brand-header">
+            <div class="brand-title">
+                <h1 class="brand-name">{{ brand_name }}</h1>
+                <div class="brand-badges">
+                    <span class="badge-sku">📊 {{ brand.summary.total_skus }} SKUs</span>
+                    <span class="badge-countries">🌍 {{ brand.summary.countries|length }} Countries</span>
+                    {% if brand.summary.importers %}
+                        <span class="badge-matched">✅ Matched</span>
+                    {% else %}
+                        <span class="badge-unmatched">⚠️ Unmatched</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="brand-actions">
+                <button class="btn btn-primary" onclick="window.history.back()">← Back to Brands</button>
+                <button class="btn btn-secondary" onclick="exportBrandData()">📥 Export Data</button>
+            </div>
+        </section>
+
+        <!-- Main Content List -->
+        <div class="content-list">
+            <!-- Compact Summary Bar -->
+            <div class="info-card compact-summary">
+                <div class="card-content">
+                    <div class="summary-stats">
+                        <div class="stat-item">
+                            <span class="stat-value">{{ brand.summary.total_skus }}</span>
+                            <span class="stat-label">SKUs</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">{{ brand.summary.countries|length }}</span>
+                            <span class="stat-label">Countries</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">{{ brand.summary.class_types|length }}</span>
+                            <span class="stat-label">Product Types</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">{{ brand.summary.importers|length if brand.summary.importers else 0 }}</span>
+                            <span class="stat-label">Importers</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">{{ brand.summary.producers|length if brand.summary.producers else 0 }}</span>
+                            <span class="stat-label">Producers</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Consolidation History Card -->
+            <div class="info-card consolidation-history hidden" id="consolidation-history-card">
+                <div class="card-header">
+                    <div class="header-title-section">
+                        <h2>🔀 Brand History</h2>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div id="consolidation-history-content">
+                        <!-- Dynamically populated via JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Unified Website Card -->
+            <div class="info-card website-card {{ 'verified' if automatic_website and automatic_website.verification_status == 'verified' else ('unverified' if automatic_website else 'add-website') }}">
+                <div class="card-header">
+                    <div class="header-title-section">
+                        <h2>🌐 Website Information</h2>
+                        {% if automatic_website %}
+                            <div class="verification-badges">
+                                {% if automatic_website.verification_status == 'verified' %}
+                                    <span class="verification-badge verified">✅ Verified</span>
+                                {% elif automatic_website.verification_status == 'flagged' %}
+                                    <span class="verification-badge flagged">🚩 Flagged</span>
+                                {% elif automatic_website.verification_status == 'rejected' %}
+                                    <span class="verification-badge rejected">❌ Rejected</span>
+                                {% else %}
+                                    <span class="verification-badge unverified">⏳ Needs Review</span>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="card-actions">
+                        {% if automatic_website %}
+                            <button class="btn btn-secondary" onclick="toggleEditMode(this.dataset.brandName)" data-brand-name="{{ brand_name }}" type="button">✏️ Edit</button>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-content">
+                    <!-- Display Mode -->
+                    <div id="website-display" class="{{ 'hidden' if not automatic_website else '' }}">
+                        {% if automatic_website %}
+                        {% set website_data = automatic_website %}
+                        <div class="website-info-compact">
+                            <div class="website-url-section">
+                                <div class="website-link-container">
+                                    <a href="{{ website_data.get('url', website_data.get('website', '#')) }}" target="_blank" class="website-url-link">
+                                        <span class="website-icon">🔗</span>
+                                        <span class="website-url-text">{{ website_data.get('url', website_data.get('website', 'Unknown')) }}</span>
+                                        <span class="external-icon">↗</span>
+                                    </a>
+                                </div>
+                                <div class="website-domain-display">
+                                    <span class="domain-label">Domain:</span>
+                                    <span class="domain-text">{{ website_data.get('domain', website_data.get('url', '').replace('https://', '').replace('http://', '').split('/')[0] if website_data.get('url') else 'Unknown') }}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="website-details-row">
+                                <!-- Confidence Indicator -->
+                                {% set confidence_value = website_data.get('confidence', website_data.get('final_confidence', 0.5)) %}
+                                <div class="confidence-compact">
+                                    <span class="confidence-label">Confidence:</span>
+                                    <div class="confidence-bar-small">
+                                        <div class="confidence-fill {{ 'high' if confidence_value >= 0.8 else ('medium' if confidence_value >= 0.5 else 'low') }}" style="width: {{ (confidence_value * 100) if confidence_value else 0 }}%"></div>
+                                    </div>
+                                    <span class="confidence-value-small">{{ "%.0f"|format(confidence_value * 100) if confidence_value else 0 }}%</span>
+                                </div>
+                                
+                                <!-- Source and Date -->
+                                <div class="website-source-compact">
+                                    <span class="source-text">{{ '👤 Manual' if website_data.get('manual_override') else '🤖 Automatic' }}</span>
+                                    <span class="date-text">{{ website_data.get('approved_date', website_data.get('updated_date', '')).split('T')[0] if website_data.get('approved_date') or website_data.get('updated_date') else 'Unknown' }}</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Verification Actions for automatic websites -->
+                            {% if not website_data.get('manual_override') and website_data.get('verification_status') != 'verified' %}
+                            <div class="verification-actions">
+                                <button class="btn btn-verify" onclick="verifyWebsite('{{ brand_name }}', true)">✅ Verify</button>
+                                <button class="btn btn-reject" onclick="verifyWebsite('{{ brand_name }}', false)">❌ Reject</button>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Edit Mode -->
+                    <div id="website-edit" class="{{ 'hidden' if automatic_website else '' }}">
+                        <p class="form-description">{{ 'Update the website information:' if automatic_website else 'No website found for this brand. Add one:' }}</p>
+                        <form id="edit-website-form" onsubmit="addWebsite(event, this.dataset.brandName)" data-brand-name="{{ brand_name }}">
+                            <div class="form-group">
+                                <label for="edit-website-url">Website URL:</label>
+                                <input type="url" id="edit-website-url" name="url" placeholder="https://example.com" required class="form-input" value="{{ automatic_website.get('url', automatic_website.get('website', '')) if automatic_website else '' }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-confidence-score">Confidence Score (0-100):</label>
+                                <input type="number" id="edit-confidence-score" name="confidence" min="0" max="100" value="{{ ((automatic_website.get('confidence', automatic_website.get('final_confidence', 0.95)) * 100)|round) if automatic_website else 95 }}" required class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-source-note">Source/Notes:</label>
+                                <input type="text" id="edit-source-note" name="source" placeholder="e.g., Found via Google search" class="form-input" value="{{ automatic_website.get('user_source', automatic_website.get('source', 'manual')) if automatic_website else 'manual' }}">
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-success">💾 Save Website</button>
+                                {% if automatic_website %}
+                                <button type="button" class="btn btn-secondary" onclick="cancelEditMode()">❌ Cancel</button>
+                                {% endif %}
+                                <button type="button" class="btn btn-secondary" onclick="searchForWebsite(this.dataset.brandName)" data-brand-name="{{ brand_name }}">🔍 Auto Search</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Business Intelligence & Key Contacts Card -->
+            <div class="info-card apollo-enrichment" id="contacts">
+                <div class="card-header">
+                    <h2>Business Intelligence & Key Contacts</h2>
+                    {% if brand.apollo_data %}
+                    <div class="apollo-verification-badge">
+                        <span class="verification-status verified">Apollo Verified</span>
+                        <span class="verification-date">{{ brand.apollo_data.verification.entered_date[:10] if brand.apollo_data.verification and brand.apollo_data.verification.entered_date else 'Unknown' }}</span>
+                    </div>
+                    {% else %}
+                    <div class="card-actions">
+                        <button class="btn btn-primary" onclick="findContacts('{{ brand_name }}')" id="find-contacts-btn">
+                            🔍 Find Contacts
+                        </button>
+                    </div>
+                    <div class="apollo-verification-badge">
+                        <span class="verification-status pending">Not Enriched</span>
+                        <span class="verification-date">Awaiting Apollo data</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="card-content">
+                    <!-- Company Overview -->
+                    <div class="company-overview-section">
+                        {% if brand.apollo_data %}
+                        <div class="company-header">
+                            <h3 class="company-name">{{ brand.apollo_data.company.name }}</h3>
+                            {% if brand.apollo_data.company.industry %}
+                            <span class="industry-badge">{{ brand.apollo_data.company.industry }}</span>
+                            {% endif %}
+                        </div>
+
+                        {% if brand.apollo_data.company.description %}
+                        <p class="company-description">{{ brand.apollo_data.company.description }}</p>
+                        {% endif %}
+
+                        <div class="company-stats-grid">
+                            {% if brand.apollo_data.company.employee_count %}
+                            <div class="stat-item">
+                                <span class="stat-label">Team Size</span>
+                                <span class="stat-value">{{ brand.apollo_data.company.employee_count }} employees</span>
+                            </div>
+                            {% endif %}
+
+                            {% if brand.apollo_data.company.revenue %}
+                            <div class="stat-item">
+                                <span class="stat-label">Revenue</span>
+                                <span class="stat-value">{{ brand.apollo_data.company.revenue }}</span>
+                            </div>
+                            {% endif %}
+
+                            {% if brand.apollo_data.company.location %}
+                            <div class="stat-item">
+                                <span class="stat-label">Headquarters</span>
+                                <span class="stat-value">
+                                    {{ brand.apollo_data.company.location.city or '' }}{% if brand.apollo_data.company.location.city and brand.apollo_data.company.location.state %}, {% endif %}{{ brand.apollo_data.company.location.state or '' }}
+                                    {% if brand.apollo_data.company.location.country and brand.apollo_data.company.location.country != 'United States' %}
+                                        <br>{{ brand.apollo_data.company.location.country }}
+                                    {% endif %}
+                                </span>
+                            </div>
+                            {% endif %}
+
+                            {% if brand.apollo_data.company.website %}
+                            <div class="stat-item">
+                                <span class="stat-label">Company Website</span>
+                                <span class="stat-value">
+                                    <a href="{{ brand.apollo_data.company.website }}" target="_blank" class="company-website-link">
+                                        {{ brand.apollo_data.company.website }}
+                                    </a>
+                                </span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% else %}
+                        <div class="company-header">
+                            <h3 class="company-name empty-placeholder">Company Name</h3>
+                            <span class="industry-badge empty-placeholder">Industry</span>
+                        </div>
+
+                        <p class="company-description empty-placeholder">Company description will appear here once Apollo enrichment is complete.</p>
+
+                        <div class="company-stats-grid">
+                            <div class="stat-item">
+                                <span class="stat-label">Team Size</span>
+                                <span class="stat-value empty-placeholder">— employees</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Revenue</span>
+                                <span class="stat-value empty-placeholder">—</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Headquarters</span>
+                                <span class="stat-value empty-placeholder">—</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Company Website</span>
+                                <span class="stat-value empty-placeholder">—</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Key Decision Makers Section -->
+                    <div class="key-contacts-section">
+                        <div class="section-header">
+                            <h3 class="section-title">Key Decision Makers for Helmsman Imports Outreach</h3>
+                            <p class="section-description">Top contacts identified for distribution partnership discussions</p>
+                        </div>
+
+                        {% if brand.apollo_data %}
+                        <div class="contacts-dropdown-list">
+                            {% for contact in brand.apollo_data.contacts[:2] %}
+                            <div class="contact-dropdown-item">
+                                <div class="contact-dropdown-header" onclick="toggleContactDetails('contact-{{ loop.index }}')">
+                                    <div class="contact-header-info">
+                                        <div class="contact-name-title">
+                                            <span class="contact-name">{{ contact.name }}</span>
+                                            <span class="contact-title">{{ contact.title }}</span>
+                                        </div>
+                                        <div class="contact-badges">
+                                            <span class="relevance-badge">{{ contact.relevance_score }}% Match</span>
+                                            {% if contact.is_decision_maker %}
+                                            <span class="decision-maker-badge">Decision Maker</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="dropdown-arrow" id="arrow-contact-{{ loop.index }}">
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                            <path d="M4 6l4 4 4-4H4z"/>
+                                        </svg>
+                                    </div>
+                                </div>
+
+                                <div class="contact-dropdown-content" id="contact-{{ loop.index }}" style="display: none;">
+                                    <div class="contact-details-grid">
+                                        {% if contact.email %}
+                                        <div class="contact-detail-row">
+                                            <span class="detail-label">Email:</span>
+                                            <div class="detail-content">
+                                                <a href="mailto:{{ contact.email }}" class="contact-email">{{ contact.email }}</a>
+                                                <button class="copy-btn" onclick="copyToClipboard('{{ contact.email }}')">Copy</button>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+
+                                        {% if contact.phone %}
+                                        <div class="contact-detail-row">
+                                            <span class="detail-label">Phone:</span>
+                                            <div class="detail-content">
+                                                <a href="tel:{{ contact.phone }}" class="contact-phone">{{ contact.phone }}</a>
+                                                <button class="copy-btn" onclick="copyToClipboard('{{ contact.phone }}')">Copy</button>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+
+                                        {% if contact.linkedin %}
+                                        <div class="contact-detail-row">
+                                            <span class="detail-label">LinkedIn:</span>
+                                            <div class="detail-content">
+                                                <a href="{{ contact.linkedin }}" target="_blank" class="contact-linkedin">View Profile</a>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+
+                                        {% if contact.department %}
+                                        <div class="contact-detail-row">
+                                            <span class="detail-label">Department:</span>
+                                            <div class="detail-content">
+                                                <span class="contact-department">{{ contact.department }}</span>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+
+                                        {% if contact.seniority %}
+                                        <div class="contact-detail-row">
+                                            <span class="detail-label">Seniority:</span>
+                                            <div class="detail-content">
+                                                <span class="contact-seniority">{{ contact.seniority }}</span>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Outreach Suggestions -->
+                                    <div class="outreach-suggestions">
+                                        <h5 class="suggestions-title">Suggested Outreach Approach:</h5>
+                                        <ul class="suggestions-list">
+                                            {% if 'VP' in contact.title or 'President' in contact.title or 'CEO' in contact.title %}
+                                            <li>High-level partnership discussion focused on portfolio expansion</li>
+                                            <li>Emphasize Helmsman's premium brand portfolio and market reach</li>
+                                            {% elif 'Import' in contact.title or 'Export' in contact.title %}
+                                            <li>Discuss import logistics, compliance, and distribution requirements</li>
+                                            <li>Highlight Helmsman's expertise in TTB/COLA regulatory processes</li>
+                                            {% elif 'Sales' in contact.title or 'Business Development' in contact.title %}
+                                            <li>Present distribution capabilities and market channel access</li>
+                                            <li>Focus on sales growth opportunities and market expansion</li>
+                                            {% else %}
+                                            <li>Introduce Helmsman's comprehensive import and distribution services</li>
+                                            <li>Discuss mutual partnership opportunities in the US market</li>
+                                            {% endif %}
+                                        </ul>
+                                    </div>
+
+                                    <!-- Contact Actions -->
+                                    <div class="contact-actions">
+                                        <button class="action-btn email-btn" onclick="composeEmail('{{ contact.email }}', '{{ brand_name }}', '{{ contact.name }}')">
+                                            Compose Email
+                                        </button>
+                                        <button class="action-btn crm-btn" onclick="addToCRM('{{ contact.email }}', '{{ brand_name }}', '{{ contact.name }}')">
+                                            Add to CRM
+                                        </button>
+                                        <button class="action-btn log-btn" onclick="logContact('{{ contact.email }}', '{{ brand_name }}', '{{ contact.name }}')">
+                                            Log Outreach
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- More Contacts Link -->
+                        {% if brand.apollo_data.contacts|length > 2 %}
+                        <div class="more-contacts-section">
+                            <button class="view-all-contacts-btn" onclick="showAllContacts()">
+                                <span class="contact-count">{{ brand.apollo_data.contacts|length - 2 }}</span> More Contacts Available
+                                <span class="arrow">→</span>
+                            </button>
+                        </div>
+                        {% endif %}
+                        {% else %}
+                        <div class="contacts-dropdown-list">
+                            <div class="contact-dropdown-item empty-contact">
+                                <div class="contact-dropdown-header">
+                                    <div class="contact-header-info">
+                                        <div class="contact-name-title">
+                                            <span class="contact-name empty-placeholder">Contact Name</span>
+                                            <span class="contact-title empty-placeholder">Title</span>
+                                        </div>
+                                        <div class="contact-badges">
+                                            <span class="relevance-badge empty-placeholder">—% Match</span>
+                                            <span class="decision-maker-badge empty-placeholder">—</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="contact-dropdown-item empty-contact">
+                                <div class="contact-dropdown-header">
+                                    <div class="contact-header-info">
+                                        <div class="contact-name-title">
+                                            <span class="contact-name empty-placeholder">Contact Name</span>
+                                            <span class="contact-title empty-placeholder">Title</span>
+                                        </div>
+                                        <div class="contact-badges">
+                                            <span class="relevance-badge empty-placeholder">—% Match</span>
+                                            <span class="decision-maker-badge empty-placeholder">—</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="empty-state-message">
+                            <p>Contact information will appear here once Apollo enrichment is complete.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Verification Info -->
+                    <div class="verification-info">
+                        {% if brand.apollo_data %}
+                        <div class="verification-details">
+                            <strong>Verification Method:</strong>
+                            {% if brand.apollo_data.verification.method == 'domain_match' %}
+                                Domain Match (100% Accuracy)
+                            {% elif brand.apollo_data.verification.method == 'manual_approval' %}
+                                Manual Verification ({{ brand.apollo_data.verification.confidence }}% Confidence)
+                            {% else %}
+                                Manual Entry
+                            {% endif %}
+                        </div>
+                        {% if brand.apollo_data.verification.entered_by and brand.apollo_data.verification.entered_by != 'system' %}
+                        <div class="verified-by">
+                            <strong>Verified by:</strong> {{ brand.apollo_data.verification.entered_by }}
+                        </div>
+                        {% endif %}
+                        {% else %}
+                        <div class="verification-details">
+                            <strong>Verification Method:</strong> Pending Apollo enrichment
+                        </div>
+                        <div class="verified-by">
+                            <strong>Status:</strong> Ready for contact discovery
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Countries and Class Types Card (Combined) -->
+            <div class="info-card">
+                <div class="card-header">
+                    <h2>🌍 Countries & Product Types</h2>
+                </div>
+                <div class="card-content">
+                    <div class="combined-info-layout">
+                        <!-- Countries Section -->
+                        <div class="info-section">
+                            <h3 class="section-subtitle">Countries of Origin</h3>
+                            {% if brand.summary.countries %}
+                                <div class="tags-container">
+                                    {% for country in brand.summary.countries %}
+                                        <span class="tag country-tag">{{ country }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="no-data">No countries specified</p>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Class Types Section -->
+                        <div class="info-section">
+                            <h3 class="section-subtitle">Class & Types</h3>
+                            {% if brand.summary.class_types %}
+                                <div class="tags-container">
+                                    {% for class_type in brand.summary.class_types %}
+                                        <span class="tag type-tag">{{ class_type }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="no-data">No class types specified</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Three-Tier Permit Classification -->
+            <div class="info-card">
+                <div class="card-header">
+                    <h2>📋 Permit Classification & Business Relationships</h2>
+                </div>
+                <div class="card-content">
+                    <div class="three-tier-layout">
+                        
+                        <!-- Importer Match Permits -->
+                        <div class="info-section permit-column">
+                            <h3 class="section-subtitle">🏢 Importer Match Permits</h3>
+                            <p class="section-description">Real importer relationships (XX-I-XXXXX permits)</p>
+                            {% if brand.summary.importers %}
+                                {% for importer in brand.summary.importers %}
+                                    <div class="compact-entity-card">
+                                        <div class="entity-header">
+                                            <h4 class="entity-name">
+                                                <a href="/importer/{{ importer.permit_number }}" class="entity-link">
+                                                    {{ importer.owner_name or importer.operating_name or 'Unknown Importer' }}
+                                                </a>
+                                            </h4>
+                                            <span class="permit-badge-small importer-permit">{{ importer.permit_number }}</span>
+                                        </div>
+                                        <div class="entity-details">
+                                            {% if importer.city or importer.state %}
+                                                <div class="compact-detail">
+                                                    <span class="detail-icon">📍</span>
+                                                    <span class="detail-text">{{ importer.city }}{% if importer.city and importer.state %}, {% endif %}{{ importer.state }}</span>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="no-data-compact">
+                                    <span class="no-data-icon">🚫</span>
+                                    <span class="no-data-text">No importer</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Producer Match Permits -->
+                        <div class="info-section permit-column">
+                            <h3 class="section-subtitle">🏭 Producer Match Permits</h3>
+                            <p class="section-description">Producer relationships (DSP-, BWN-, BR- permits)</p>
+                            {% if brand.summary.producers %}
+                                {% for producer in brand.summary.producers %}
+                                    <div class="compact-entity-card">
+                                        <div class="entity-header">
+                                            <h4 class="entity-name">
+                                                <a href="/producer/{{ producer.permit_number }}" class="entity-link">
+                                                    {{ producer.owner_name or producer.operating_name or 'Unknown Producer' }}
+                                                </a>
+                                            </h4>
+                                            <span class="permit-badge-small producer-permit">{{ producer.permit_number }}</span>
+                                        </div>
+                                        <div class="entity-details">
+                                            {% if producer.city or producer.state %}
+                                                <div class="compact-detail">
+                                                    <span class="detail-icon">📍</span>
+                                                    <span class="detail-text">{{ producer.city }}{% if producer.city and producer.state %}, {% endif %}{{ producer.state }}</span>
+                                                </div>
+                                            {% endif %}
+                                            {% if producer.industry_type %}
+                                                <div class="compact-detail">
+                                                    <span class="detail-icon">🏭</span>
+                                                    <span class="detail-text">{{ producer.industry_type }}</span>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="no-data-compact">
+                                    <span class="no-data-icon">🚫</span>
+                                    <span class="no-data-text">No producer</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Brand's Own Permits -->
+                        <div class="info-section permit-column">
+                            <h3 class="section-subtitle">📄 Brand's Own Permits</h3>
+                            <p class="section-description">Independent brand permits (no matches)</p>
+                            {% if brand.summary.brand_permits %}
+                                {% for permit in brand.summary.brand_permits %}
+                                    <div class="compact-entity-card">
+                                        <div class="entity-header">
+                                            <h4 class="entity-name">Independent Permit</h4>
+                                            <span class="permit-badge-small brand-permit">{{ permit }}</span>
+                                        </div>
+                                        <div class="entity-details">
+                                            <div class="compact-detail">
+                                                <span class="detail-icon">🏷️</span>
+                                                <span class="detail-text">Brand-owned permit</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="no-data-compact">
+                                    <span class="no-data-icon">✅</span>
+                                    <span class="no-data-text">All permits matched</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SKUs Section -->
+        <section class="skus-section">
+            <div class="section-header">
+                <h2>📦 Product SKUs ({{ brand.skus|length }})</h2>
+                <div class="section-actions">
+                    <button class="btn btn-outline" onclick="toggleView('grid')">Grid View</button>
+                    <button class="btn btn-outline active" onclick="toggleView('table')">Table View</button>
+                </div>
+            </div>
+
+            <!-- SKUs Table -->
+            <div class="skus-table-container" id="skus-table">
+                <table class="skus-table">
+                    <thead>
+                        <tr>
+                            <th>Product Name</th>
+                            <th>TTB ID</th>
+                            <th>Serial Number</th>
+                            <th>Completed Date</th>
+                            <th>Origin</th>
+                            <th>Class/Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sku in brand.skus %}
+                            <tr class="sku-row">
+                                <td class="sku-name-cell">
+                                    <div class="sku-name">
+                                        {% if sku.fanciful_name and sku.fanciful_name != 'nan' %}
+                                            {{ sku.fanciful_name }}
+                                        {% else %}
+                                            <span class="standard-product">Standard Product</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td><code class="ttb-id">{{ sku.ttb_id }}</code></td>
+                                <td><code class="serial-number">{{ sku.serial_number }}</code></td>
+                                <td class="date-cell">{{ sku.completed_date }}</td>
+                                <td class="origin-cell">
+                                    <span class="origin-code">{{ sku.origin }}</span>
+                                    {% if sku.origin_desc %}<br><span class="origin-desc">{{ sku.origin_desc }}</span>{% endif %}
+                                </td>
+                                <td class="type-cell">{{ sku.class_type_desc }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- SKUs Grid (Hidden by default) -->
+            <div class="skus-grid-container" id="skus-grid" style="display: none;">
+                <div class="skus-grid">
+                    {% for sku in brand.skus %}
+                        <div class="sku-card">
+                            <div class="sku-card-header">
+                                <h4 class="sku-card-name">
+                                    {% if sku.fanciful_name and sku.fanciful_name != 'nan' %}
+                                        {{ sku.fanciful_name }}
+                                    {% else %}
+                                        Standard Product
+                                    {% endif %}
+                                </h4>
+                                <span class="sku-card-date">{{ sku.completed_date }}</span>
+                            </div>
+                            <div class="sku-card-content">
+                                <div class="sku-detail">
+                                    <span class="sku-detail-label">TTB ID:</span>
+                                    <code class="sku-detail-value">{{ sku.ttb_id }}</code>
+                                </div>
+                                <div class="sku-detail">
+                                    <span class="sku-detail-label">Serial:</span>
+                                    <code class="sku-detail-value">{{ sku.serial_number }}</code>
+                                </div>
+                                <div class="sku-detail">
+                                    <span class="sku-detail-label">Origin:</span>
+                                    <span class="sku-detail-value">{{ sku.origin }} - {{ sku.origin_desc }}</span>
+                                </div>
+                                <div class="sku-detail">
+                                    <span class="sku-detail-label">Type:</span>
+                                    <span class="sku-detail-value">{{ sku.class_type_desc }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/brand_detail.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Importers - TTB COLA System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/importers.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Unified Navigation -->
+        {% include 'includes/navigation.html' %}
+
+        <header>
+            <h1>Importers Directory</h1>
+        </header>
+
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-label">Total Importers</span>
+                <span class="stat-value" id="total-importers">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Total Brands</span>
+                <span class="stat-value" id="total-brands">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Active Importers</span>
+                <span class="stat-value" id="active-importers">0</span>
+            </div>
+        </div>
+
+        <div class="search-controls">
+            <div class="search-group">
+                <input type="text" id="importer-search" placeholder="Search importers by name, permit, city, or state..." class="search-input">
+                <button id="search-btn" class="search-btn">🔍 Search</button>
+            </div>
+            <div class="view-controls">
+                <label for="per-page-select">Show:</label>
+                <select id="per-page-select">
+                    <option value="12">12 per page</option>
+                    <option value="24" selected>24 per page</option>
+                    <option value="48">48 per page</option>
+                    <option value="all">All importers</option>
+                </select>
+                <label for="sort-select">Sort by:</label>
+                <select id="sort-select">
+                    <option value="name">Company Name</option>
+                    <option value="brands">Brand Count</option>
+                    <option value="permit">Permit Number</option>
+                    <option value="state">State</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="importers-table-container">
+            <table class="importers-table" id="importers-table">
+                <thead>
+                    <tr>
+                        <th class="sortable" data-sort="name">
+                            <span class="th-content">
+                                <span class="th-icon">🏢</span>
+                                <span class="th-text">Company Name</span>
+                                <span class="sort-indicator"></span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-sort="permit">
+                            <span class="th-content">
+                                <span class="th-icon">🆔</span>
+                                <span class="th-text">Permit #</span>
+                                <span class="sort-indicator"></span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-sort="brands">
+                            <span class="th-content">
+                                <span class="th-icon">🏷️</span>
+                                <span class="th-text">Brands</span>
+                                <span class="sort-indicator"></span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-sort="location">
+                            <span class="th-content">
+                                <span class="th-icon">📍</span>
+                                <span class="th-text">Location</span>
+                                <span class="sort-indicator"></span>
+                            </span>
+                        </th>
+                        <th class="sortable" data-sort="status">
+                            <span class="th-content">
+                                <span class="th-icon">✅</span>
+                                <span class="th-text">Status</span>
+                                <span class="sort-indicator"></span>
+                            </span>
+                        </th>
+                        <th class="actions-header">
+                            <span class="th-content">
+                                <span class="th-icon">⚡</span>
+                                <span class="th-text">Actions</span>
+                            </span>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="importers-tbody">
+                    <tr class="loading-row">
+                        <td colspan="6" class="loading-cell">
+                            <div class="loading-content">
+                                <div class="loading-spinner"></div>
+                                <span>Loading importers...</span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pagination-container" id="pagination-container">
+            <!-- Pagination will be inserted here -->
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/importers.js') }}"></script>
+</body>
+</html>

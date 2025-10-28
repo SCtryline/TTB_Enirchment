@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Insights - TTB COLA Registry</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/learning_insights.css">
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h1>TTB COLA Registry</h1>
+                <span class="nav-subtitle">Learning Insights Dashboard</span>
+            </div>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/dashboard">Dashboard</a>
+                <a href="/brands">Brands</a>
+                <a href="/importers">Importers</a>
+                <a href="/producers">Producers</a>
+                <a href="/data">Data</a>
+                <a href="/learning_insights" class="active">Learning</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h2>🧠 Agentic Learning System Insights</h2>
+            <p>Monitor and analyze the self-learning system's performance and pattern recognition</p>
+        </div>
+
+        <!-- Key Metrics -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-icon">📚</div>
+                <div class="metric-content">
+                    <div class="metric-value" id="total-events">0</div>
+                    <div class="metric-label">Learning Events</div>
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon">✅</div>
+                <div class="metric-content">
+                    <div class="metric-value" id="success-rate">0%</div>
+                    <div class="metric-label">Success Rate</div>
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon">🎯</div>
+                <div class="metric-content">
+                    <div class="metric-value" id="confidence-accuracy">0%</div>
+                    <div class="metric-label">Confidence Accuracy</div>
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon">🔍</div>
+                <div class="metric-content">
+                    <div class="metric-value" id="patterns-learned">0</div>
+                    <div class="metric-label">Patterns Learned</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Learning Statistics -->
+        <div class="section-grid">
+            <div class="section-card">
+                <h3>📊 Learning Performance</h3>
+                <div class="stats-list">
+                    <div class="stat-row">
+                        <span class="stat-label">Verified Websites:</span>
+                        <span class="stat-value" id="verified-count">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Rejected Websites:</span>
+                        <span class="stat-value" id="rejected-count">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Flagged for Review:</span>
+                        <span class="stat-value" id="flagged-count">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Average Confidence:</span>
+                        <span class="stat-value" id="avg-confidence">0.00</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Learning Rate:</span>
+                        <span class="stat-value" id="learning-rate">0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-card">
+                <h3>🏭 Industry Knowledge</h3>
+                <div class="stats-list">
+                    <div class="stat-row">
+                        <span class="stat-label">Spirits Brands:</span>
+                        <span class="stat-value" id="spirits-brands">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Wine Brands:</span>
+                        <span class="stat-value" id="wine-brands">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Beer/Malt Brands:</span>
+                        <span class="stat-value" id="beer-brands">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Industry Patterns:</span>
+                        <span class="stat-value" id="industry-patterns">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Domain Patterns:</span>
+                        <span class="stat-value" id="domain-patterns">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pattern Recognition -->
+        <div class="pattern-section">
+            <h3>🔍 Learned Domain Patterns</h3>
+            <div id="patterns-container" class="patterns-grid">
+                <!-- Patterns will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Recent Learning Events -->
+        <div class="events-section">
+            <h3>📝 Recent Learning Events</h3>
+            <div class="events-table-container">
+                <table class="events-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Brand</th>
+                            <th>Action</th>
+                            <th>Domain</th>
+                            <th>Confidence</th>
+                            <th>Learning Impact</th>
+                        </tr>
+                    </thead>
+                    <tbody id="events-tbody">
+                        <!-- Events will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Knowledge Base Insights -->
+        <div class="knowledge-section">
+            <h3>💡 Knowledge Base Insights</h3>
+            <div class="knowledge-grid">
+                <div class="knowledge-card">
+                    <h4>Top Search Terms</h4>
+                    <div id="top-search-terms" class="term-list">
+                        <!-- Search terms will be loaded here -->
+                    </div>
+                </div>
+                <div class="knowledge-card">
+                    <h4>False Positive Domains</h4>
+                    <div id="false-positive-domains" class="domain-list">
+                        <!-- False positive domains will be loaded here -->
+                    </div>
+                </div>
+                <div class="knowledge-card">
+                    <h4>Confidence Calibration</h4>
+                    <div id="confidence-calibration" class="calibration-info">
+                        <!-- Calibration info will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Batch Re-scoring Section -->
+        <div class="rescore-section">
+            <h3>🎯 Batch Website Re-scoring</h3>
+            <div class="rescore-info">
+                <p>Apply all accumulated learning patterns to re-score existing website matches. This will:</p>
+                <ul>
+                    <li>Update confidence scores based on learned domain patterns</li>
+                    <li>Detect category mismatches (e.g., vodka brands with wine domains)</li>
+                    <li>Flag websites that need review</li>
+                    <li>Apply learning improvements retroactively</li>
+                </ul>
+                
+                <div class="rescore-stats" id="rescore-stats">
+                    <div class="stat-row">
+                        <span class="stat-label">Total Websites:</span>
+                        <span class="stat-value" id="total-websites-stat">Loading...</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Potential Category Mismatches:</span>
+                        <span class="stat-value" id="category-mismatches-stat">Loading...</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Learning Patterns Available:</span>
+                        <span class="stat-value" id="patterns-available-stat">Loading...</span>
+                    </div>
+                </div>
+                
+                <div class="rescore-actions">
+                    <button onclick="loadRescoreStats()" class="btn btn-secondary">
+                        📊 Check Impact
+                    </button>
+                    <button onclick="startBatchRescore()" class="btn btn-primary" id="rescore-btn">
+                        🚀 Start Batch Re-scoring
+                    </button>
+                </div>
+                
+                <div id="rescore-results" class="rescore-results" style="display: none;">
+                    <h4>Re-scoring Results</h4>
+                    <div id="rescore-summary"></div>
+                    <div id="rescore-updates"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="actions-section">
+            <h3>⚙️ Learning System Actions</h3>
+            <div class="button-group">
+                <button onclick="exportLearningData()" class="btn btn-primary">
+                    📥 Export Learning Data
+                </button>
+                <button onclick="recalculateConfidence()" class="btn btn-secondary">
+                    🔄 Recalculate All Confidence Scores
+                </button>
+                <button onclick="clearLearningCache()" class="btn btn-danger">
+                    🗑️ Clear Learning Cache
+                </button>
+                <button onclick="refreshInsights()" class="btn btn-success">
+                    🔄 Refresh Insights
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/learning_insights.js"></script>
+</body>
+</html>
