@@ -10,10 +10,14 @@ import re
 import logging
 import time
 from functools import lru_cache
+from dotenv import load_dotenv
 from core.database import BrandDatabaseV2 as BrandDatabase
 from core.config import get_database_config, get_web_config, get_enrichment_config, ensure_directories
 from core.market_insights import MarketInsightsAnalyzer
 from core.pdf_generator import MarketInsightsPDFGenerator
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -51,61 +55,116 @@ FILTER_CACHE_TTL = 600  # 10 minutes cache for filter counts (increased)
 BRAND_LIST_CACHE_TTL = 120  # 2 minutes for brand list queries
 ALL_BRANDS_CACHE_TTL = 300  # 5 minutes for get_all_brands calls
 STATS_CACHE_TTL = 180  # 3 minutes for statistics
+
+# Database version tracking for cache invalidation
+db_version = {
+    'version': int(time.time() * 1000),  # Millisecond timestamp
+    'last_modified': datetime.now().isoformat()
+}
+
 filter_cache = {
     'counts': None,
-    'timestamp': 0
+    'timestamp': 0,
+    'db_version': 0
 }
 brand_list_cache = {
     'data': None,
     'timestamp': 0,
-    'query_hash': None
+    'query_hash': None,
+    'db_version': 0
 }
 all_brands_cache = {
     'data': None,
-    'timestamp': 0
+    'timestamp': 0,
+    'db_version': 0
 }
 stats_cache = {
     'data': None,
-    'timestamp': 0
+    'timestamp': 0,
+    'db_version': 0
 }
+
+def invalidate_all_caches():
+    """
+    Invalidate all caches when database is modified
+    This ensures UI always shows fresh data after consolidations, merges, updates
+    """
+    global filter_cache, brand_list_cache, all_brands_cache, stats_cache, db_version
+
+    # Update database version to invalidate all caches
+    db_version['version'] = int(time.time() * 1000)
+    db_version['last_modified'] = datetime.now().isoformat()
+
+    # Clear all cache data
+    filter_cache = {'counts': None, 'timestamp': 0, 'db_version': 0}
+    brand_list_cache = {'data': None, 'timestamp': 0, 'query_hash': None, 'db_version': 0}
+    all_brands_cache = {'data': None, 'timestamp': 0, 'db_version': 0}
+    stats_cache = {'data': None, 'timestamp': 0, 'db_version': 0}
+
+    logger.info(f"🔄 All caches invalidated - DB version: {db_version['version']}")
 
 def get_cached_all_brands():
     """Get all brands with caching to avoid repeated database calls"""
-    global all_brands_cache
+    global all_brands_cache, db_version
     current_time = time.time()
-    
-    if all_brands_cache['data'] and (current_time - all_brands_cache['timestamp']) < ALL_BRANDS_CACHE_TTL:
+
+    # Check if cache is valid (both time-based AND version-based)
+    cache_valid = (
+        all_brands_cache['data'] and
+        (current_time - all_brands_cache['timestamp']) < ALL_BRANDS_CACHE_TTL and
+        all_brands_cache['db_version'] == db_version['version']
+    )
+
+    if cache_valid:
         return all_brands_cache['data']
-    
+
+    # Cache miss - reload from database
     all_brands_cache['data'] = brand_db.get_all_brands()
     all_brands_cache['timestamp'] = current_time
+    all_brands_cache['db_version'] = db_version['version']
     return all_brands_cache['data']
 
 def get_cached_statistics():
     """Get database statistics with caching"""
-    global stats_cache
+    global stats_cache, db_version
     current_time = time.time()
-    
-    if stats_cache['data'] and (current_time - stats_cache['timestamp']) < STATS_CACHE_TTL:
+
+    # Check if cache is valid (both time-based AND version-based)
+    cache_valid = (
+        stats_cache['data'] and
+        (current_time - stats_cache['timestamp']) < STATS_CACHE_TTL and
+        stats_cache['db_version'] == db_version['version']
+    )
+
+    if cache_valid:
         return stats_cache['data']
-    
+
+    # Cache miss - reload from database
     stats_cache['data'] = brand_db.get_statistics()
     stats_cache['timestamp'] = current_time
+    stats_cache['db_version'] = db_version['version']
     return stats_cache['data']
 
 def get_cached_filter_counts():
     """Get filter counts with caching"""
-    global filter_cache
+    global filter_cache, db_version
     current_time = time.time()
-    
-    # Check if cache is valid
-    if filter_cache['counts'] and (current_time - filter_cache['timestamp']) < FILTER_CACHE_TTL:
+
+    # Check if cache is valid (both time-based AND version-based)
+    cache_valid = (
+        filter_cache['counts'] and
+        (current_time - filter_cache['timestamp']) < FILTER_CACHE_TTL and
+        filter_cache['db_version'] == db_version['version']
+    )
+
+    if cache_valid:
         return filter_cache['counts']
-    
-    # Refresh cache
+
+    # Cache miss - reload from database
     if hasattr(brand_db, 'get_filter_counts'):
         filter_cache['counts'] = brand_db.get_filter_counts()
         filter_cache['timestamp'] = current_time
+        filter_cache['db_version'] = db_version['version']
     else:
         # Fallback to calculating counts from cached brands
         all_brands = get_cached_all_brands()
@@ -156,17 +215,12 @@ def get_cached_filter_counts():
     return filter_cache['counts']
 
 def invalidate_filter_cache():
-    """Invalidate all caches when data changes"""
-    global filter_cache, brand_list_cache, all_brands_cache, stats_cache
-    filter_cache['counts'] = None
-    filter_cache['timestamp'] = 0
-    brand_list_cache['data'] = None
-    brand_list_cache['timestamp'] = 0
-    brand_list_cache['query_hash'] = None
-    all_brands_cache['data'] = None
-    all_brands_cache['timestamp'] = 0
-    stats_cache['data'] = None
-    stats_cache['timestamp'] = 0
+    """
+    Invalidate all caches when data changes
+    DEPRECATED: Redirects to invalidate_all_caches() for comprehensive cache clearing with versioning
+    """
+    # Call the new comprehensive cache invalidation with versioning
+    invalidate_all_caches()
 
 def get_query_hash(params):
     """Generate a hash for query parameters to use as cache key"""
@@ -1337,6 +1391,58 @@ def get_apollo_status():
         }), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/api/database_version', methods=['GET'])
+def get_database_version():
+    """
+    Get current database version for UI cache-busting
+    UI can poll this endpoint to detect when data has changed
+    """
+    global db_version
+    return jsonify({
+        'version': db_version['version'],
+        'last_modified': db_version['last_modified'],
+        'success': True
+    }), 200, {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+    }
+
+@app.route('/api/cache_status', methods=['GET'])
+def get_cache_status():
+    """Get cache status for debugging"""
+    global filter_cache, brand_list_cache, all_brands_cache, stats_cache, db_version
+    return jsonify({
+        'db_version': db_version,
+        'caches': {
+            'filter': {
+                'cached': filter_cache['counts'] is not None,
+                'timestamp': filter_cache['timestamp'],
+                'db_version': filter_cache['db_version'],
+                'age_seconds': int(time.time() - filter_cache['timestamp']) if filter_cache['timestamp'] > 0 else None
+            },
+            'brand_list': {
+                'cached': brand_list_cache['data'] is not None,
+                'timestamp': brand_list_cache['timestamp'],
+                'db_version': brand_list_cache['db_version'],
+                'age_seconds': int(time.time() - brand_list_cache['timestamp']) if brand_list_cache['timestamp'] > 0 else None
+            },
+            'all_brands': {
+                'cached': all_brands_cache['data'] is not None,
+                'count': len(all_brands_cache['data']) if all_brands_cache['data'] else 0,
+                'timestamp': all_brands_cache['timestamp'],
+                'db_version': all_brands_cache['db_version'],
+                'age_seconds': int(time.time() - all_brands_cache['timestamp']) if all_brands_cache['timestamp'] > 0 else None
+            },
+            'stats': {
+                'cached': stats_cache['data'] is not None,
+                'timestamp': stats_cache['timestamp'],
+                'db_version': stats_cache['db_version'],
+                'age_seconds': int(time.time() - stats_cache['timestamp']) if stats_cache['timestamp'] > 0 else None
+            }
+        }
+    }), 200
 
 @app.route('/debug_importers', methods=['GET'])
 def debug_importers():

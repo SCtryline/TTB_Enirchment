@@ -848,5 +848,33 @@
     },
     "user": "agentic_system",
     "reasoning": "Similar brand names detected (avg 72.5% similarity)"
+  },
+  {
+    "timestamp": "2025-11-05T18:10:01.948054",
+    "action": "consolidation_approved",
+    "proposal_id": "normalization_origi_n.ca_brewing",
+    "consolidation_type": "normalization",
+    "approval_method": "\ud83d\udc64 Force approved by user",
+    "confidence": 0.85,
+    "canonical_name": "ORIGI N.CA BREWING",
+    "brands_merged": [
+      "\"WITTY FARMER\" BELGIAN STYLE WITBIER"
+    ],
+    "countries_count": 1,
+    "class_types_count": 1,
+    "total_permits_preserved": 2,
+    "consolidation_strategy": {
+      "verified_enrichment": "\"WITTY FARMER\" BELGIAN STYLE WITBIER",
+      "best_website": "\"WITTY FARMER\" BELGIAN STYLE WITBIER",
+      "highest_confidence": 1.1016949152542372,
+      "most_complete_data": "\"WITTY FARMER\" BELGIAN STYLE WITBIER",
+      "reasoning": [
+        "\u2705 \"WITTY FARMER\" BELGIAN STYLE WITBIER has verified enrichment data",
+        "\ud83c\udfaf \"WITTY FARMER\" BELGIAN STYLE WITBIER has highest confidence website (110.2%)",
+        "\ud83d\udcca \"WITTY FARMER\" BELGIAN STYLE WITBIER has comprehensive data"
+      ]
+    },
+    "user": "agentic_system",
+    "reasoning": "Product name detected, should use company name"
   }
 ]

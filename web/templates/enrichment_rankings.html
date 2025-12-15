@@ -212,6 +212,8 @@
     <script>
         let allRankings = [];
         let currentTier = 'all';
+        let currentPage = 1;
+        let itemsPerPage = 100; // Default: 100 brands per page
 
         async function loadStatistics() {
             try {
@@ -260,11 +262,14 @@
 
         async function loadRankings() {
             try {
-                const response = await fetch('/api/enrichment/rankings?limit=100');
+                // Fetch ALL brands (no limit) - will get all 38,596 brands with rankings
+                // Backend will rank and return all brands across all 5 tiers
+                const response = await fetch('/api/enrichment/rankings');
                 const data = await response.json();
 
                 if (data.success) {
                     allRankings = data.rankings;
+                    console.log(`Loaded ${allRankings.length} brands across all tiers`);
                     displayRankings(allRankings);
                 }
             } catch (error) {
@@ -285,7 +290,37 @@
                 return;
             }
 
+            // Pagination calculations
+            const totalItems = filteredRankings.length;
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+            // Ensure current page is valid
+            if (currentPage > totalPages) currentPage = 1;
+
+            // Get items for current page
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const paginatedRankings = filteredRankings.slice(startIndex, endIndex);
+
             const tableHTML = `
+                <div style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="color: #666;">
+                        Showing ${startIndex + 1}-${Math.min(endIndex, totalItems)} of ${totalItems.toLocaleString()} brands
+                        ${currentTier !== 'all' ? `(Tier ${currentTier})` : '(All Tiers)'}
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <label style="color: #666;">
+                            Per page:
+                            <select onchange="changeItemsPerPage(this.value)" style="margin-left: 5px; padding: 5px; border: 1px solid #d1d5db; border-radius: 4px;">
+                                <option value="50" ${itemsPerPage === 50 ? 'selected' : ''}>50</option>
+                                <option value="100" ${itemsPerPage === 100 ? 'selected' : ''}>100</option>
+                                <option value="250" ${itemsPerPage === 250 ? 'selected' : ''}>250</option>
+                                <option value="500" ${itemsPerPage === 500 ? 'selected' : ''}>500</option>
+                            </select>
+                        </label>
+                    </div>
+                </div>
+
                 <table class="rankings-table">
                     <thead>
                         <tr>
@@ -302,9 +337,9 @@
                         </tr>
                     </thead>
                     <tbody>
-                        ${filteredRankings.map((brand, index) => `
+                        ${paginatedRankings.map((brand, index) => `
                             <tr class="tier-${brand.tier}">
-                                <td>${index + 1}</td>
+                                <td>${startIndex + index + 1}</td>
                                 <td>
                                     <a href="/brand/${encodeURIComponent(brand.brand_name)}"
                                        style="color: #2563eb; text-decoration: none;">
@@ -355,6 +390,31 @@
                         `).join('')}
                     </tbody>
                 </table>
+
+                <!-- Pagination Controls -->
+                <div style="margin-top: 20px; display: flex; justify-content: center; align-items: center; gap: 10px;">
+                    <button onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''}
+                            style="padding: 8px 12px; border: 1px solid #d1d5db; background: ${currentPage === 1 ? '#f3f4f6' : 'white'}; border-radius: 4px; cursor: ${currentPage === 1 ? 'not-allowed' : 'pointer'};">
+                        « First
+                    </button>
+                    <button onclick="prevPage()" ${currentPage === 1 ? 'disabled' : ''}
+                            style="padding: 8px 12px; border: 1px solid #d1d5db; background: ${currentPage === 1 ? '#f3f4f6' : 'white'}; border-radius: 4px; cursor: ${currentPage === 1 ? 'not-allowed' : 'pointer'};">
+                        ‹ Previous
+                    </button>
+
+                    <div style="display: flex; gap: 5px; align-items: center;">
+                        ${generatePageNumbers(currentPage, totalPages)}
+                    </div>
+
+                    <button onclick="nextPage()" ${currentPage === totalPages ? 'disabled' : ''}
+                            style="padding: 8px 12px; border: 1px solid #d1d5db; background: ${currentPage === totalPages ? '#f3f4f6' : 'white'}; border-radius: 4px; cursor: ${currentPage === totalPages ? 'not-allowed' : 'pointer'};">
+                        Next ›
+                    </button>
+                    <button onclick="goToPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}
+                            style="padding: 8px 12px; border: 1px solid #d1d5db; background: ${currentPage === totalPages ? '#f3f4f6' : 'white'}; border-radius: 4px; cursor: ${currentPage === totalPages ? 'not-allowed' : 'pointer'};">
+                        Last »
+                    </button>
+                </div>
             `;
 
             document.getElementById('rankingsTableContainer').innerHTML = tableHTML;
@@ -436,6 +496,84 @@
                     <span>${breakdown.total} pts</span>
                 </div>
             `;
+        }
+
+        // Pagination Functions
+        function generatePageNumbers(current, total) {
+            const pages = [];
+            const maxVisible = 7; // Show max 7 page buttons
+
+            if (total <= maxVisible) {
+                // Show all pages if total is small
+                for (let i = 1; i <= total; i++) {
+                    pages.push(i);
+                }
+            } else {
+                // Show smart pagination with ellipsis
+                if (current <= 4) {
+                    // Near start: 1 2 3 4 5 ... last
+                    for (let i = 1; i <= 5; i++) pages.push(i);
+                    pages.push('...');
+                    pages.push(total);
+                } else if (current >= total - 3) {
+                    // Near end: 1 ... n-4 n-3 n-2 n-1 n
+                    pages.push(1);
+                    pages.push('...');
+                    for (let i = total - 4; i <= total; i++) pages.push(i);
+                } else {
+                    // Middle: 1 ... current-1 current current+1 ... last
+                    pages.push(1);
+                    pages.push('...');
+                    pages.push(current - 1);
+                    pages.push(current);
+                    pages.push(current + 1);
+                    pages.push('...');
+                    pages.push(total);
+                }
+            }
+
+            return pages.map(page => {
+                if (page === '...') {
+                    return '<span style="padding: 8px 4px; color: #666;">…</span>';
+                } else if (page === current) {
+                    return `<button style="padding: 8px 12px; border: 2px solid #2563eb; background: #2563eb; color: white; border-radius: 4px; cursor: default; font-weight: bold;">${page}</button>`;
+                } else {
+                    return `<button onclick="goToPage(${page})" style="padding: 8px 12px; border: 1px solid #d1d5db; background: white; border-radius: 4px; cursor: pointer; color: #374151;">${page}</button>`;
+                }
+            }).join('');
+        }
+
+        function changeItemsPerPage(newValue) {
+            itemsPerPage = parseInt(newValue);
+            currentPage = 1; // Reset to first page when changing items per page
+            displayRankings(allRankings);
+        }
+
+        function goToPage(pageNumber) {
+            currentPage = pageNumber;
+            displayRankings(allRankings);
+            window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to top
+        }
+
+        function nextPage() {
+            const filteredRankings = currentTier === 'all'
+                ? allRankings
+                : allRankings.filter(r => r.tier === parseInt(currentTier));
+            const totalPages = Math.ceil(filteredRankings.length / itemsPerPage);
+
+            if (currentPage < totalPages) {
+                currentPage++;
+                displayRankings(allRankings);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                displayRankings(allRankings);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
         }
 
         function toggleBreakdown(brandName) {
@@ -583,6 +721,7 @@
                 document.querySelectorAll('.tier-tab').forEach(t => t.classList.remove('active'));
                 this.classList.add('active');
                 currentTier = this.dataset.tier;
+                currentPage = 1; // Reset to page 1 when changing tiers
                 displayRankings(allRankings);
             });
         });
@@ -831,5 +970,8 @@
         loadStatistics();
         loadRankings();
     </script>
+
+    <!-- Cache Buster for Real-time UI Updates -->
+    <script src="{{ url_for('static', filename='js/cache_buster.js') }}"></script>
 </body>
 </html>
