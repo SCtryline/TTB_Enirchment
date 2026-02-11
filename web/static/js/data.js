@@ -974,10 +974,239 @@ window.exportFilteredApollo = async function exportFilteredApollo() {
     }
 }
 
+// ============================================================
+// Brand URL Research Functions
+// ============================================================
+
+// Track whether we opened the filter modal for URL research
+let urlResearchMode = false;
+
+// Load URL research status on page load
+async function loadUrlResearchStatus() {
+    try {
+        const response = await fetch('/get_filter_options');
+        const data = await response.json();
+
+        const statusEl = document.getElementById('url-research-status');
+        if (statusEl && data.stats) {
+            const needingUrls = data.stats.not_enriched;
+            statusEl.innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; font-size: 0.875rem;">
+                    <div>
+                        <span style="color: #6b7280;">Total Brands:</span>
+                        <strong style="color: #111827;">${data.stats.total_brands}</strong>
+                    </div>
+                    <div>
+                        <span style="color: #6b7280;">Have URLs:</span>
+                        <strong style="color: #10b981;">${data.stats.enriched_brands}</strong>
+                    </div>
+                    <div>
+                        <span style="color: #6b7280;">Need URLs:</span>
+                        <strong style="color: #f59e0b;">${needingUrls}</strong>
+                    </div>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Failed to load URL research status:', error);
+    }
+}
+
+// Export brands needing URLs (no filter modal)
+window.exportBrandsNeedingUrls = async function exportBrandsNeedingUrls(format) {
+    try {
+        const params = new URLSearchParams();
+        params.append('enrichmentStatus', 'not_enriched');
+        params.append('format', format || 'csv');
+
+        const response = await fetch(`/export_brands_needing_urls?${params.toString()}`);
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Export failed');
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+
+        const contentDisposition = response.headers.get('Content-Disposition');
+        const filename = contentDisposition ?
+            contentDisposition.split('filename=')[1].replace(/"/g, '') :
+            `brands_needing_urls_${new Date().toISOString().split('T')[0]}.${format || 'csv'}`;
+
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+
+        showTemporaryMessage('Brands needing URLs exported!', 'success');
+
+    } catch (error) {
+        console.error('URL research export error:', error);
+        alert(`Export failed: ${error.message}`);
+    }
+}
+
+// Open filter modal in URL research mode
+window.openUrlResearchFilterModal = function openUrlResearchFilterModal() {
+    urlResearchMode = true;
+
+    // Pre-set filters for URL research
+    document.querySelector('input[name="enrichment-status"][value="not_enriched"]').checked = true;
+
+    openApolloFilterModal();
+}
+
+// Export filtered brands needing URLs (called from filter modal when in URL research mode)
+async function exportFilteredBrandsNeedingUrls(format) {
+    try {
+        const filters = getApolloFilters();
+
+        const params = new URLSearchParams();
+        if (filters.search) params.append('search', filters.search);
+        if (filters.countries.length) params.append('countries', filters.countries.join(','));
+        if (filters.classTypes.length) params.append('classTypes', filters.classTypes.join(','));
+        if (filters.importers.length) params.append('importers', filters.importers.join(','));
+        params.append('matchStatus', filters.matchStatus);
+        params.append('enrichmentStatus', filters.enrichmentStatus);
+        params.append('format', format || 'csv');
+
+        const response = await fetch(`/export_brands_needing_urls?${params.toString()}`);
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Export failed');
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+
+        const contentDisposition = response.headers.get('Content-Disposition');
+        const filename = contentDisposition ?
+            contentDisposition.split('filename=')[1].replace(/"/g, '') :
+            `brands_needing_urls_filtered_${new Date().toISOString().split('T')[0]}.${format || 'csv'}`;
+
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+
+        closeApolloFilterModal();
+        urlResearchMode = false;
+        showTemporaryMessage('Filtered brands exported for URL research!', 'success');
+
+    } catch (error) {
+        console.error('Filtered URL research export error:', error);
+        alert(`Export failed: ${error.message}`);
+    }
+}
+
+// Setup URL import handler
+function setupUrlImportHandler() {
+    const form = document.getElementById('url-import-form');
+    if (!form) return;
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const fileInput = document.getElementById('urlFile');
+        const file = fileInput.files[0];
+
+        if (!file) {
+            alert('Please select a file with brand URLs');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = 'Importing...';
+
+        const resultsDiv = document.getElementById('url-import-results');
+
+        try {
+            const response = await fetch('/upload_brand_urls', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                resultsDiv.innerHTML = `
+                    <div class="status-box success" style="margin-top: 12px;">
+                        <strong>URL Import Complete</strong><br>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-top: 8px; font-size: 0.875rem;">
+                            <span>Updated: <strong>${result.updated}</strong></span>
+                            <span>Already had URL: <strong>${result.already_had_url}</strong></span>
+                            <span>Not found: <strong>${result.not_found}</strong></span>
+                            <span>Skipped (empty): <strong>${result.skipped}</strong></span>
+                        </div>
+                    </div>
+                `;
+
+                // Reset form
+                form.reset();
+                const label = document.querySelector('label[for="urlFile"]');
+                if (label) label.textContent = 'Choose File with URLs';
+
+                // Refresh stats
+                await loadUrlResearchStatus();
+                await loadApolloStatus();
+
+            } else {
+                resultsDiv.innerHTML = `
+                    <div class="status-box error" style="margin-top: 12px;">
+                        Import failed: ${result.error}
+                    </div>
+                `;
+            }
+
+        } catch (error) {
+            console.error('URL import error:', error);
+            resultsDiv.innerHTML = `
+                <div class="status-box error" style="margin-top: 12px;">
+                    Import failed: ${error.message}
+                </div>
+            `;
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+    });
+
+    // Update label when file is selected
+    const fileInput = document.getElementById('urlFile');
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            const label = document.querySelector('label[for="urlFile"]');
+            if (this.files.length > 0) {
+                label.textContent = `Selected: ${this.files[0].name}`;
+            }
+        });
+    }
+}
+
+// Initialize URL research on DOM load
+document.addEventListener('DOMContentLoaded', function() {
+    loadUrlResearchStatus();
+    setupUrlImportHandler();
+});
+
 // Close modal when clicking outside
 window.onclick = function(event) {
     const modal = document.getElementById('apollo-filter-modal');
     if (event.target === modal) {
         closeApolloFilterModal();
+        urlResearchMode = false;
     }
 }

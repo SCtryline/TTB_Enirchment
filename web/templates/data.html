@@ -270,6 +270,55 @@
                     </div>
                 </div>
 
+                <!-- Brand URL Research -->
+                <div class="export-card" style="border: 2px solid #7c3aed;">
+                    <div class="export-header">
+                        <div class="export-icon">🔗</div>
+                        <h4>Brand URL Research</h4>
+                        <span class="badge" style="background: #7c3aed; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">NEW</span>
+                    </div>
+                    <p>Download a list of brands needing website URLs for manual research, then re-upload with URLs filled in.</p>
+
+                    <div id="url-research-status" style="background: #f3f4f6; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                        <div style="font-size: 0.875rem; color: #6b7280;">
+                            <span>Loading brand stats...</span>
+                        </div>
+                    </div>
+
+                    <div class="export-options">
+                        <h5 style="font-size: 0.875rem; margin-bottom: 8px; color: #374151;">Step 1: Download Brands Needing URLs</h5>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="export-btn" onclick="exportBrandsNeedingUrls('csv')" style="background: #7c3aed; color: white; flex: 1;">
+                                <span class="btn-icon">📄</span>
+                                Download CSV
+                            </button>
+                            <button class="export-btn" onclick="exportBrandsNeedingUrls('xlsx')" style="background: #7c3aed; color: white; flex: 1;">
+                                <span class="btn-icon">📊</span>
+                                Download Excel
+                            </button>
+                        </div>
+                        <button class="export-btn" onclick="openUrlResearchFilterModal()" style="background: #6d28d9; color: white; width: 100%; margin-top: 8px;">
+                            <span class="btn-icon">🎯</span>
+                            Download with Filters
+                        </button>
+
+                        <h5 style="font-size: 0.875rem; margin: 16px 0 8px 0; color: #374151;">Step 2: Upload Completed URLs</h5>
+                        <form id="url-import-form" style="display: flex; flex-direction: column; gap: 8px;">
+                            <div class="file-input-wrapper" style="margin: 0;">
+                                <input type="file" id="urlFile" name="file" accept=".csv,.xlsx,.xls">
+                                <label for="urlFile" class="file-label" style="background: #10b981; color: white;">
+                                    📁 Choose File with URLs
+                                </label>
+                            </div>
+                            <button type="submit" class="btn" style="background: #10b981; color: white;">
+                                Import Brand URLs
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="results-container" id="url-import-results"></div>
+                </div>
+
                 <!-- System Reports -->
                 <div class="export-card">
                     <div class="export-header">
@@ -460,7 +509,7 @@
                 </div>
 
                 <!-- Action Buttons -->
-                <div style="display: flex; gap: 10px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+                <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
                     <button onclick="resetApolloFilters()" style="padding: 10px 20px; background: #6b7280; color: white; border: none; border-radius: 6px; cursor: pointer;">
                         Reset Filters
                     </button>
@@ -472,6 +521,12 @@
                     </button>
                     <button onclick="exportFilteredApollo()" style="padding: 10px 20px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
                         Export Filtered Brands
+                    </button>
+                    <button onclick="exportFilteredBrandsNeedingUrls('csv')" style="padding: 10px 20px; background: #7c3aed; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                        Export for URL Research (CSV)
+                    </button>
+                    <button onclick="exportFilteredBrandsNeedingUrls('xlsx')" style="padding: 10px 20px; background: #6d28d9; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                        Export for URL Research (Excel)
                     </button>
                 </div>
             </div>

@@ -30,7 +30,7 @@ Tests are in `tests/` — they are integration-style tests, not unit tests. No p
 ## Architecture
 
 ### Entry Point
-`app.py` — monolithic Flask app (~1200 lines) containing all routes, API endpoints, caching logic, and the cache invalidation system. This is the central orchestrator that wires everything together.
+`app.py` — monolithic Flask app (~3600 lines) containing all routes, API endpoints, caching logic, and the cache invalidation system. This is the central orchestrator that wires everything together. Includes URL research export/import endpoints near the end of file.
 
 ### Core Modules (`core/`)
 - `database.py` (94KB) — `BrandDatabaseV2` class wrapping SQLite with WAL mode. All database access goes through this. Tables: `brands`, `skus`, `master_importers`, `consolidation_history`. Uses JSON fields for complex data (enrichment_data, apollo_data).
@@ -76,12 +76,13 @@ Server-rendered Jinja2 templates with vanilla JavaScript:
 3. **Enrichment** → search for brand websites using selected search backend → learning system records patterns → update database
 4. **Apollo Integration** → use discovered domains for contact lookup → user selects contacts → unlock emails (1 credit each) → save to DB
 5. **Consolidation** → detect duplicate/related brands via name similarity + URL analysis → generate proposals → user reviews in audit UI → merge
-6. **Cache Invalidation** → any DB write increments `db_version` → clears all server caches → client detects version change → auto-refresh
+6. **URL Research** (`/data`) → export filtered brands needing URLs as CSV/Excel (`/export_brands_needing_urls`) → assistant researches and fills in URLs → re-upload via `/upload_brand_urls` → `bulk_update_brand_urls()` writes to `enrichment_data` with `source: "manual_import"`
+7. **Cache Invalidation** → any DB write increments `db_version` → clears all server caches → client detects version change → auto-refresh
 
 ## Key Patterns
 
 - **Cache invalidation**: `invalidate_all_caches()` in `app.py` must be called after every database write. It increments `db_version` and clears all 4 caches (filter, brand_list, all_brands, stats).
-- **Enrichment data structure**: Flat JSON stored in `enrichment_data` column — fields: `url`, `domain`, `confidence`, `source`, `verification_status`, `notes`, `updated_date`, `title`, `description`. Queried via `json_extract(enrichment_data, '$.url')`.
+- **Enrichment data structure**: Flat JSON stored in `enrichment_data` column — fields: `url`, `domain`, `confidence`, `source`, `verification_status`, `notes`, `updated_date`, `title`, `description`. Queried via `json_extract(enrichment_data, '$.url')`. Bulk URL imports set `source: "manual_import"` and `verification_status: "unverified"`.
 - **Frontend visibility**: Use `classList.add/remove('hidden')` for show/hide. Use `safeJsonParse(response)` for JSON parsing.
 - **Domain handling**: Auto-strips `www.` prefix during processing.
 - **Database concurrency**: SQLite WAL mode enabled. All access through `BrandDatabaseV2`.

@@ -1439,6 +1439,62 @@ class BrandDatabaseV2:
             return True
         return False
 
+    def bulk_update_brand_urls(self, url_data):
+        """Update enrichment_data URLs for multiple brands from a bulk import.
+
+        Args:
+            url_data: list of dicts with 'brand_name' and 'url' keys
+
+        Returns:
+            dict with counts {updated, not_found, already_had_url, skipped}
+        """
+        results = {'updated': 0, 'not_found': 0, 'already_had_url': 0, 'skipped': 0}
+
+        for entry in url_data:
+            brand_name = entry.get('brand_name', '').strip()
+            url = entry.get('url', '').strip()
+
+            if not brand_name or not url:
+                results['skipped'] += 1
+                continue
+
+            cursor = self.conn.execute(
+                'SELECT enrichment_data FROM brands WHERE brand_name = ?',
+                (brand_name,)
+            )
+            row = cursor.fetchone()
+
+            if row is None:
+                results['not_found'] += 1
+                continue
+
+            enrichment = json.loads(row['enrichment_data'] or '{}')
+
+            # Check if brand already has a URL
+            existing_url = enrichment.get('url', '')
+            if existing_url:
+                results['already_had_url'] += 1
+                continue
+
+            # Extract domain from URL
+            domain = url.replace('https://', '').replace('http://', '').replace('www.', '').split('/')[0]
+
+            enrichment['url'] = url
+            enrichment['domain'] = domain
+            enrichment['source'] = 'manual_import'
+            enrichment['verification_status'] = 'unverified'
+            enrichment['updated_date'] = datetime.now().isoformat()
+
+            self.conn.execute(
+                'UPDATE brands SET enrichment_data = ? WHERE brand_name = ?',
+                (json.dumps(enrichment), brand_name)
+            )
+            results['updated'] += 1
+
+        self.conn.commit()
+        self.db = self._load_as_dict()
+        return results
+
     def add_manual_website_entry(self, brand_name, website_data):
         """Add a manual website entry (separate from automatic enrichment)"""
         cursor = self.conn.execute('SELECT manual_websites FROM brands WHERE brand_name = ?', (brand_name,))

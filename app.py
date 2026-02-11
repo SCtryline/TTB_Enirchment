@@ -1382,12 +1382,21 @@ def manual_url_training():
 
 @app.route('/get_apollo_status', methods=['GET'])
 def get_apollo_status():
-    """Get Apollo API status"""
+    """Get Apollo API status and enrichment statistics"""
     try:
         apollo_key = os.getenv('APOLLO_API_KEY')
+        stats = get_cached_statistics()
+        total_brands = stats.get('total_brands', 0)
+        brands_with_websites = stats.get('brands_with_websites', 0)
+        enrichment_pct = round((brands_with_websites / total_brands * 100), 1) if total_brands > 0 else 0
+
         return jsonify({
             'has_key': bool(apollo_key),
-            'status': 'enabled' if apollo_key else 'disabled'
+            'status': 'enabled' if apollo_key else 'disabled',
+            'total_brands': total_brands,
+            'enriched_brands': brands_with_websites,
+            'brands_with_websites': brands_with_websites,
+            'enrichment_percentage': enrichment_pct
         }), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -3342,6 +3351,316 @@ def get_priority_queue():
         import traceback
         logger.error(traceback.format_exc())
         return jsonify({'error': str(e)}), 500
+
+# ============================================================
+# URL Research Export/Import Endpoints
+# ============================================================
+
+@app.route('/get_filter_options', methods=['GET'])
+def get_filter_options():
+    """Get distinct filter values and stats for the filter modal"""
+    try:
+        all_brands = get_cached_all_brands()
+
+        importers_set = set()
+        countries_set = set()
+        class_types_set = set()
+        enriched_count = 0
+
+        for brand in all_brands:
+            for country in brand.get('countries', []):
+                if country:
+                    countries_set.add(country)
+            for ct in brand.get('class_types', []):
+                if ct:
+                    class_types_set.add(ct)
+            for imp in brand.get('importers', []):
+                if isinstance(imp, dict):
+                    name = imp.get('owner_name', '')
+                    if name:
+                        importers_set.add(name)
+
+            enrichment = brand.get('enrichment', {})
+            if enrichment and (enrichment.get('url') or enrichment.get('website')):
+                enriched_count += 1
+
+        total_brands = len(all_brands)
+
+        return jsonify({
+            'importers': sorted(importers_set),
+            'countries': sorted(countries_set),
+            'class_types': sorted(class_types_set),
+            'stats': {
+                'total_brands': total_brands,
+                'enriched_brands': enriched_count,
+                'not_enriched': total_brands - enriched_count
+            }
+        })
+    except Exception as e:
+        logger.error(f"Error getting filter options: {e}")
+        return error_response(e)
+
+
+@app.route('/export_brands_needing_urls', methods=['GET'])
+def export_brands_needing_urls():
+    """Export filtered brands that need URLs as CSV or Excel"""
+    try:
+        # Read filter params
+        importers_param = request.args.get('importers', '')
+        countries_param = request.args.get('countries', '')
+        class_types_param = request.args.get('classTypes', '')
+        search = request.args.get('search', '').strip().lower()
+        enrichment_status = request.args.get('enrichmentStatus', 'not_enriched')
+        match_status = request.args.get('matchStatus', 'all')
+        file_format = request.args.get('format', 'csv')
+        tier_param = request.args.get('tier', '')
+
+        selected_importers = [i.strip() for i in importers_param.split(',') if i.strip()] if importers_param else []
+        selected_countries = [c.strip() for c in countries_param.split(',') if c.strip()] if countries_param else []
+        selected_class_types = [c.strip() for c in class_types_param.split(',') if c.strip()] if class_types_param else []
+
+        all_brands = get_cached_all_brands()
+        filtered = []
+
+        for brand in all_brands:
+            # Search filter
+            if search and search not in brand.get('brand_name', '').lower():
+                continue
+
+            # Enrichment status filter
+            enrichment = brand.get('enrichment', {})
+            has_url = bool(enrichment and (enrichment.get('url') or enrichment.get('website')))
+            if enrichment_status == 'not_enriched' and has_url:
+                continue
+            elif enrichment_status == 'enriched' and not has_url:
+                continue
+
+            # Match status filter
+            brand_importers = brand.get('importers', [])
+            has_importers = len(brand_importers) > 0
+            if match_status == 'matched' and not has_importers:
+                continue
+            elif match_status == 'unmatched' and has_importers:
+                continue
+
+            # Importers filter
+            if selected_importers:
+                importer_names = [imp.get('owner_name', '') for imp in brand_importers if isinstance(imp, dict)]
+                if not any(name in selected_importers for name in importer_names):
+                    continue
+
+            # Countries filter
+            if selected_countries:
+                if not any(c in selected_countries for c in brand.get('countries', [])):
+                    continue
+
+            # Class types filter
+            if selected_class_types:
+                if not any(ct in selected_class_types for ct in brand.get('class_types', [])):
+                    continue
+
+            # Build row
+            importer_names = ', '.join(
+                imp.get('owner_name', '') for imp in brand_importers if isinstance(imp, dict) and imp.get('owner_name')
+            )
+            filtered.append({
+                'brand_name': brand.get('brand_name', ''),
+                'total_skus': brand.get('total_skus', 0),
+                'countries': ', '.join(brand.get('countries', [])),
+                'class_types': ', '.join(brand.get('class_types', [])),
+                'importers': importer_names,
+                'url': ''  # Blank for assistant to fill in
+            })
+
+        if not filtered:
+            return jsonify({'error': 'No brands match the selected filters'}), 404
+
+        df = pd.DataFrame(filtered)
+
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+
+        if file_format == 'xlsx':
+            output = io.BytesIO()
+            with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                df.to_excel(writer, index=False, sheet_name='Brands Needing URLs')
+            output.seek(0)
+            return send_file(
+                output,
+                mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                as_attachment=True,
+                download_name=f'brands_needing_urls_{timestamp}.xlsx'
+            )
+        else:
+            output = io.StringIO()
+            df.to_csv(output, index=False)
+            output.seek(0)
+            return send_file(
+                io.BytesIO(output.getvalue().encode('utf-8')),
+                mimetype='text/csv',
+                as_attachment=True,
+                download_name=f'brands_needing_urls_{timestamp}.csv'
+            )
+
+    except Exception as e:
+        logger.error(f"Error exporting brands needing URLs: {e}")
+        return error_response(e)
+
+
+@app.route('/upload_brand_urls', methods=['POST'])
+def upload_brand_urls():
+    """Import a file with brand URLs filled in by a research assistant"""
+    try:
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file provided'}), 400
+
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+
+        if not allowed_file(file.filename):
+            return jsonify({'error': 'Invalid file type. Use CSV or Excel.'}), 400
+
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
+
+        # Read file
+        if filename.endswith('.csv'):
+            encodings = ['utf-8', 'latin-1', 'cp1252']
+            df = None
+            for enc in encodings:
+                try:
+                    df = pd.read_csv(filepath, encoding=enc)
+                    break
+                except UnicodeDecodeError:
+                    continue
+            if df is None:
+                return jsonify({'error': 'Unable to read CSV. Check encoding.'}), 400
+        else:
+            df = pd.read_excel(filepath)
+
+        # Validate required columns
+        df.columns = [c.strip().lower() for c in df.columns]
+        if 'brand_name' not in df.columns or 'url' not in df.columns:
+            return jsonify({
+                'error': f'File must contain "brand_name" and "url" columns. Found: {", ".join(df.columns)}'
+            }), 400
+
+        # Build URL data list (only rows with non-empty URLs)
+        url_data = []
+        for _, row in df.iterrows():
+            url_val = str(row.get('url', '')).strip()
+            if url_val and url_val.lower() not in ('nan', '', 'none'):
+                url_data.append({
+                    'brand_name': str(row['brand_name']).strip(),
+                    'url': url_val
+                })
+
+        if not url_data:
+            return jsonify({'error': 'No rows with URLs found in the uploaded file.'}), 400
+
+        results = brand_db.bulk_update_brand_urls(url_data)
+        invalidate_all_caches()
+
+        return jsonify({
+            'success': True,
+            'message': f"URL import complete: {results['updated']} brands updated",
+            'updated': results['updated'],
+            'not_found': results['not_found'],
+            'already_had_url': results['already_had_url'],
+            'skipped': results['skipped'],
+            'total_processed': len(url_data)
+        })
+
+    except Exception as e:
+        logger.error(f"Error uploading brand URLs: {e}")
+        return error_response(e)
+
+
+@app.route('/export_apollo_filtered', methods=['GET'])
+def export_apollo_filtered():
+    """Export filtered brands for Apollo enrichment"""
+    try:
+        importers_param = request.args.get('importers', '')
+        countries_param = request.args.get('countries', '')
+        class_types_param = request.args.get('classTypes', '')
+        search = request.args.get('search', '').strip().lower()
+        enrichment_status = request.args.get('enrichmentStatus', 'all')
+        match_status = request.args.get('matchStatus', 'all')
+        exclude_enriched = request.args.get('excludeEnriched', 'false') == 'true'
+
+        selected_importers = [i.strip() for i in importers_param.split(',') if i.strip()] if importers_param else []
+        selected_countries = [c.strip() for c in countries_param.split(',') if c.strip()] if countries_param else []
+        selected_class_types = [c.strip() for c in class_types_param.split(',') if c.strip()] if class_types_param else []
+
+        all_brands = get_cached_all_brands()
+        filtered = []
+
+        for brand in all_brands:
+            if search and search not in brand.get('brand_name', '').lower():
+                continue
+
+            enrichment = brand.get('enrichment', {})
+            has_url = bool(enrichment and (enrichment.get('url') or enrichment.get('website')))
+
+            if enrichment_status == 'not_enriched' and has_url:
+                continue
+            elif enrichment_status == 'enriched' and not has_url:
+                continue
+            if exclude_enriched and has_url:
+                continue
+
+            brand_importers = brand.get('importers', [])
+            has_importers = len(brand_importers) > 0
+            if match_status == 'matched' and not has_importers:
+                continue
+            elif match_status == 'unmatched' and has_importers:
+                continue
+
+            if selected_importers:
+                importer_names = [imp.get('owner_name', '') for imp in brand_importers if isinstance(imp, dict)]
+                if not any(name in selected_importers for name in importer_names):
+                    continue
+            if selected_countries:
+                if not any(c in selected_countries for c in brand.get('countries', [])):
+                    continue
+            if selected_class_types:
+                if not any(ct in selected_class_types for ct in brand.get('class_types', [])):
+                    continue
+
+            importer_names_str = ', '.join(
+                imp.get('owner_name', '') for imp in brand_importers if isinstance(imp, dict) and imp.get('owner_name')
+            )
+            website = enrichment.get('url', '') if enrichment else ''
+            filtered.append({
+                'brand_name': brand.get('brand_name', ''),
+                'website': website,
+                'countries': ', '.join(brand.get('countries', [])),
+                'class_types': ', '.join(brand.get('class_types', [])),
+                'importers': importer_names_str,
+                'total_skus': brand.get('total_skus', 0)
+            })
+
+        if not filtered:
+            return jsonify({'error': 'No brands match the selected filters'}), 404
+
+        df = pd.DataFrame(filtered)
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+
+        output = io.StringIO()
+        df.to_csv(output, index=False)
+        output.seek(0)
+        return send_file(
+            io.BytesIO(output.getvalue().encode('utf-8')),
+            mimetype='text/csv',
+            as_attachment=True,
+            download_name=f'apollo_filtered_{timestamp}.csv'
+        )
+
+    except Exception as e:
+        logger.error(f"Error exporting filtered Apollo data: {e}")
+        return error_response(e)
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
