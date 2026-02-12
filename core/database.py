@@ -1199,6 +1199,261 @@ class BrandDatabaseV2:
         
         return filter_counts
 
+    def get_scoped_filter_counts(self, search='', filters=None):
+        """
+        Faceted filter counts — for each dimension, count with all OTHER filters applied.
+        This means selecting an importer will update country/alcohol/website counts
+        to reflect only that importer's brands, but the importer list itself stays
+        scoped by the other dimensions only.
+
+        Returns same structure as get_filter_counts().
+        """
+        filters = filters or {}
+
+        # If no active filters and no search, return global counts
+        has_any_filter = any(
+            filters.get(k) for k in ['importers', 'alcoholTypes', 'producers', 'countries', 'websiteStatus', 'downloadStatus']
+        )
+        if not has_any_filter and not search:
+            return self.get_filter_counts()
+
+        # Dimension keys and the filter keys they correspond to
+        dimensions = ['importers', 'alcoholTypes', 'producers', 'countries', 'websiteStatus', 'downloadStatus']
+
+        def _build_where(exclude_dimension=None):
+            """Build WHERE clauses applying all filters EXCEPT exclude_dimension."""
+            clauses = []
+            params = []
+
+            if search:
+                clauses.append("LOWER(b.brand_name) LIKE LOWER(?)")
+                params.append(f'%{search}%')
+
+            if exclude_dimension != 'countries' and filters.get('countries'):
+                conds = []
+                for country in filters['countries']:
+                    conds.append("b.countries LIKE ?")
+                    params.append(f'%"{country}"%')
+                clauses.append(f"({' OR '.join(conds)})")
+
+            if exclude_dimension != 'alcoholTypes' and filters.get('alcoholTypes'):
+                conds = []
+                for t in filters['alcoholTypes']:
+                    conds.append("LOWER(b.class_types) LIKE LOWER(?)")
+                    params.append(f'%{t}%')
+                clauses.append(f"({' OR '.join(conds)})")
+
+            if exclude_dimension != 'websiteStatus' and filters.get('websiteStatus'):
+                conds = []
+                for status in filters['websiteStatus']:
+                    if status == 'has_website':
+                        conds.append("""(
+                            (b.website IS NOT NULL AND b.website != '') OR
+                            (b.enrichment_data LIKE '%"url":%' OR b.enrichment_data LIKE '%manual_override%')
+                        )""")
+                    elif status == 'verified':
+                        conds.append("""(
+                            b.website LIKE '%"verification_status": "verified"%' OR
+                            b.enrichment_data LIKE '%"verification_status": "verified"%' OR
+                            b.enrichment_data LIKE '%"verified": true%'
+                        )""")
+                    elif status == 'no_website':
+                        conds.append("""(
+                            (b.website IS NULL OR b.website = '') AND
+                            (b.enrichment_data IS NULL OR
+                             (b.enrichment_data NOT LIKE '%"url":%' AND b.enrichment_data NOT LIKE '%manual_override%'))
+                        )""")
+                if conds:
+                    clauses.append(f"({' OR '.join(conds)})")
+
+            if exclude_dimension != 'downloadStatus' and filters.get('downloadStatus'):
+                conds = []
+                for status in filters['downloadStatus']:
+                    if status == 'downloaded':
+                        conds.append("b.last_downloaded_at IS NOT NULL")
+                    elif status == 'not_downloaded':
+                        conds.append("b.last_downloaded_at IS NULL")
+                if conds:
+                    clauses.append(f"({' OR '.join(conds)})")
+
+            if exclude_dimension != 'importers' and filters.get('importers'):
+                conds = []
+                for imp in filters['importers']:
+                    conds.append("b.importers LIKE ?")
+                    params.append(f'%"{imp}"%')
+                clauses.append(f"({' OR '.join(conds)})")
+
+            if exclude_dimension != 'producers' and filters.get('producers'):
+                conds = []
+                for producer in filters['producers']:
+                    if '(' in producer and producer.endswith(')'):
+                        type_part = producer.split(' (')[0]
+                        state_part = producer.split('(')[1].rstrip(')')
+                        type_map = {
+                            'Distilled Spirits Producer': 'DSP',
+                            'Bonded Winery': 'BWN',
+                            'Brewer': 'BR',
+                            'Beer Growler': 'BG'
+                        }
+                        permit_prefix = type_map.get(type_part, type_part)
+                        permit_pattern = f"{permit_prefix}-{state_part}-%"
+                        conds.append("""
+                            b.brand_name IN (
+                                SELECT DISTINCT brand_name FROM skus WHERE permit_no LIKE ?
+                            )
+                        """)
+                        params.append(permit_pattern)
+                if conds:
+                    clauses.append(f"({' OR '.join(conds)})")
+
+            where_sql = ''
+            if clauses:
+                where_sql = ' WHERE ' + ' AND '.join(clauses)
+            return where_sql, params
+
+        def _count_from_rows(rows, exclude_dimension):
+            """Aggregate counts from brand rows for non-producer dimensions."""
+            counts = {
+                'importers': {},
+                'alcoholTypes': {},
+                'countries': {},
+                'websiteStatus': {'has_website': 0, 'verified': 0, 'no_website': 0},
+                'downloadStatus': {'downloaded': 0, 'not_downloaded': 0}
+            }
+
+            for row in rows:
+                if exclude_dimension != 'countries':
+                    countries = json.loads(row['countries'] or '[]')
+                    for country in countries:
+                        counts['countries'][country] = counts['countries'].get(country, 0) + 1
+
+                if exclude_dimension != 'alcoholTypes':
+                    class_types = json.loads(row['class_types'] or '[]')
+                    for ct in class_types:
+                        counts['alcoholTypes'][ct] = counts['alcoholTypes'].get(ct, 0) + 1
+
+                if exclude_dimension != 'importers':
+                    importers = json.loads(row['importers'] or '{}')
+                    for imp_data in importers.values():
+                        if imp_data.get('permit_number', '').count('-I-'):
+                            name = imp_data.get('owner_name', '')
+                            if name:
+                                counts['importers'][name] = counts['importers'].get(name, 0) + 1
+
+                if exclude_dimension != 'websiteStatus':
+                    has_website = False
+                    is_verified = False
+                    if row['website']:
+                        has_website = True
+                        wd = json.loads(row['website'] or '{}')
+                        if wd.get('verification_status') == 'verified':
+                            is_verified = True
+                    if row['enrichment_data']:
+                        ed = json.loads(row['enrichment_data'] or '{}')
+                        if ed.get('url') or ed.get('source') == 'manual_override':
+                            has_website = True
+                            if ed.get('verification_status') == 'verified':
+                                is_verified = True
+                        if ed.get('website'):
+                            wn = ed['website']
+                            if wn.get('url'):
+                                has_website = True
+                                if wn.get('verified') == True or wn.get('verification_status') == 'verified':
+                                    is_verified = True
+                    if has_website:
+                        counts['websiteStatus']['has_website'] += 1
+                        if is_verified:
+                            counts['websiteStatus']['verified'] += 1
+                    else:
+                        counts['websiteStatus']['no_website'] += 1
+
+                if exclude_dimension != 'downloadStatus':
+                    if row['last_downloaded_at']:
+                        counts['downloadStatus']['downloaded'] += 1
+                    else:
+                        counts['downloadStatus']['not_downloaded'] += 1
+
+            return counts
+
+        def _count_producers(where_sql, params):
+            """Count producers from SKUs table with the given WHERE on brands."""
+            producer_counts = {}
+            query = f'''
+                SELECT s.permit_no, COUNT(DISTINCT s.brand_name) as brand_count
+                FROM skus s
+                INNER JOIN brands b ON s.brand_name = b.brand_name
+                {where_sql}
+                {'AND' if where_sql else 'WHERE'} s.permit_no NOT LIKE '%-I-%'
+                AND s.permit_no IS NOT NULL AND s.permit_no != ''
+                GROUP BY s.permit_no
+            '''
+            cursor = self.conn.execute(query, params)
+            type_names = {
+                'DSP': 'Distilled Spirits Producer',
+                'BWN': 'Bonded Winery',
+                'BR': 'Brewer',
+                'BG': 'Beer Growler'
+            }
+            for row in cursor:
+                parts = row['permit_no'].split('-')
+                if len(parts) >= 3:
+                    producer_name = f"{type_names.get(parts[0], parts[0])} ({parts[1]})"
+                    producer_counts[producer_name] = producer_counts.get(producer_name, 0) + row['brand_count']
+            return producer_counts
+
+        # Determine which dimensions actually have active filters
+        active_dims = [d for d in dimensions if filters.get(d)]
+
+        # Result structure
+        result = {
+            'importers': {},
+            'alcoholTypes': {},
+            'producers': {},
+            'countries': {},
+            'websiteStatus': {'has_website': 0, 'verified': 0, 'no_website': 0},
+            'downloadStatus': {'downloaded': 0, 'not_downloaded': 0}
+        }
+
+        # For each dimension, we need counts with that dimension excluded from filters.
+        # Optimization: dimensions with no active filter all share the "all filters applied" WHERE.
+        # Group them together to avoid redundant queries.
+
+        # First, run the "all filters applied" query (no exclusion) for dimensions without active filters
+        inactive_dims = [d for d in dimensions if not filters.get(d)]
+        if inactive_dims:
+            where_sql, params = _build_where(exclude_dimension=None)
+            query = f'''
+                SELECT b.brand_name, b.countries, b.class_types, b.importers,
+                       b.website, b.enrichment_data, b.last_downloaded_at
+                FROM brands b {where_sql}
+            '''
+            rows = self.conn.execute(query, params).fetchall()
+            shared_counts = _count_from_rows(rows, exclude_dimension=None)
+
+            for dim in inactive_dims:
+                if dim == 'producers':
+                    result['producers'] = _count_producers(where_sql, params)
+                elif dim in shared_counts:
+                    result[dim] = shared_counts[dim]
+
+        # Now run per-dimension queries for dimensions WITH active filters
+        for dim in active_dims:
+            where_sql, params = _build_where(exclude_dimension=dim)
+            query = f'''
+                SELECT b.brand_name, b.countries, b.class_types, b.importers,
+                       b.website, b.enrichment_data, b.last_downloaded_at
+                FROM brands b {where_sql}
+            '''
+            rows = self.conn.execute(query, params).fetchall()
+            dim_counts = _count_from_rows(rows, exclude_dimension=None)
+
+            if dim == 'producers':
+                result['producers'] = _count_producers(where_sql, params)
+            elif dim in dim_counts:
+                result[dim] = dim_counts[dim]
+
+        return result
+
     def mark_brands_downloaded(self, brand_names):
         """Mark a list of brands as downloaded with the current timestamp"""
         if not brand_names:
@@ -2072,115 +2327,6 @@ class BrandDatabaseV2:
                 'page': page,
                 'per_page': per_page,
                 'total_pages': 0
-            }
-    
-    def get_filter_counts(self):
-        """
-        Optimized method to get filter counts using database aggregation
-        Returns counts for all filter categories used in the UI
-        """
-        try:
-            counts = {
-                'importers': {},
-                'alcoholTypes': {},
-                'producers': {},
-                'countries': {},
-                'websiteStatus': {'has_website': 0, 'verified': 0, 'no_website': 0}
-            }
-            
-            # Get website status counts using SQL
-            cursor = self.conn.execute('''
-                SELECT 
-                    CASE 
-                        WHEN enrichment_data IS NOT NULL OR website IS NOT NULL THEN 'has_website'
-                        ELSE 'no_website'
-                    END as status,
-                    COUNT(*) as count
-                FROM brands
-                GROUP BY status
-            ''')
-            
-            for row in cursor:
-                if row['status'] == 'has_website':
-                    counts['websiteStatus']['has_website'] = row['count']
-                else:
-                    counts['websiteStatus']['no_website'] = row['count']
-            
-            # Get verified count
-            cursor = self.conn.execute('''
-                SELECT COUNT(*) as count
-                FROM brands
-                WHERE enrichment_data IS NOT NULL 
-                AND json_extract(enrichment_data, '$.website.verification_status') = 'verified'
-            ''')
-            verified_count = cursor.fetchone()
-            if verified_count:
-                counts['websiteStatus']['verified'] = verified_count['count']
-            
-            # For JSON columns, we need to parse and aggregate
-            # This is still more efficient than loading all brands into memory
-            cursor = self.conn.execute('''
-                SELECT countries, class_types, importers, producers
-                FROM brands
-                WHERE countries IS NOT NULL 
-                   OR class_types IS NOT NULL 
-                   OR importers IS NOT NULL 
-                   OR producers IS NOT NULL
-            ''')
-            
-            for row in cursor:
-                # Count countries
-                if row['countries']:
-                    try:
-                        countries = json.loads(row['countries'])
-                        for country in countries:
-                            counts['countries'][country] = counts['countries'].get(country, 0) + 1
-                    except:
-                        pass
-                
-                # Count alcohol types
-                if row['class_types']:
-                    try:
-                        class_types = json.loads(row['class_types'])
-                        for class_type in class_types:
-                            counts['alcoholTypes'][class_type] = counts['alcoholTypes'].get(class_type, 0) + 1
-                    except:
-                        pass
-                
-                # Count importers
-                if row['importers']:
-                    try:
-                        importers = json.loads(row['importers'])
-                        for permit, importer_data in importers.items():
-                            if isinstance(importer_data, dict):
-                                name = importer_data.get('owner_name', '')
-                                if name:
-                                    counts['importers'][name] = counts['importers'].get(name, 0) + 1
-                    except:
-                        pass
-                
-                # Count producers
-                if row['producers']:
-                    try:
-                        producers = json.loads(row['producers'])
-                        for permit, producer_data in producers.items():
-                            if isinstance(producer_data, dict):
-                                name = producer_data.get('owner_name', '')
-                                if name:
-                                    counts['producers'][name] = counts['producers'].get(name, 0) + 1
-                    except:
-                        pass
-            
-            return counts
-            
-        except Exception as e:
-            logger.error(f"Error getting filter counts: {e}")
-            return {
-                'importers': {},
-                'alcoholTypes': {},
-                'producers': {},
-                'countries': {},
-                'websiteStatus': {'has_website': 0, 'verified': 0, 'no_website': 0}
             }
     
     def reload_from_disk(self):

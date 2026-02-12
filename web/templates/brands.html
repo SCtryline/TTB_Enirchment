@@ -240,6 +240,23 @@
                         Download Filtered (Excel)
                     </button>
                 </div>
+
+                <!-- URL Upload Section -->
+                <div class="filter-section-upload">
+                    <div class="upload-section-header">Upload Brand URLs</div>
+                    <p class="upload-help-text">Upload a CSV/Excel with brand_name and url columns</p>
+                    <form id="brand-url-upload-form" enctype="multipart/form-data">
+                        <label class="upload-file-label" for="brand-url-file">
+                            {{ icon('upload', 14) }} Choose File
+                        </label>
+                        <input type="file" id="brand-url-file" accept=".csv,.xlsx,.xls" hidden>
+                        <span class="upload-file-name" id="upload-file-name">No file chosen</span>
+                        <button type="submit" class="upload-submit-btn" id="upload-submit-btn" disabled>
+                            Upload URLs
+                        </button>
+                    </form>
+                    <div class="upload-result" id="upload-result" style="display:none;"></div>
+                </div>
             </div>
         </div>
 

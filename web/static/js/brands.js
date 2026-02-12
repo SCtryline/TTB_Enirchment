@@ -59,6 +59,9 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Initialize filters (this will also load brands)
         console.log('🔧 Initializing filters...');
         await initializeFilters();
+
+        // Initialize URL upload handler
+        setupUrlUpload();
         console.log('✅ Brands page initialization complete!');
     
     // Search functionality
@@ -461,7 +464,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     async function performSearch() {
         currentSearch = brandSearch.value.trim();
         currentPage = 1;
-        await loadBrands(currentPage, currentSearch, currentPerPage, currentSort, sortDirection, activeFilters);
+        await Promise.all([
+            loadBrands(currentPage, currentSearch, currentPerPage, currentSort, sortDirection, activeFilters),
+            loadScopedFilterCounts()
+        ]);
         updateURL();
     }
     
@@ -976,14 +982,17 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
 
         console.log('Applying filters:', activeFilters);
-        
+
         currentPage = 1;
-        await loadBrands(currentPage, currentSearch, currentPerPage, currentSort, sortDirection, activeFilters);
+        await Promise.all([
+            loadBrands(currentPage, currentSearch, currentPerPage, currentSort, sortDirection, activeFilters),
+            loadScopedFilterCounts()
+        ]);
         updateFilterCount();
         updateURL();
     };
     
-    window.resetFilters = function() {
+    window.resetFilters = async function() {
         // Clear all filters
         activeFilters = {
             importers: [],
@@ -993,12 +1002,12 @@ document.addEventListener('DOMContentLoaded', async function() {
             websiteStatus: [],
             downloadStatus: []
         };
-        
+
         // Uncheck all checkboxes
         document.querySelectorAll('.filter-option input[type="checkbox"]').forEach(checkbox => {
             checkbox.checked = false;
         });
-        
+
         // Uncheck all quick toggle checkboxes and remove active states
         document.querySelectorAll('.quick-toggle-checkbox').forEach(checkbox => {
             checkbox.checked = false;
@@ -1007,18 +1016,22 @@ document.addEventListener('DOMContentLoaded', async function() {
                 quickToggleItem.classList.remove('active');
             }
         });
-        
+
         // Clear search inputs
         document.querySelectorAll('.filter-search').forEach(input => {
             input.value = '';
         });
-        
+
         // Reset filter displays
         document.querySelectorAll('.filter-options .filter-option').forEach(option => {
             option.style.display = 'flex';
         });
-        
+
         updateActiveFiltersDisplay();
+
+        // Restore global counts by re-populating from original filter data
+        populateFilterOptions();
+
         window.applyFilters();
     };
     
@@ -1146,8 +1159,163 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     }
     
+    // === URL UPLOAD HANDLER ===
+    function setupUrlUpload() {
+        const fileInput = document.getElementById('brand-url-file');
+        const fileNameEl = document.getElementById('upload-file-name');
+        const submitBtn = document.getElementById('upload-submit-btn');
+        const form = document.getElementById('brand-url-upload-form');
+        const resultEl = document.getElementById('upload-result');
+
+        if (!fileInput || !form) return;
+
+        fileInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                fileNameEl.textContent = file.name;
+                submitBtn.disabled = false;
+            } else {
+                fileNameEl.textContent = 'No file chosen';
+                submitBtn.disabled = true;
+            }
+        });
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Uploading...';
+            resultEl.style.display = 'none';
+
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const response = await fetch('/upload_brand_urls', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    resultEl.className = 'upload-result success';
+                    resultEl.textContent = data.message;
+                    resultEl.style.display = 'block';
+                    // Reset form
+                    fileInput.value = '';
+                    fileNameEl.textContent = 'No file chosen';
+                    // Refresh brands table + filter counts
+                    await loadFilterData();
+                    populateFilterOptions();
+                    await loadBrands(currentPage, currentSearch, currentPerPage, currentSort, sortDirection, activeFilters);
+                } else {
+                    throw new Error(data.error || 'Upload failed');
+                }
+            } catch (error) {
+                resultEl.className = 'upload-result error';
+                resultEl.textContent = error.message;
+                resultEl.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
+        });
+    }
+
+    // === SCOPED FILTER COUNTS (Faceted Search) ===
+
+    async function loadScopedFilterCounts() {
+        // Skip if no active filters and no search — global counts already loaded
+        if (!hasActiveFilters() && !currentSearch) return;
+
+        try {
+            const response = await fetch('/get_scoped_filter_counts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    search: currentSearch,
+                    filters: activeFilters
+                })
+            });
+
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+            const data = await response.json();
+            updateAllFilterCounts(data);
+        } catch (error) {
+            console.error('Failed to load scoped filter counts:', error);
+        }
+    }
+
+    function updateAllFilterCounts(data) {
+        const sectionTypes = [
+            { type: 'importer', key: 'importers' },
+            { type: 'alcohol', key: 'alcoholTypes' },
+            { type: 'producer', key: 'producers' },
+            { type: 'country', key: 'countries' }
+        ];
+
+        sectionTypes.forEach(({ type, key }) => {
+            const counts = data[key] || {};
+
+            // Update full list option counts
+            const optionsContainer = document.getElementById(`${type}-options`);
+            if (optionsContainer) {
+                optionsContainer.querySelectorAll('.filter-option').forEach(label => {
+                    const checkbox = label.querySelector('input[type="checkbox"]');
+                    const countSpan = label.querySelector('.option-count');
+                    if (checkbox && countSpan) {
+                        const value = checkbox.value;
+                        countSpan.textContent = counts[value] || 0;
+                    }
+                });
+            }
+
+            // Update quick toggle counts
+            const quickContainer = document.getElementById(`${type}-quick-toggles`);
+            if (quickContainer) {
+                quickContainer.querySelectorAll('.quick-toggle-item').forEach(item => {
+                    const checkbox = item.querySelector('.quick-toggle-checkbox');
+                    const countSpan = item.querySelector('.quick-toggle-count');
+                    if (checkbox && countSpan) {
+                        const value = checkbox.value;
+                        countSpan.textContent = counts[value] || 0;
+                    }
+                });
+            }
+
+            // Update section header badge (number of unique options with count > 0)
+            const countEl = document.getElementById(`${type}-count`);
+            if (countEl) {
+                const nonZero = Object.values(counts).filter(c => c > 0).length;
+                countEl.textContent = nonZero;
+            }
+        });
+
+        // Update website status counts
+        const ws = data.websiteStatus || {};
+        const hasWebEl = document.getElementById('has-website-count');
+        if (hasWebEl) hasWebEl.textContent = ws.has_website || 0;
+        const noWebEl = document.getElementById('no-website-count');
+        if (noWebEl) noWebEl.textContent = ws.no_website || 0;
+        const websiteCountEl = document.getElementById('website-count');
+        if (websiteCountEl) websiteCountEl.textContent = (ws.has_website || 0) + (ws.no_website || 0);
+
+        // Update download status counts
+        const ds = data.downloadStatus || {};
+        const dlEl = document.getElementById('downloaded-count');
+        if (dlEl) dlEl.textContent = ds.downloaded || 0;
+        const notDlEl = document.getElementById('not-downloaded-count');
+        if (notDlEl) notDlEl.textContent = ds.not_downloaded || 0;
+        const downloadCountEl = document.getElementById('download-count');
+        if (downloadCountEl) downloadCountEl.textContent = (ds.downloaded || 0) + (ds.not_downloaded || 0);
+    }
+
     // === QUICK TOGGLE FUNCTIONS ===
-    
+
     window.toggleQuickFilter = function(sectionType, value, evt) {
         // This function is called when clicking on the quick toggle item (not the checkbox)
         if (!evt) evt = window.event;

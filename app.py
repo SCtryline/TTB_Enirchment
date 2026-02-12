@@ -1181,6 +1181,19 @@ def get_filter_data():
     """Legacy alias for get_filter_counts for frontend compatibility"""
     return get_filter_counts()
 
+@app.route('/get_scoped_filter_counts', methods=['POST'])
+def get_scoped_filter_counts():
+    """Get faceted filter counts scoped by active filters"""
+    try:
+        data = request.get_json() or {}
+        search = data.get('search', '')
+        filters = data.get('filters', {})
+        counts = brand_db.get_scoped_filter_counts(search=search, filters=filters)
+        return jsonify(counts), 200
+    except Exception as e:
+        logger.error(f"Error getting scoped filter counts: {e}")
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/get_all_brands', methods=['GET'])
 def get_all_brands():
     """Optimized endpoint for getting filtered brands with database-level filtering"""
