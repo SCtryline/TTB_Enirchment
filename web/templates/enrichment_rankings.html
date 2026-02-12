@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Enrichment Priority Rankings - TTB Registry</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
         .rankings-container {
@@ -161,9 +162,10 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        {% include 'includes/navigation.html' %}
-    </div>
+    {% from 'includes/icons.html' import icon %}
+    <div class="app-layout">
+    {% include 'includes/sidebar.html' %}
+    <div class="main-content-area">
 
     <div class="rankings-container">
         <h2>Enrichment Priority Rankings</h2>
@@ -358,8 +360,8 @@
                                 <td style="text-align: center;">${brand.sku_count}</td>
                                 <td>
                                     ${brand.has_website ?
-                                        '<span style="color: #10b981; font-size: 12px;">✓ Has URL</span>' :
-                                        '<span style="color: #ef4444; font-size: 12px;">✗ No URL</span>'}
+                                        '<span style="color: #10b981; font-size: 12px;">{{ icon('check-circle', 12) }} Has URL</span>' :
+                                        '<span style="color: #ef4444; font-size: 12px;">{{ icon('x-circle', 12) }} No URL</span>'}
                                 </td>
                                 <td>
                                     <span id="apollo-status-${brand.brand_name.replace(/[^a-zA-Z0-9]/g, '_')}" class="apollo-status">
@@ -607,16 +609,16 @@
 
             switch (status) {
                 case 'verified':
-                    return `<button class="btn-small" style="background: #10b981; color: white;" onclick="viewContacts('${brand.brand_name}')">👥 Contacts</button>`;
+                    return `<button class="btn-small" style="background: #10b981; color: white;" onclick="viewContacts('${brand.brand_name}')">{{ icon('user', 14) }} Contacts</button>`;
                 case 'pending_approval':
-                    return `<button class="btn-small" style="background: #f59e0b; color: white;" onclick="reviewApolloMatch('${brand.brand_name}')">🔍 Review</button>`;
+                    return `<button class="btn-small" style="background: #f59e0b; color: white;" onclick="reviewApolloMatch('${brand.brand_name}')">{{ icon('search', 14) }} Review</button>`;
                 case 'not_found':
-                    return `<button class="btn-small" style="background: #ef4444; color: white;" onclick="manualApolloEntry('${brand.brand_name}')">📝 Manual</button>`;
+                    return `<button class="btn-small" style="background: #ef4444; color: white;" onclick="manualApolloEntry('${brand.brand_name}')">{{ icon('file-text', 14) }} Manual</button>`;
                 default:
                     if (hasWebsite) {
-                        return `<button class="btn-small" style="background: #3b82f6; color: white;" onclick="startApolloEnrichment('${brand.brand_name}', true)">🚀 Auto-Enrich</button>`;
+                        return `<button class="btn-small" style="background: #3b82f6; color: white;" onclick="startApolloEnrichment('${brand.brand_name}', true)">{{ icon('zap', 14) }} Auto-Enrich</button>`;
                     } else {
-                        return `<button class="btn-small" style="background: #6366f1; color: white;" onclick="startApolloEnrichment('${brand.brand_name}', false)">🔍 Find Contacts</button>`;
+                        return `<button class="btn-small" style="background: #6366f1; color: white;" onclick="startApolloEnrichment('${brand.brand_name}', false)">{{ icon('search', 14) }} Find Contacts</button>`;
                     }
             }
         }
@@ -635,8 +637,8 @@
             const statusElement = document.getElementById(`apollo-status-${brandName.replace(/[^a-zA-Z0-9]/g, '_')}`);
             const actionElement = document.getElementById(`apollo-action-${brandName.replace(/[^a-zA-Z0-9]/g, '_')}`);
 
-            if (statusElement) statusElement.innerHTML = '<span style="color: #6366f1;">🔄 Searching...</span>';
-            if (actionElement) actionElement.innerHTML = '<button class="btn-small" disabled>⏳ Processing...</button>';
+            if (statusElement) statusElement.innerHTML = '<span style="color: #6366f1;">{{ icon('refresh-cw', 14) }} Searching...</span>';
+            if (actionElement) actionElement.innerHTML = '<button class="btn-small" disabled>{{ icon('refresh-cw', 14) }} Processing...</button>';
 
             try {
                 const response = await fetch('/apollo/enrich_brand', {
@@ -742,11 +744,11 @@
                                         <div style="flex: 1;">
                                             <h3 style="margin: 0 0 10px 0; color: #2c3e50;">${rec.company.name}</h3>
                                             <div style="color: #666; font-size: 14px; margin-bottom: 8px;">
-                                                ${rec.company.domain ? `<span style="background: #e8f5e9; padding: 3px 8px; border-radius: 4px; margin-right: 8px;">🌐 ${rec.company.domain}</span>` : ''}
-                                                ${rec.company.industry ? `<span style="background: #e3f2fd; padding: 3px 8px; border-radius: 4px; margin-right: 8px;">🏭 ${rec.company.industry}</span>` : ''}
-                                                ${rec.company.employee_count ? `<span style="background: #fff3e0; padding: 3px 8px; border-radius: 4px;">👥 ${rec.company.employee_count} employees</span>` : ''}
+                                                ${rec.company.domain ? `<span style="background: #e8f5e9; padding: 3px 8px; border-radius: 4px; margin-right: 8px;">{{ icon('globe', 14) }} ${rec.company.domain}</span>` : ''}
+                                                ${rec.company.industry ? `<span style="background: #e3f2fd; padding: 3px 8px; border-radius: 4px; margin-right: 8px;">{{ icon('factory', 14) }} ${rec.company.industry}</span>` : ''}
+                                                ${rec.company.employee_count ? `<span style="background: #fff3e0; padding: 3px 8px; border-radius: 4px;">{{ icon('user', 14) }} ${rec.company.employee_count} employees</span>` : ''}
                                             </div>
-                                            ${rec.company.location && rec.company.location.city ? `<div style="color: #888; font-size: 13px;">📍 ${rec.company.location.city}, ${rec.company.location.state || ''} ${rec.company.location.country || ''}</div>` : ''}
+                                            ${rec.company.location && rec.company.location.city ? `<div style="color: #888; font-size: 13px;">{{ icon('target', 14) }} ${rec.company.location.city}, ${rec.company.location.state || ''} ${rec.company.location.country || ''}</div>` : ''}
                                         </div>
                                         <div style="text-align: right;">
                                             <div style="background: ${rec.confidence >= 80 ? '#4caf50' : rec.confidence >= 60 ? '#ff9800' : '#999'}; color: white; padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 14px;">
@@ -761,7 +763,7 @@
                                             <div style="margin-top: 8px;">
                                                 ${rec.contacts_preview.map(contact => `
                                                     <div style="background: #f5f5f5; padding: 8px 12px; border-radius: 6px; margin-top: 5px; font-size: 13px;">
-                                                        👤 <strong>${contact.name}</strong> - ${contact.title || 'No title'}
+                                                        {{ icon('user', 14) }} <strong>${contact.name}</strong> - ${contact.title || 'No title'}
                                                     </div>
                                                 `).join('')}
                                             </div>
@@ -797,7 +799,7 @@
             const loadingDiv = document.createElement('div');
             loadingDiv.id = 'apollo-loading';
             loadingDiv.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); z-index: 10001; text-align: center;';
-            loadingDiv.innerHTML = '<h3 style="margin: 0 0 15px 0;">⏳ Loading Contact List...</h3><p style="color: #666; margin: 0;">Fetching available contacts (no credits used yet)</p>';
+            loadingDiv.innerHTML = '<h3 style="margin: 0 0 15px 0;">{{ icon('refresh-cw', 14) }} Loading Contact List...</h3><p style="color: #666; margin: 0;">Fetching available contacts (no credits used yet)</p>';
             document.body.appendChild(loadingDiv);
 
             try {
@@ -817,11 +819,11 @@
                     // Show contact selection modal
                     showContactSelectionModal(brandName, recommendation, result.contacts);
                 } else {
-                    alert('❌ Error: ' + (result.error || 'Failed to fetch contacts'));
+                    alert('Error: ' + (result.error || 'Failed to fetch contacts'));
                 }
             } catch (error) {
                 document.body.removeChild(loadingDiv);
-                alert('❌ Error: ' + error.message);
+                alert('Error: ' + error.message);
             }
         }
 
@@ -868,7 +870,7 @@
                                     Cancel
                                 </button>
                                 <button onclick="unlockSelectedContacts('${brandName}')" style="background: #27ae60; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold;">
-                                    🔓 Unlock Selected Emails
+                                    {{ icon('check-circle', 14) }} Unlock Selected Emails
                                 </button>
                             </div>
                         </div>
@@ -920,7 +922,7 @@
             const loadingDiv = document.createElement('div');
             loadingDiv.id = 'apollo-loading';
             loadingDiv.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); z-index: 10001; text-align: center;';
-            loadingDiv.innerHTML = `<h3 style="margin: 0 0 15px 0;">🔓 Unlocking ${selectedContacts.length} Contact${selectedContacts.length > 1 ? 's' : ''}...</h3><p style="color: #666; margin: 0;">Revealing emails and saving to database</p>`;
+            loadingDiv.innerHTML = `<h3 style="margin: 0 0 15px 0;">{{ icon('refresh-cw', 14) }} Unlocking ${selectedContacts.length} Contact${selectedContacts.length > 1 ? 's' : ''}...</h3><p style="color: #666; margin: 0;">Revealing emails and saving to database</p>`;
             document.body.appendChild(loadingDiv);
 
             try {
@@ -941,14 +943,14 @@
                 document.body.removeChild(loadingDiv);
 
                 if (result.success) {
-                    alert(`✅ Successfully unlocked ${result.contacts_unlocked} contact${result.contacts_unlocked > 1 ? 's' : ''}!\\n\\nCredits used: ${result.credits_used}\\nSaved to database: ${result.contacts_saved} contacts`);
+                    alert(`Successfully unlocked ${result.contacts_unlocked} contact${result.contacts_unlocked > 1 ? 's' : ''}!\\n\\nCredits used: ${result.credits_used}\\nSaved to database: ${result.contacts_saved} contacts`);
                     loadRankings(); // Reload table
                 } else {
-                    alert('❌ Error: ' + (result.error || 'Failed to unlock contacts'));
+                    alert('Error: ' + (result.error || 'Failed to unlock contacts'));
                 }
             } catch (error) {
                 document.body.removeChild(loadingDiv);
-                alert('❌ Error: ' + error.message);
+                alert('Error: ' + error.message);
             }
         }
 
@@ -973,5 +975,6 @@
 
     <!-- Cache Buster for Real-time UI Updates -->
     <script src="{{ url_for('static', filename='js/cache_buster.js') }}"></script>
+</div></div>
 </body>
 </html>

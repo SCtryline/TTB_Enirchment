@@ -7,27 +7,19 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/brand_detail.css') }}">
 </head>
 <body>
+    {% from 'includes/icons.html' import icon %}
+    <div class="app-layout">
+    {% include 'includes/sidebar.html' %}
+    <div class="main-content-area">
     <div class="container">
-        <!-- Navigation Header -->
-        <header>
-            <div class="nav-brand">
-                <h1><a href="/">TTB COLA Registry System</a></h1>
-            </div>
-            <div class="nav-links">
-                <a href="/">Home</a>
-                <a href="/dashboard">Dashboard</a>
-                <a href="/data">Data</a>
-                <a href="/brands">Brands</a>
-                <a href="/importers">Importers</a>
-            </div>
-        </header>
 
         <!-- Breadcrumb Navigation -->
         <nav class="breadcrumb">
-            <a href="/brands" class="breadcrumb-link">🏷️ Brands</a>
+            <a href="/brands" class="breadcrumb-link">{{ icon('tag', 14) }} Brands</a>
             <span class="breadcrumb-separator">›</span>
             <span class="breadcrumb-current">{{ brand_name }}</span>
         </nav>
@@ -37,18 +29,18 @@
             <div class="brand-title">
                 <h1 class="brand-name">{{ brand_name }}</h1>
                 <div class="brand-badges">
-                    <span class="badge-sku">📊 {{ brand.summary.total_skus }} SKUs</span>
-                    <span class="badge-countries">🌍 {{ brand.summary.countries|length }} Countries</span>
+                    <span class="badge-sku">{{ icon('bar-chart-2', 14) }} {{ brand.summary.total_skus }} SKUs</span>
+                    <span class="badge-countries">{{ icon('globe-2', 14) }} {{ brand.summary.countries|length }} Countries</span>
                     {% if brand.summary.importers %}
-                        <span class="badge-matched">✅ Matched</span>
+                        <span class="badge-matched">{{ icon('check-circle', 14) }} Matched</span>
                     {% else %}
-                        <span class="badge-unmatched">⚠️ Unmatched</span>
+                        <span class="badge-unmatched">{{ icon('alert-triangle', 14) }} Unmatched</span>
                     {% endif %}
                 </div>
             </div>
             <div class="brand-actions">
                 <button class="btn btn-primary" onclick="window.history.back()">← Back to Brands</button>
-                <button class="btn btn-secondary" onclick="exportBrandData()">📥 Export Data</button>
+                <button class="btn btn-secondary" onclick="exportBrandData()">{{ icon('download', 14) }} Export Data</button>
             </div>
         </section>
 
@@ -86,7 +78,7 @@
             <div class="info-card consolidation-history hidden" id="consolidation-history-card">
                 <div class="card-header">
                     <div class="header-title-section">
-                        <h2>🔀 Brand History</h2>
+                        <h2>{{ icon('git-merge', 14) }} Brand History</h2>
                     </div>
                 </div>
                 <div class="card-content">
@@ -100,24 +92,24 @@
             <div class="info-card website-card {{ 'verified' if automatic_website and automatic_website.verification_status == 'verified' else ('unverified' if automatic_website else 'add-website') }}">
                 <div class="card-header">
                     <div class="header-title-section">
-                        <h2>🌐 Website Information</h2>
+                        <h2>{{ icon('globe', 14) }} Website Information</h2>
                         {% if automatic_website %}
                             <div class="verification-badges">
                                 {% if automatic_website.verification_status == 'verified' %}
-                                    <span class="verification-badge verified">✅ Verified</span>
+                                    <span class="verification-badge verified">{{ icon('check-circle', 14) }} Verified</span>
                                 {% elif automatic_website.verification_status == 'flagged' %}
-                                    <span class="verification-badge flagged">🚩 Flagged</span>
+                                    <span class="verification-badge flagged">{{ icon('flag', 14) }} Flagged</span>
                                 {% elif automatic_website.verification_status == 'rejected' %}
-                                    <span class="verification-badge rejected">❌ Rejected</span>
+                                    <span class="verification-badge rejected">{{ icon('x-circle', 14) }} Rejected</span>
                                 {% else %}
-                                    <span class="verification-badge unverified">⏳ Needs Review</span>
+                                    <span class="verification-badge unverified">{{ icon('clock', 14) }} Needs Review</span>
                                 {% endif %}
                             </div>
                         {% endif %}
                     </div>
                     <div class="card-actions">
                         {% if automatic_website %}
-                            <button class="btn btn-secondary" onclick="toggleEditMode(this.dataset.brandName)" data-brand-name="{{ brand_name }}" type="button">✏️ Edit</button>
+                            <button class="btn btn-secondary" onclick="toggleEditMode(this.dataset.brandName)" data-brand-name="{{ brand_name }}" type="button">{{ icon('edit', 14) }} Edit</button>
                         {% endif %}
                     </div>
                 </div>
@@ -130,7 +122,7 @@
                             <div class="website-url-section">
                                 <div class="website-link-container">
                                     <a href="{{ website_data.get('url', website_data.get('website', '#')) }}" target="_blank" class="website-url-link">
-                                        <span class="website-icon">🔗</span>
+                                        <span class="website-icon">{{ icon('link', 14) }}</span>
                                         <span class="website-url-text">{{ website_data.get('url', website_data.get('website', 'Unknown')) }}</span>
                                         <span class="external-icon">↗</span>
                                     </a>
@@ -154,7 +146,7 @@
                                 
                                 <!-- Source and Date -->
                                 <div class="website-source-compact">
-                                    <span class="source-text">{{ '👤 Manual' if website_data.get('manual_override') else '🤖 Automatic' }}</span>
+                                    <span class="source-text">{{ icon('user', 14) ~ ' Manual' if website_data.get('manual_override') else icon('cpu', 14) ~ ' Automatic' }}</span>
                                     <span class="date-text">{{ website_data.get('approved_date', website_data.get('updated_date', '')).split('T')[0] if website_data.get('approved_date') or website_data.get('updated_date') else 'Unknown' }}</span>
                                 </div>
                             </div>
@@ -162,8 +154,8 @@
                             <!-- Verification Actions for automatic websites -->
                             {% if not website_data.get('manual_override') and website_data.get('verification_status') != 'verified' %}
                             <div class="verification-actions">
-                                <button class="btn btn-verify" onclick="verifyWebsite('{{ brand_name }}', true)">✅ Verify</button>
-                                <button class="btn btn-reject" onclick="verifyWebsite('{{ brand_name }}', false)">❌ Reject</button>
+                                <button class="btn btn-verify" onclick="verifyWebsite('{{ brand_name }}', true)">{{ icon('check-circle', 14) }} Verify</button>
+                                <button class="btn btn-reject" onclick="verifyWebsite('{{ brand_name }}', false)">{{ icon('x-circle', 14) }} Reject</button>
                             </div>
                             {% endif %}
                         </div>
@@ -187,11 +179,11 @@
                                 <input type="text" id="edit-source-note" name="source" placeholder="e.g., Found via Google search" class="form-input" value="{{ automatic_website.get('user_source', automatic_website.get('source', 'manual')) if automatic_website else 'manual' }}">
                             </div>
                             <div class="form-actions">
-                                <button type="submit" class="btn btn-success">💾 Save Website</button>
+                                <button type="submit" class="btn btn-success">{{ icon('save', 14) }} Save Website</button>
                                 {% if automatic_website %}
-                                <button type="button" class="btn btn-secondary" onclick="cancelEditMode()">❌ Cancel</button>
+                                <button type="button" class="btn btn-secondary" onclick="cancelEditMode()">{{ icon('x-circle', 14) }} Cancel</button>
                                 {% endif %}
-                                <button type="button" class="btn btn-secondary" onclick="searchForWebsite(this.dataset.brandName)" data-brand-name="{{ brand_name }}">🔍 Auto Search</button>
+                                <button type="button" class="btn btn-secondary" onclick="searchForWebsite(this.dataset.brandName)" data-brand-name="{{ brand_name }}">{{ icon('search', 14) }} Auto Search</button>
                             </div>
                         </form>
                     </div>
@@ -210,7 +202,7 @@
                     {% else %}
                     <div class="card-actions">
                         <button class="btn btn-primary" onclick="findContacts('{{ brand_name }}')" id="find-contacts-btn">
-                            🔍 Find Contacts
+                            {{ icon('search', 14) }} Find Contacts
                         </button>
                     </div>
                     <div class="apollo-verification-badge">
@@ -499,7 +491,7 @@
             <!-- Countries and Class Types Card (Combined) -->
             <div class="info-card">
                 <div class="card-header">
-                    <h2>🌍 Countries & Product Types</h2>
+                    <h2>{{ icon('globe-2', 14) }} Countries & Product Types</h2>
                 </div>
                 <div class="card-content">
                     <div class="combined-info-layout">
@@ -537,14 +529,14 @@
             <!-- Three-Tier Permit Classification -->
             <div class="info-card">
                 <div class="card-header">
-                    <h2>📋 Permit Classification & Business Relationships</h2>
+                    <h2>{{ icon('clipboard-list', 14) }} Permit Classification & Business Relationships</h2>
                 </div>
                 <div class="card-content">
                     <div class="three-tier-layout">
                         
                         <!-- Importer Match Permits -->
                         <div class="info-section permit-column">
-                            <h3 class="section-subtitle">🏢 Importer Match Permits</h3>
+                            <h3 class="section-subtitle">{{ icon('building-2', 14) }} Importer Match Permits</h3>
                             <p class="section-description">Real importer relationships (XX-I-XXXXX permits)</p>
                             {% if brand.summary.importers %}
                                 {% for importer in brand.summary.importers %}
@@ -560,7 +552,7 @@
                                         <div class="entity-details">
                                             {% if importer.city or importer.state %}
                                                 <div class="compact-detail">
-                                                    <span class="detail-icon">📍</span>
+                                                    <span class="detail-icon">{{ icon('map-pin', 14) }}</span>
                                                     <span class="detail-text">{{ importer.city }}{% if importer.city and importer.state %}, {% endif %}{{ importer.state }}</span>
                                                 </div>
                                             {% endif %}
@@ -569,7 +561,7 @@
                                 {% endfor %}
                             {% else %}
                                 <div class="no-data-compact">
-                                    <span class="no-data-icon">🚫</span>
+                                    <span class="no-data-icon">{{ icon('slash', 14) }}</span>
                                     <span class="no-data-text">No importer</span>
                                 </div>
                             {% endif %}
@@ -577,7 +569,7 @@
                         
                         <!-- Producer Match Permits -->
                         <div class="info-section permit-column">
-                            <h3 class="section-subtitle">🏭 Producer Match Permits</h3>
+                            <h3 class="section-subtitle">{{ icon('factory', 14) }} Producer Match Permits</h3>
                             <p class="section-description">Producer relationships (DSP-, BWN-, BR- permits)</p>
                             {% if brand.summary.producers %}
                                 {% for producer in brand.summary.producers %}
@@ -593,13 +585,13 @@
                                         <div class="entity-details">
                                             {% if producer.city or producer.state %}
                                                 <div class="compact-detail">
-                                                    <span class="detail-icon">📍</span>
+                                                    <span class="detail-icon">{{ icon('map-pin', 14) }}</span>
                                                     <span class="detail-text">{{ producer.city }}{% if producer.city and producer.state %}, {% endif %}{{ producer.state }}</span>
                                                 </div>
                                             {% endif %}
                                             {% if producer.industry_type %}
                                                 <div class="compact-detail">
-                                                    <span class="detail-icon">🏭</span>
+                                                    <span class="detail-icon">{{ icon('factory', 14) }}</span>
                                                     <span class="detail-text">{{ producer.industry_type }}</span>
                                                 </div>
                                             {% endif %}
@@ -608,7 +600,7 @@
                                 {% endfor %}
                             {% else %}
                                 <div class="no-data-compact">
-                                    <span class="no-data-icon">🚫</span>
+                                    <span class="no-data-icon">{{ icon('slash', 14) }}</span>
                                     <span class="no-data-text">No producer</span>
                                 </div>
                             {% endif %}
@@ -616,7 +608,7 @@
                         
                         <!-- Brand's Own Permits -->
                         <div class="info-section permit-column">
-                            <h3 class="section-subtitle">📄 Brand's Own Permits</h3>
+                            <h3 class="section-subtitle">{{ icon('file-text', 14) }} Brand's Own Permits</h3>
                             <p class="section-description">Independent brand permits (no matches)</p>
                             {% if brand.summary.brand_permits %}
                                 {% for permit in brand.summary.brand_permits %}
@@ -627,7 +619,7 @@
                                         </div>
                                         <div class="entity-details">
                                             <div class="compact-detail">
-                                                <span class="detail-icon">🏷️</span>
+                                                <span class="detail-icon">{{ icon('tag', 14) }}</span>
                                                 <span class="detail-text">Brand-owned permit</span>
                                             </div>
                                         </div>
@@ -635,7 +627,7 @@
                                 {% endfor %}
                             {% else %}
                                 <div class="no-data-compact">
-                                    <span class="no-data-icon">✅</span>
+                                    <span class="no-data-icon">{{ icon('check-circle', 14) }}</span>
                                     <span class="no-data-text">All permits matched</span>
                                 </div>
                             {% endif %}
@@ -649,7 +641,7 @@
         <!-- SKUs Section -->
         <section class="skus-section">
             <div class="section-header">
-                <h2>📦 Product SKUs ({{ brand.skus|length }})</h2>
+                <h2>{{ icon('package', 14) }} Product SKUs ({{ brand.skus|length }})</h2>
                 <div class="section-actions">
                     <button class="btn btn-outline" onclick="toggleView('grid')">Grid View</button>
                     <button class="btn btn-outline active" onclick="toggleView('table')">Table View</button>
@@ -733,6 +725,8 @@
                 </div>
             </div>
         </section>
+    </div>
+    </div>
     </div>
 
     <script src="{{ url_for('static', filename='js/brand_detail.js') }}"></script>

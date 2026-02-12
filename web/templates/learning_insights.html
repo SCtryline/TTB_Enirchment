@@ -5,60 +5,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Learning Insights - TTB COLA Registry</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/style.css">
-    <link rel="stylesheet" href="/static/css/learning_insights.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/learning_insights.css') }}">
 </head>
 <body>
-    <nav>
-        <div class="nav-container">
-            <div class="nav-brand">
-                <h1>TTB COLA Registry</h1>
-                <span class="nav-subtitle">Learning Insights Dashboard</span>
-            </div>
-            <div class="nav-links">
-                <a href="/">Home</a>
-                <a href="/dashboard">Dashboard</a>
-                <a href="/brands">Brands</a>
-                <a href="/importers">Importers</a>
-                <a href="/producers">Producers</a>
-                <a href="/data">Data</a>
-                <a href="/learning_insights" class="active">Learning</a>
-            </div>
-        </div>
-    </nav>
+    {% from 'includes/icons.html' import icon %}
+    <div class="app-layout">
+    {% include 'includes/sidebar.html' %}
+    <div class="main-content-area">
 
     <div class="container">
         <!-- Page Header -->
         <div class="page-header">
-            <h2>🧠 Agentic Learning System Insights</h2>
+            <h2>{{ icon('brain', 20) }} Agentic Learning System Insights</h2>
             <p>Monitor and analyze the self-learning system's performance and pattern recognition</p>
         </div>
 
         <!-- Key Metrics -->
         <div class="metrics-grid">
             <div class="metric-card">
-                <div class="metric-icon">📚</div>
+                <div class="metric-icon">{{ icon('book-open', 20) }}</div>
                 <div class="metric-content">
                     <div class="metric-value" id="total-events">0</div>
                     <div class="metric-label">Learning Events</div>
                 </div>
             </div>
             <div class="metric-card">
-                <div class="metric-icon">✅</div>
+                <div class="metric-icon">{{ icon('check-circle', 20) }}</div>
                 <div class="metric-content">
                     <div class="metric-value" id="success-rate">0%</div>
                     <div class="metric-label">Success Rate</div>
                 </div>
             </div>
             <div class="metric-card">
-                <div class="metric-icon">🎯</div>
+                <div class="metric-icon">{{ icon('target', 20) }}</div>
                 <div class="metric-content">
                     <div class="metric-value" id="confidence-accuracy">0%</div>
                     <div class="metric-label">Confidence Accuracy</div>
                 </div>
             </div>
             <div class="metric-card">
-                <div class="metric-icon">🔍</div>
+                <div class="metric-icon">{{ icon('search', 20) }}</div>
                 <div class="metric-content">
                     <div class="metric-value" id="patterns-learned">0</div>
                     <div class="metric-label">Patterns Learned</div>
@@ -69,7 +57,7 @@
         <!-- Learning Statistics -->
         <div class="section-grid">
             <div class="section-card">
-                <h3>📊 Learning Performance</h3>
+                <h3>{{ icon('bar-chart-3', 20) }} Learning Performance</h3>
                 <div class="stats-list">
                     <div class="stat-row">
                         <span class="stat-label">Verified Websites:</span>
@@ -95,7 +83,7 @@
             </div>
 
             <div class="section-card">
-                <h3>🏭 Industry Knowledge</h3>
+                <h3>{{ icon('factory', 20) }} Industry Knowledge</h3>
                 <div class="stats-list">
                     <div class="stat-row">
                         <span class="stat-label">Spirits Brands:</span>
@@ -123,7 +111,7 @@
 
         <!-- Pattern Recognition -->
         <div class="pattern-section">
-            <h3>🔍 Learned Domain Patterns</h3>
+            <h3>{{ icon('search', 20) }} Learned Domain Patterns</h3>
             <div id="patterns-container" class="patterns-grid">
                 <!-- Patterns will be loaded here -->
             </div>
@@ -131,7 +119,7 @@
 
         <!-- Recent Learning Events -->
         <div class="events-section">
-            <h3>📝 Recent Learning Events</h3>
+            <h3>{{ icon('clipboard-list', 20) }} Recent Learning Events</h3>
             <div class="events-table-container">
                 <table class="events-table">
                     <thead>
@@ -153,7 +141,7 @@
 
         <!-- Knowledge Base Insights -->
         <div class="knowledge-section">
-            <h3>💡 Knowledge Base Insights</h3>
+            <h3>{{ icon('lightbulb', 20) }} Knowledge Base Insights</h3>
             <div class="knowledge-grid">
                 <div class="knowledge-card">
                     <h4>Top Search Terms</h4>
@@ -178,7 +166,7 @@
 
         <!-- Batch Re-scoring Section -->
         <div class="rescore-section">
-            <h3>🎯 Batch Website Re-scoring</h3>
+            <h3>{{ icon('target', 20) }} Batch Website Re-scoring</h3>
             <div class="rescore-info">
                 <p>Apply all accumulated learning patterns to re-score existing website matches. This will:</p>
                 <ul>
@@ -187,7 +175,7 @@
                     <li>Flag websites that need review</li>
                     <li>Apply learning improvements retroactively</li>
                 </ul>
-                
+
                 <div class="rescore-stats" id="rescore-stats">
                     <div class="stat-row">
                         <span class="stat-label">Total Websites:</span>
@@ -202,16 +190,16 @@
                         <span class="stat-value" id="patterns-available-stat">Loading...</span>
                     </div>
                 </div>
-                
+
                 <div class="rescore-actions">
                     <button onclick="loadRescoreStats()" class="btn btn-secondary">
-                        📊 Check Impact
+                        {{ icon('bar-chart-3', 16) }} Check Impact
                     </button>
                     <button onclick="startBatchRescore()" class="btn btn-primary" id="rescore-btn">
-                        🚀 Start Batch Re-scoring
+                        {{ icon('rocket', 16) }} Start Batch Re-scoring
                     </button>
                 </div>
-                
+
                 <div id="rescore-results" class="rescore-results" style="display: none;">
                     <h4>Re-scoring Results</h4>
                     <div id="rescore-summary"></div>
@@ -222,23 +210,25 @@
 
         <!-- Actions -->
         <div class="actions-section">
-            <h3>⚙️ Learning System Actions</h3>
+            <h3>{{ icon('settings', 20) }} Learning System Actions</h3>
             <div class="button-group">
                 <button onclick="exportLearningData()" class="btn btn-primary">
-                    📥 Export Learning Data
+                    {{ icon('download', 16) }} Export Learning Data
                 </button>
                 <button onclick="recalculateConfidence()" class="btn btn-secondary">
-                    🔄 Recalculate All Confidence Scores
+                    {{ icon('refresh-cw', 16) }} Recalculate All Confidence Scores
                 </button>
                 <button onclick="clearLearningCache()" class="btn btn-danger">
-                    🗑️ Clear Learning Cache
+                    {{ icon('trash-2', 16) }} Clear Learning Cache
                 </button>
                 <button onclick="refreshInsights()" class="btn btn-success">
-                    🔄 Refresh Insights
+                    {{ icon('refresh-cw', 16) }} Refresh Insights
                 </button>
             </div>
         </div>
     </div>
+
+    </div></div>
 
     <script src="/static/js/learning_insights.js"></script>
 </body>

@@ -7,12 +7,15 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/importers.css') }}">
 </head>
 <body>
+    {% from 'includes/icons.html' import icon %}
+    <div class="app-layout">
+    {% include 'includes/sidebar.html' %}
+    <div class="main-content-area">
     <div class="container">
-        <!-- Unified Navigation -->
-        {% include 'includes/navigation.html' %}
 
         <header>
             <h1>Importers Directory</h1>
@@ -36,7 +39,7 @@
         <div class="search-controls">
             <div class="search-group">
                 <input type="text" id="importer-search" placeholder="Search importers by name, permit, city, or state..." class="search-input">
-                <button id="search-btn" class="search-btn">🔍 Search</button>
+                <button id="search-btn" class="search-btn">{{ icon('search', 14) }} Search</button>
             </div>
             <div class="view-controls">
                 <label for="per-page-select">Show:</label>
@@ -62,7 +65,7 @@
                     <tr>
                         <th class="sortable" data-sort="name">
                             <span class="th-content">
-                                <span class="th-icon">🏢</span>
+                                <span class="th-icon">{{ icon('building-2', 14) }}</span>
                                 <span class="th-text">Company Name</span>
                                 <span class="sort-indicator"></span>
                             </span>
@@ -76,14 +79,14 @@
                         </th>
                         <th class="sortable" data-sort="brands">
                             <span class="th-content">
-                                <span class="th-icon">🏷️</span>
+                                <span class="th-icon">{{ icon('tag', 14) }}</span>
                                 <span class="th-text">Brands</span>
                                 <span class="sort-indicator"></span>
                             </span>
                         </th>
                         <th class="sortable" data-sort="location">
                             <span class="th-content">
-                                <span class="th-icon">📍</span>
+                                <span class="th-icon">{{ icon('map-pin', 14) }}</span>
                                 <span class="th-text">Location</span>
                                 <span class="sort-indicator"></span>
                             </span>
@@ -119,6 +122,8 @@
         <div class="pagination-container" id="pagination-container">
             <!-- Pagination will be inserted here -->
         </div>
+    </div>
+    </div>
     </div>
 
     <script src="{{ url_for('static', filename='js/importers.js') }}"></script>

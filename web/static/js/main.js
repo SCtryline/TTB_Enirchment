@@ -1,51 +1,64 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Load dashboard stats for home page hero section
-    loadDashboardStats();
+    loadHomeStats();
 });
 
-// Load dashboard statistics for the hero section
-async function loadDashboardStats() {
+async function loadHomeStats() {
     try {
         const response = await fetch('/get_database_stats');
         const data = await response.json();
-        
-        // Animate counters with data
-        animateCounter('total-brands-hero', data.total_brands || 0);
-        animateCounter('total-skus-hero', data.total_skus || 0);
-        animateCounter('total-importers-hero', data.total_importers || 0);
-        
+
+        const totalBrands = data.total_brands || 0;
+        const totalSkus = data.total_skus || 0;
+        const totalImporters = data.total_importers || 0;
+        const enriched = data.brands_with_websites || 0;
+        const needUrl = totalBrands - enriched;
+
+        // Animate stat tiles
+        animateCounter('stat-brands', totalBrands);
+        animateCounter('stat-skus', totalSkus);
+        animateCounter('stat-importers', totalImporters);
+        animateCounter('stat-enriched', enriched);
+        animateCounter('stat-need-url', needUrl);
+
+        // Enrichment progress bar
+        const pct = totalBrands > 0 ? Math.round((enriched / totalBrands) * 100) : 0;
+        const bar = document.getElementById('enrichment-bar');
+        const pctEl = document.getElementById('enrichment-pct');
+        const textEl = document.getElementById('enrichment-text');
+
+        if (bar) {
+            // Small delay so the CSS transition is visible
+            requestAnimationFrame(function() {
+                bar.style.width = pct + '%';
+            });
+        }
+        if (pctEl) pctEl.textContent = pct + '%';
+        if (textEl) textEl.textContent = enriched.toLocaleString() + ' of ' + totalBrands.toLocaleString() + ' brands have a website';
+
     } catch (error) {
-        console.error('Error loading dashboard stats:', error);
-        // Fallback to 0 if there's an error
-        document.getElementById('total-brands-hero').textContent = '0';
-        document.getElementById('total-skus-hero').textContent = '0';
-        document.getElementById('total-importers-hero').textContent = '0';
+        console.error('Error loading home stats:', error);
+        ['stat-brands', 'stat-skus', 'stat-importers', 'stat-enriched', 'stat-need-url'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.textContent = '0';
+        });
     }
 }
 
-// Animate counter with easing effect
 function animateCounter(elementId, targetValue) {
-    const element = document.getElementById(elementId);
+    var element = document.getElementById(elementId);
     if (!element) return;
-    
-    const startValue = 0;
-    const duration = 2000; // 2 seconds
-    const startTime = performance.now();
-    
-    function updateCounter(currentTime) {
-        const elapsed = currentTime - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        
-        // Ease out cubic for smooth animation
-        const easedProgress = 1 - Math.pow(1 - progress, 3);
-        const currentValue = Math.floor(startValue + (targetValue - startValue) * easedProgress);
-        
-        element.textContent = currentValue.toLocaleString();
-        
-        if (progress < 1) {
-            requestAnimationFrame(updateCounter);
-        }
+
+    var duration = 1200;
+    var startTime = performance.now();
+
+    function update(currentTime) {
+        var elapsed = currentTime - startTime;
+        var progress = Math.min(elapsed / duration, 1);
+        // Ease-out cubic
+        var eased = 1 - Math.pow(1 - progress, 3);
+        element.textContent = Math.floor(targetValue * eased).toLocaleString();
+        if (progress < 1) requestAnimationFrame(update);
     }
-    
-    requestAnimationFrame(updateCounter);
+
+    requestAnimationFrame(update);
 }

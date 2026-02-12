@@ -60,9 +60,17 @@ Detects and merges duplicate/related brands:
 
 ### Frontend (`web/`)
 Server-rendered Jinja2 templates with vanilla JavaScript:
-- `templates/` — 17 HTML templates. Key pages: `brands.html`, `brand_detail.html`, `audit.html`, `dashboard.html`, `enrichment_rankings.html`, `data.html`, `importers.html`
+- `templates/` — 16 HTML templates. Key pages: `brands.html`, `brand_detail.html`, `audit.html`, `dashboard.html`, `enrichment_rankings.html`, `data.html`, `importers.html`
 - `static/js/cache_buster.js` — polls `/api/database_version` every 5 seconds, auto-refreshes UI on data changes
 - Each page has its own CSS and JS file (e.g., `brands.js`, `brands.css`)
+
+**UI Foundation (Phase 1 SaaS Redesign):**
+- `static/css/base.css` — loaded FIRST on every page. Contains `:root` variables (canonical + backward-compatible aliases for audit/producers/consolidation/enrichment naming), CSS reset, body styles, `.app-layout` flex container, `.main-content-area` with sidebar offset, sidebar nav styles, mobile responsive, utility classes.
+- `templates/includes/sidebar.html` — self-contained dark sidebar nav (`#0f172a`) with inline SVGs. Sections: Main (Home, Dashboard, Data), Registry (Brands, Importers, Producers), Intelligence (Rankings, Audit, Learning). Active state via `request.endpoint`. Mobile hamburger toggle. No external dependencies.
+- `templates/includes/icons.html` — Jinja2 macro `icon(name, size, class)` with 47 Lucide SVG icons. Usage: `{% from 'includes/icons.html' import icon %}` then `{{ icon('search', 16) }}`.
+- **Page CSS load order**: `base.css` first, then page-specific CSS (e.g., `brands.css`). Page CSS wins by cascade for same-specificity rules.
+- **Template structure**: All pages wrap content in `<div class="app-layout">{% include 'includes/sidebar.html' %}<div class="main-content-area">...content...</div></div>`.
+- **No emoji in templates** — all replaced with Lucide SVG icon macro calls.
 
 ### Data Storage (`data/`)
 - `database/brands.db` — primary SQLite database
@@ -86,6 +94,8 @@ Server-rendered Jinja2 templates with vanilla JavaScript:
 - **Frontend visibility**: Use `classList.add/remove('hidden')` for show/hide. Use `safeJsonParse(response)` for JSON parsing.
 - **Domain handling**: Auto-strips `www.` prefix during processing.
 - **Database concurrency**: SQLite WAL mode enabled. All access through `BrandDatabaseV2`.
+- **CSS variable aliases**: `base.css` defines canonical variables (`--primary-color`, `--gray-200`, etc.) plus aliases for backward compatibility: `--primary-blue` (audit/producers), `--surface-color`/`--border-color`/`--card-bg` (consolidation/enrichment), `--success`/`--warning`/`--error` (producers). New CSS should use the canonical names from `:root` in `base.css`.
+- **Adding new icons**: Add a new `{%- elif name == 'icon-name' -%}` block in `icons.html` before the `{%- else -%}` fallback. Use Lucide icon SVG paths. Unknown icon names render as a plain circle fallback.
 
 ## Critical Data (back up before modifying)
 - `data/database/brands.db`

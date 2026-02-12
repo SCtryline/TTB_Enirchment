@@ -7,25 +7,25 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/brands.css') }}">
 </head>
 <body>
-    <!-- Unified Navigation -->
-    <div class="container">
-        {% include 'includes/navigation.html' %}
-    </div>
+    {% from 'includes/icons.html' import icon %}
+    <div class="app-layout">
+    {% include 'includes/sidebar.html' %}
+    <div class="main-content-area">
 
     <!-- Fixed Header for Brands Page -->
     <header class="page-header">
         <h1>Brand Registry</h1>
     </header>
 
-    <!-- Floating Toggle Button (shown when sidebar is collapsed) -->
-    <button class="filter-toggle-float" id="filter-toggle-float">▶</button>
+    <!-- Filter Drawer Backdrop -->
+    <div class="filter-backdrop hidden" id="filter-backdrop"></div>
 
-    <div class="container-with-sidebar">
-        <!-- Advanced Filter Sidebar -->
-        <div class="filter-sidebar" id="filter-sidebar">
+    <!-- Advanced Filter Sidebar (drawer overlay, starts collapsed) -->
+    <div class="filter-sidebar collapsed" id="filter-sidebar">
             <div class="filter-header">
                 <h3>Advanced Filters</h3>
                 <button class="filter-toggle" id="toggle-filters">
@@ -46,17 +46,17 @@
                 <!-- Importer Filter -->
                 <div class="filter-section">
                     <div class="filter-section-header" onclick="toggleFilterSection('importer-filters')">
-                        <span>🏢 Importer</span>
+                        <span>{{ icon('building-2', 14) }} Importer</span>
                         <span class="filter-count" id="importer-count"></span>
                         <span class="chevron">►</span>
                     </div>
                     <div class="filter-section-content" id="importer-filters">
                         <!-- Search Bar -->
                         <div class="filter-search-section">
-                            <input type="text" class="filter-search" placeholder="Search importers..." 
+                            <input type="text" class="filter-search" placeholder="Search importers..."
                                    id="importer-search" onkeyup="filterOptions('importer')">
                         </div>
-                        
+
                         <!-- Top 10 Quick Toggles -->
                         <div class="quick-toggles">
                             <div class="quick-toggles-header">
@@ -67,7 +67,7 @@
                                 <!-- Dynamically populated with top 10 -->
                             </div>
                         </div>
-                        
+
                         <!-- Full List (searchable) -->
                         <div class="full-list-section">
                             <div class="filter-options" id="importer-options" style="max-height: 300px; overflow-y: auto;">
@@ -80,7 +80,7 @@
                 <!-- Alcohol Type Filter -->
                 <div class="filter-section">
                     <div class="filter-section-header" onclick="toggleFilterSection('alcohol-filters')">
-                        <span>🍷 Alcohol Type</span>
+                        <span>{{ icon('wine', 14) }} Alcohol Type</span>
                         <span class="filter-count" id="alcohol-count"></span>
                         <span class="chevron">►</span>
                     </div>
@@ -95,11 +95,15 @@
                                 <!-- Dynamically populated with top 10 -->
                             </div>
                         </div>
-                        
-                        <!-- Search and Full List -->
-                        <div class="full-list-section">
-                            <input type="text" class="filter-search" placeholder="Search all types..." 
+
+                        <!-- Search Bar -->
+                        <div class="filter-search-section">
+                            <input type="text" class="filter-search" placeholder="Search all types..."
                                    id="alcohol-search" onkeyup="filterOptions('alcohol')">
+                        </div>
+
+                        <!-- Full List -->
+                        <div class="full-list-section">
                             <div class="filter-options" id="alcohol-options">
                                 <!-- Dynamically populated with all options -->
                             </div>
@@ -110,7 +114,7 @@
                 <!-- Producer Filter -->
                 <div class="filter-section">
                     <div class="filter-section-header" onclick="toggleFilterSection('producer-filters')">
-                        <span>🏭 Producer</span>
+                        <span>{{ icon('factory', 14) }} Producer</span>
                         <span class="filter-count" id="producer-count"></span>
                         <span class="chevron">►</span>
                     </div>
@@ -125,11 +129,15 @@
                                 <!-- Dynamically populated with top 10 -->
                             </div>
                         </div>
-                        
-                        <!-- Search and Full List -->
-                        <div class="full-list-section">
-                            <input type="text" class="filter-search" placeholder="Search all producers..." 
+
+                        <!-- Search Bar -->
+                        <div class="filter-search-section">
+                            <input type="text" class="filter-search" placeholder="Search all producers..."
                                    id="producer-search" onkeyup="filterOptions('producer')">
+                        </div>
+
+                        <!-- Full List -->
+                        <div class="full-list-section">
                             <div class="filter-options" id="producer-options">
                                 <!-- Dynamically populated with all options -->
                             </div>
@@ -140,7 +148,7 @@
                 <!-- Country Filter -->
                 <div class="filter-section">
                     <div class="filter-section-header" onclick="toggleFilterSection('country-filters')">
-                        <span>🌍 Country</span>
+                        <span>{{ icon('globe-2', 14) }} Country</span>
                         <span class="filter-count" id="country-count"></span>
                         <span class="chevron">►</span>
                     </div>
@@ -155,11 +163,15 @@
                                 <!-- Dynamically populated with top 10 -->
                             </div>
                         </div>
-                        
-                        <!-- Search and Full List -->
-                        <div class="full-list-section">
-                            <input type="text" class="filter-search" placeholder="Search all countries..." 
+
+                        <!-- Search Bar -->
+                        <div class="filter-search-section">
+                            <input type="text" class="filter-search" placeholder="Search all countries..."
                                    id="country-search" onkeyup="filterOptions('country')">
+                        </div>
+
+                        <!-- Full List -->
+                        <div class="full-list-section">
                             <div class="filter-options" id="country-options">
                                 <!-- Dynamically populated with all options -->
                             </div>
@@ -170,7 +182,7 @@
                 <!-- Website Status Filter -->
                 <div class="filter-section">
                     <div class="filter-section-header" onclick="toggleFilterSection('website-filters')">
-                        <span>🌐 Website Status</span>
+                        <span>{{ icon('globe', 14) }} Website Status</span>
                         <span class="filter-count" id="website-count"></span>
                         <span class="chevron">►</span>
                     </div>
@@ -182,14 +194,32 @@
                                 <span class="option-count" id="has-website-count"></span>
                             </label>
                             <label class="filter-option">
-                                <input type="checkbox" value="verified" onchange="applyFilters()">
-                                <span>Verified Website</span>
-                                <span class="option-count" id="verified-count"></span>
-                            </label>
-                            <label class="filter-option">
                                 <input type="checkbox" value="no_website" onchange="applyFilters()">
                                 <span>No Website</span>
                                 <span class="option-count" id="no-website-count"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Download Status Filter -->
+                <div class="filter-section">
+                    <div class="filter-section-header" onclick="toggleFilterSection('download-filters')">
+                        <span>{{ icon('download', 14) }} Download Status</span>
+                        <span class="filter-count" id="download-count"></span>
+                        <span class="chevron">►</span>
+                    </div>
+                    <div class="filter-section-content" id="download-filters">
+                        <div class="filter-options">
+                            <label class="filter-option">
+                                <input type="checkbox" value="downloaded" onchange="applyFilters()">
+                                <span>Previously Downloaded</span>
+                                <span class="option-count" id="downloaded-count"></span>
+                            </label>
+                            <label class="filter-option">
+                                <input type="checkbox" value="not_downloaded" onchange="applyFilters()">
+                                <span>Not Downloaded</span>
+                                <span class="option-count" id="not-downloaded-count"></span>
                             </label>
                         </div>
                     </div>
@@ -199,6 +229,16 @@
                 <div class="filter-actions">
                     <button class="apply-filters-btn" onclick="applyFilters()">Apply Filters</button>
                     <button class="reset-filters-btn" onclick="resetFilters()">Reset All</button>
+                </div>
+
+                <!-- Download Filtered List -->
+                <div class="filter-actions-export">
+                    <button class="export-btn" onclick="downloadFilteredBrands('csv')">
+                        Download Filtered (CSV)
+                    </button>
+                    <button class="export-btn export-excel" onclick="downloadFilteredBrands('xlsx')">
+                        Download Filtered (Excel)
+                    </button>
                 </div>
             </div>
         </div>
@@ -226,8 +266,12 @@
 
             <div class="search-controls">
                 <div class="search-group">
+                    <button class="filter-toolbar-btn" id="filter-toolbar-btn" title="Toggle advanced filters">
+                        {{ icon('sliders-horizontal', 14) }} Filters
+                        <span class="filter-toolbar-badge" id="filter-toolbar-badge" style="display: none;">0</span>
+                    </button>
                     <input type="text" id="brand-search" placeholder="Quick search brands..." class="search-input">
-                    <button id="search-btn" class="search-btn">🔍 Search</button>
+                    <button id="search-btn" class="search-btn">{{ icon('search', 14) }} Search</button>
                 </div>
                 <div class="view-controls">
                     <label for="per-page-select">Show:</label>
@@ -255,19 +299,19 @@
                 </div>
                 <div class="bulk-actions-right">
                     <button class="bulk-action-btn bulk-verify" id="bulk-verify-btn" title="Verify selected websites">
-                        ✅ Verify Websites
+                        {{ icon('check-circle', 14) }} Verify Websites
                     </button>
                     <button class="bulk-action-btn bulk-reject" id="bulk-reject-btn" title="Reject selected websites">
-                        ❌ Reject Websites  
+                        {{ icon('x-circle', 14) }} Reject Websites
                     </button>
                     <button class="bulk-action-btn bulk-flag" id="bulk-flag-btn" title="Flag selected websites for review">
-                        🚩 Flag for Review
+                        {{ icon('flag', 14) }} Flag for Review
                     </button>
                     <button class="bulk-action-btn bulk-enrich" id="bulk-enrich-btn" title="Enrich selected brands">
-                        🔍 Bulk Enrich
+                        {{ icon('search', 14) }} Bulk Enrich
                     </button>
                     <button class="bulk-action-btn bulk-export" id="bulk-export-btn" title="Export selected brands">
-                        📄 Export Selected
+                        {{ icon('file-text', 14) }} Export Selected
                     </button>
                     <button class="bulk-action-clear" id="clear-selection-btn" title="Clear selection">
                         Clear Selection
@@ -287,56 +331,56 @@
                             </th>
                             <th class="sortable" data-sort="name">
                                 <span class="th-content">
-                                    <span class="th-icon">🏷️</span>
+                                    <span class="th-icon">{{ icon('tag', 14) }}</span>
                                     <span class="th-text">Brand Name</span>
                                     <span class="sort-indicator"></span>
                                 </span>
                             </th>
                             <th class="sortable" data-sort="countries">
                                 <span class="th-content">
-                                    <span class="th-icon">🌍</span>
+                                    <span class="th-icon">{{ icon('globe-2', 14) }}</span>
                                     <span class="th-text">Countries</span>
                                     <span class="sort-indicator"></span>
                                 </span>
                             </th>
                             <th class="sortable" data-sort="types">
                                 <span class="th-content">
-                                    <span class="th-icon">🥃</span>
+                                    <span class="th-icon">{{ icon('glass-water', 14) }}</span>
                                     <span class="th-text">Types</span>
                                     <span class="sort-indicator"></span>
                                 </span>
                             </th>
                             <th class="sortable" data-sort="producer">
                                 <span class="th-content">
-                                    <span class="th-icon">🏭</span>
+                                    <span class="th-icon">{{ icon('factory', 14) }}</span>
                                     <span class="th-text">Producer</span>
                                     <span class="sort-indicator"></span>
                                 </span>
                             </th>
                             <th class="sortable" data-sort="importer">
                                 <span class="th-content">
-                                    <span class="th-icon">🏢</span>
+                                    <span class="th-icon">{{ icon('building-2', 14) }}</span>
                                     <span class="th-text">Importer</span>
                                     <span class="sort-indicator"></span>
                                 </span>
                             </th>
                             <th class="sortable" data-sort="website">
                                 <span class="th-content">
-                                    <span class="th-icon">🌐</span>
+                                    <span class="th-icon">{{ icon('globe', 14) }}</span>
                                     <span class="th-text">Website</span>
                                     <span class="sort-indicator"></span>
                                 </span>
                             </th>
                             <th class="sortable" data-sort="contact">
                                 <span class="th-content">
-                                    <span class="th-icon">👤</span>
+                                    <span class="th-icon">{{ icon('user', 14) }}</span>
                                     <span class="th-text">Primary Contact</span>
                                     <span class="sort-indicator"></span>
                                 </span>
                             </th>
                             <th class="actions-header">
                                 <span class="th-content">
-                                    <span class="th-icon">⚡</span>
+                                    <span class="th-icon">{{ icon('zap', 14) }}</span>
                                     <span class="th-text">Actions</span>
                                 </span>
                             </th>
@@ -359,7 +403,6 @@
                 <!-- Pagination will be inserted here -->
             </div>
         </div>
-    </div>
 
     <div id="brand-modal" class="modal">
         <div class="modal-content">
@@ -367,6 +410,8 @@
             <div id="brand-detail-content"></div>
         </div>
     </div>
+
+    </div></div>
 
     <script src="{{ url_for('static', filename='js/brands.js') }}"></script>
     <!-- Cache Buster for Real-time UI Updates -->

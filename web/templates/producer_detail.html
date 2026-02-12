@@ -7,24 +7,18 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/producers.css') }}">
 </head>
 <body>
+    {% from 'includes/icons.html' import icon %}
+    <div class="app-layout">
+    {% include 'includes/sidebar.html' %}
+    <div class="main-content-area">
     <div class="container">
-        <header>
-            <h1>Producer Details</h1>
-            <div class="nav-links">
-                <a href="/">Home</a>
-                <a href="/dashboard">Dashboard</a>
-                <a href="/data">Data</a>
-                <a href="/brands">Brands</a>
-                <a href="/importers">Importers</a>
-                <a href="/producers">Producers</a>
-            </div>
-        </header>
 
         <div class="breadcrumb">
-            <a href="/producers">← Back to Producers</a>
+            <a href="/producers">{{ icon('arrow-left', 14) }} Back to Producers</a>
         </div>
 
         <div class="producer-details">
@@ -49,7 +43,7 @@
                     <div class="info-row">
                         <span class="label">Producer Type:</span>
                         <span class="value status-badge status-{{ producer.type.lower() if producer.type else 'unknown' }}">
-                            {{ '🥃' if producer.type == 'Spirit' else '🍷' if producer.type == 'Wine' else '❓' }} {{ producer.type or 'Unknown' }}
+                            {% if producer.type == 'Spirit' %}{{ icon('glass-water', 14) }}{% elif producer.type == 'Wine' %}{{ icon('wine', 14) }}{% else %}{{ icon('help-circle', 14) }}{% endif %} {{ producer.type or 'Unknown' }}
                         </span>
                     </div>
                 </div>
@@ -100,6 +94,8 @@
                 </div>
             </div>
         </div>
+    </div>
+    </div>
     </div>
 
     <style>

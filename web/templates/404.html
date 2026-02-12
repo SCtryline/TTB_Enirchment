@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
         .error-container {
@@ -80,35 +81,26 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <div class="nav-brand">
-                <h1><a href="/">TTB COLA Registry System</a></h1>
-            </div>
-            <div class="nav-links">
-                <a href="/">Home</a>
-                <a href="/dashboard">Dashboard</a>
-                <a href="/data">Data</a>
-                <a href="/brands">Brands</a>
-                <a href="/importers">Importers</a>
-            </div>
-        </header>
-
-        <div class="error-container">
-            <div class="error-icon">🔍</div>
-            <h1 class="error-title">Page Not Found</h1>
-            <p class="error-message">
-                {% if message %}
-                    {{ message }}
-                {% else %}
-                    The page you're looking for doesn't exist or has been moved.
-                {% endif %}
-            </p>
-            <div class="error-actions">
-                <a href="/brands" class="btn btn-primary">← Back to Brands</a>
-                <a href="/" class="btn btn-secondary">🏠 Home</a>
-            </div>
+{% from 'includes/icons.html' import icon %}
+<div class="app-layout">
+{% include 'includes/sidebar.html' %}
+<div class="main-content-area">
+    <div class="error-container">
+        <div class="error-icon">{{ icon('search', 48) }}</div>
+        <h1 class="error-title">Page Not Found</h1>
+        <p class="error-message">
+            {% if message %}
+                {{ message }}
+            {% else %}
+                The page you're looking for doesn't exist or has been moved.
+            {% endif %}
+        </p>
+        <div class="error-actions">
+            <a href="/brands" class="btn btn-primary">← Back to Brands</a>
+            <a href="/" class="btn btn-secondary">{{ icon('home', 16) }} Home</a>
         </div>
     </div>
+</div>
+</div>
 </body>
 </html>

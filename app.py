@@ -1197,7 +1197,8 @@ def get_all_brands():
             'alcoholTypes': request.args.getlist('alcoholTypes'),
             'producers': request.args.getlist('producers'),
             'countries': request.args.getlist('countries'),
-            'websiteStatus': request.args.getlist('websiteStatus')
+            'websiteStatus': request.args.getlist('websiteStatus'),
+            'downloadStatus': request.args.getlist('downloadStatus')
         }
         
         # Use optimized database method
@@ -1222,7 +1223,8 @@ def get_all_brands():
                 'brand_permits': brand['brand_permits'],
                 'sku_count': brand['sku_count'],
                 'enrichment_data': brand['enrichment'],
-                'website': brand['website']
+                'website': brand['website'],
+                'last_downloaded_at': brand.get('last_downloaded_at')
             })
         
         # Calculate total SKUs from the brands
@@ -3414,6 +3416,7 @@ def export_brands_needing_urls():
         match_status = request.args.get('matchStatus', 'all')
         file_format = request.args.get('format', 'csv')
         tier_param = request.args.get('tier', '')
+        download_status_param = request.args.get('downloadStatus', '')
 
         selected_importers = [i.strip() for i in importers_param.split(',') if i.strip()] if importers_param else []
         selected_countries = [c.strip() for c in countries_param.split(',') if c.strip()] if countries_param else []
@@ -3459,6 +3462,17 @@ def export_brands_needing_urls():
                 if not any(ct in selected_class_types for ct in brand.get('class_types', [])):
                     continue
 
+            # Download status filter
+            if download_status_param:
+                selected_download_statuses = [s.strip() for s in download_status_param.split(',') if s.strip()]
+                brand_downloaded = bool(brand.get('last_downloaded_at'))
+                if 'downloaded' in selected_download_statuses and 'not_downloaded' not in selected_download_statuses:
+                    if not brand_downloaded:
+                        continue
+                elif 'not_downloaded' in selected_download_statuses and 'downloaded' not in selected_download_statuses:
+                    if brand_downloaded:
+                        continue
+
             # Build row
             importer_names = ', '.join(
                 imp.get('owner_name', '') for imp in brand_importers if isinstance(imp, dict) and imp.get('owner_name')
@@ -3474,6 +3488,11 @@ def export_brands_needing_urls():
 
         if not filtered:
             return jsonify({'error': 'No brands match the selected filters'}), 404
+
+        # Mark all exported brands as downloaded
+        downloaded_names = [b['brand_name'] for b in filtered]
+        brand_db.mark_brands_downloaded(downloaded_names)
+        invalidate_all_caches()
 
         df = pd.DataFrame(filtered)
 

@@ -7,115 +7,149 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <div class="container">
-        <!-- Navigation Header -->
-        {% include 'includes/navigation.html' %}
+{% from 'includes/icons.html' import icon %}
+    <div class="app-layout">
+    {% include 'includes/sidebar.html' %}
+    <div class="main-content-area">
 
-        <!-- Hero Section -->
-        <section class="hero-section">
-            <div class="hero-content">
-                <h2>Streamline Your TTB COLA Registry Management</h2>
-                <p>Efficiently match TTB COLA registries with importer data, organize brands, and manage alcohol import compliance with our professional-grade system.</p>
-                <div class="hero-stats" id="hero-stats">
-                    <div class="stat-card">
-                        <div class="stat-number" id="total-brands-hero">0</div>
-                        <div class="stat-label">Brands Managed</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="total-skus-hero">0</div>
-                        <div class="stat-label">SKUs Tracked</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="total-importers-hero">0</div>
-                        <div class="stat-label">Importers Registered</div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Quick Actions Section -->
-        <section class="quick-actions">
-            <h3>Quick Actions</h3>
-            <div class="action-grid">
-                <div class="action-card" onclick="window.location.href='/data'">
-                    <div class="action-icon">📁</div>
-                    <h4>Manage Data</h4>
-                    <p>Upload new files and export data in multiple formats</p>
-                    <span class="action-link">Go to Data Center →</span>
-                </div>
-                <div class="action-card" onclick="window.location.href='/brands'">
-                    <div class="action-icon">🏷️</div>
-                    <h4>Browse Brands</h4>
-                    <p>Explore brand cards with detailed SKU information</p>
-                    <span class="action-link">View Brands →</span>
-                </div>
-                <div class="action-card" onclick="window.location.href='/importers'">
-                    <div class="action-icon">🏢</div>
-                    <h4>Manage Importers</h4>
-                    <p>Search and organize your importer directory</p>
-                    <span class="action-link">View Importers →</span>
-                </div>
-            </div>
-        </section>
-
-        <!-- Features Section -->
-        <section class="features-section">
-            <h3>System Features</h3>
-            <div class="features-grid">
-                <div class="feature-item">
-                    <div class="feature-icon">🔄</div>
-                    <h5>Smart Deduplication</h5>
-                    <p>Automatically prevents duplicate entries across multiple uploads</p>
-                </div>
-                <div class="feature-item">
-                    <div class="feature-icon">🎯</div>
-                    <h5>Intelligent Matching</h5>
-                    <p>Matches COLA permits with importer data using advanced algorithms</p>
-                </div>
-                <div class="feature-item">
-                    <div class="feature-icon">📋</div>
-                    <h5>Brand Organization</h5>
-                    <p>Groups SKUs by brand with aggregated country and class information</p>
-                </div>
-                <div class="feature-item">
-                    <div class="feature-icon">🔍</div>
-                    <h5>Advanced Search</h5>
-                    <p>Powerful search and pagination across all brands and importers</p>
-                </div>
-                <div class="feature-item">
-                    <div class="feature-icon">📈</div>
-                    <h5>Version Tracking</h5>
-                    <p>Maintains history of all uploads with rollback capabilities</p>
-                </div>
-                <div class="feature-item">
-                    <div class="feature-icon">💾</div>
-                    <h5>Data Export</h5>
-                    <p>Export matched data and reports in multiple formats</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Recent Activity Section -->
-        <section class="recent-activity">
-            <h3>Recent Activity</h3>
-            <div class="activity-card">
-                <div id="files-list" class="files-container">
-                    <p class="placeholder">No recent activity</p>
-                </div>
-            </div>
-        </section>
-
-        <div id="preview-modal" class="modal">
-            <div class="modal-content">
-                <span class="close">&times;</span>
-                <h3>Data Preview</h3>
-                <div id="preview-table-container"></div>
+        <!-- Page Header -->
+        <div class="home-header">
+            <div>
+                <h2 class="home-title">Welcome back</h2>
+                <p class="home-subtitle">Here's an overview of your TTB COLA registry.</p>
             </div>
         </div>
-    </div>
+
+        <!-- Stats Row -->
+        <div class="stats-row" id="stats-row">
+            <div class="stat-tile">
+                <div class="stat-tile-icon blue">{{ icon('tag', 20) }}</div>
+                <div class="stat-tile-body">
+                    <span class="stat-tile-value" id="stat-brands">--</span>
+                    <span class="stat-tile-label">Brands</span>
+                </div>
+            </div>
+            <div class="stat-tile">
+                <div class="stat-tile-icon violet">{{ icon('clipboard-list', 20) }}</div>
+                <div class="stat-tile-body">
+                    <span class="stat-tile-value" id="stat-skus">--</span>
+                    <span class="stat-tile-label">SKUs</span>
+                </div>
+            </div>
+            <div class="stat-tile">
+                <div class="stat-tile-icon amber">{{ icon('building-2', 20) }}</div>
+                <div class="stat-tile-body">
+                    <span class="stat-tile-value" id="stat-importers">--</span>
+                    <span class="stat-tile-label">Importers</span>
+                </div>
+            </div>
+            <div class="stat-tile">
+                <div class="stat-tile-icon green">{{ icon('target', 20) }}</div>
+                <div class="stat-tile-body">
+                    <span class="stat-tile-value" id="stat-enriched">--</span>
+                    <span class="stat-tile-label">Enriched</span>
+                </div>
+            </div>
+            <div class="stat-tile">
+                <div class="stat-tile-icon red">{{ icon('search', 20) }}</div>
+                <div class="stat-tile-body">
+                    <span class="stat-tile-value" id="stat-need-url">--</span>
+                    <span class="stat-tile-label">Need URL</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enrichment Progress -->
+        <div class="enrichment-card">
+            <div class="enrichment-card-header">
+                <h3>Enrichment Progress</h3>
+                <a href="/enrichment_rankings" class="enrichment-card-link">View Rankings {{ icon('arrow-right', 14) }}</a>
+            </div>
+            <div class="progress-bar-track">
+                <div class="progress-bar-fill" id="enrichment-bar" style="width: 0%"></div>
+            </div>
+            <div class="enrichment-meta">
+                <span id="enrichment-text">Loading...</span>
+                <span class="enrichment-pct" id="enrichment-pct">0%</span>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="actions-section">
+            <h3 class="actions-title">Quick Actions</h3>
+            <div class="actions-grid">
+                <a href="/data" class="action-tile">
+                    <div class="action-tile-icon blue">{{ icon('database', 24) }}</div>
+                    <div class="action-tile-body">
+                        <h4>Data Center</h4>
+                        <p>Upload files, export data, manage URL research</p>
+                    </div>
+                    <span class="action-tile-arrow">{{ icon('arrow-right', 16) }}</span>
+                </a>
+                <a href="/brands" class="action-tile">
+                    <div class="action-tile-icon violet">{{ icon('tag', 24) }}</div>
+                    <div class="action-tile-body">
+                        <h4>Brands</h4>
+                        <p>Browse brand cards, filter, review enrichment</p>
+                    </div>
+                    <span class="action-tile-arrow">{{ icon('arrow-right', 16) }}</span>
+                </a>
+                <a href="/importers" class="action-tile">
+                    <div class="action-tile-icon amber">{{ icon('building-2', 24) }}</div>
+                    <div class="action-tile-body">
+                        <h4>Importers</h4>
+                        <p>Search and organize your importer directory</p>
+                    </div>
+                    <span class="action-tile-arrow">{{ icon('arrow-right', 16) }}</span>
+                </a>
+                <a href="/producers" class="action-tile">
+                    <div class="action-tile-icon teal">{{ icon('factory', 24) }}</div>
+                    <div class="action-tile-body">
+                        <h4>Producers</h4>
+                        <p>View producers and their brand portfolios</p>
+                    </div>
+                    <span class="action-tile-arrow">{{ icon('arrow-right', 16) }}</span>
+                </a>
+                <a href="/enrichment_rankings" class="action-tile">
+                    <div class="action-tile-icon green">{{ icon('trending-up', 24) }}</div>
+                    <div class="action-tile-body">
+                        <h4>Rankings</h4>
+                        <p>Priority queue and tier-based enrichment</p>
+                    </div>
+                    <span class="action-tile-arrow">{{ icon('arrow-right', 16) }}</span>
+                </a>
+                <a href="/audit" class="action-tile">
+                    <div class="action-tile-icon red">{{ icon('shield-check', 24) }}</div>
+                    <div class="action-tile-body">
+                        <h4>Audit</h4>
+                        <p>Review brand consolidation proposals</p>
+                    </div>
+                    <span class="action-tile-arrow">{{ icon('arrow-right', 16) }}</span>
+                </a>
+                <a href="/dashboard" class="action-tile">
+                    <div class="action-tile-icon blue">{{ icon('bar-chart-2', 24) }}</div>
+                    <div class="action-tile-body">
+                        <h4>Analytics</h4>
+                        <p>Market insights, charts, and PDF reports</p>
+                    </div>
+                    <span class="action-tile-arrow">{{ icon('arrow-right', 16) }}</span>
+                </a>
+                <a href="/learning_insights" class="action-tile">
+                    <div class="action-tile-icon violet">{{ icon('brain', 24) }}</div>
+                    <div class="action-tile-body">
+                        <h4>Learning</h4>
+                        <p>AI learning patterns and search accuracy</p>
+                    </div>
+                    <span class="action-tile-arrow">{{ icon('arrow-right', 16) }}</span>
+                </a>
+            </div>
+        </div>
+
+    </div></div>
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>

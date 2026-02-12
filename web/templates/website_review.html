@@ -5,32 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Website Review - TTB COLA Registry</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/style.css">
-    <link rel="stylesheet" href="/static/css/website_review.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/website_review.css') }}">
 </head>
 <body>
-    <nav>
-        <div class="nav-container">
-            <div class="nav-brand">
-                <h1>TTB COLA Registry</h1>
-                <span class="nav-subtitle">Website Review Interface</span>
-            </div>
-            <div class="nav-links">
-                <a href="/">Home</a>
-                <a href="/dashboard">Dashboard</a>
-                <a href="/brands">Brands</a>
-                <a href="/importers">Importers</a>
-                <a href="/producers">Producers</a>
-                <a href="/data">Data</a>
-                <a href="/website_review" class="active">Review</a>
-            </div>
-        </div>
-    </nav>
+    {% from 'includes/icons.html' import icon %}
+    <div class="app-layout">
+    {% include 'includes/sidebar.html' %}
+    <div class="main-content-area">
 
     <div class="container">
         <!-- Page Header -->
         <div class="page-header">
-            <h2>🔍 Website Verification Queue</h2>
+            <h2>{{ icon('search', 20) }} Website Verification Queue</h2>
             <p>Review and verify websites that need manual verification</p>
         </div>
 
@@ -83,13 +71,13 @@
                 <button onclick="selectAll()" class="btn btn-outline">Select All</button>
                 <button onclick="deselectAll()" class="btn btn-outline">Deselect All</button>
                 <button onclick="bulkVerify()" class="btn btn-success" disabled id="bulk-verify-btn">
-                    ✅ Verify Selected (<span id="selected-count">0</span>)
+                    {{ icon('check-circle', 16) }} Verify Selected (<span id="selected-count">0</span>)
                 </button>
                 <button onclick="bulkReject()" class="btn btn-danger" disabled id="bulk-reject-btn">
-                    ❌ Reject Selected
+                    {{ icon('x-circle', 16) }} Reject Selected
                 </button>
                 <button onclick="bulkFlag()" class="btn btn-warning" disabled id="bulk-flag-btn">
-                    ⚠️ Flag Selected
+                    {{ icon('alert-triangle', 16) }} Flag Selected
                 </button>
             </div>
         </div>
@@ -152,9 +140,9 @@
                         </div>
                     </div>
                     <div class="modal-actions">
-                        <button onclick="quickVerify()" class="btn btn-success">✅ Verify</button>
-                        <button onclick="quickFlag()" class="btn btn-warning">⚠️ Flag</button>
-                        <button onclick="quickReject()" class="btn btn-danger">❌ Reject</button>
+                        <button onclick="quickVerify()" class="btn btn-success">{{ icon('check-circle', 16) }} Verify</button>
+                        <button onclick="quickFlag()" class="btn btn-warning">{{ icon('alert-triangle', 16) }} Flag</button>
+                        <button onclick="quickReject()" class="btn btn-danger">{{ icon('x-circle', 16) }} Reject</button>
                         <button onclick="closeModal()" class="btn btn-secondary">Cancel</button>
                     </div>
                 </div>
@@ -162,6 +150,7 @@
         </div>
     </div>
 
+    </div></div>
     <script src="/static/js/website_review.js"></script>
 </body>
 </html>

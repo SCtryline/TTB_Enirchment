@@ -31,9 +31,10 @@ document.addEventListener('DOMContentLoaded', async function() {
         alcoholTypes: [],
         producers: [],
         countries: [],
-        websiteStatus: []
+        websiteStatus: [],
+        downloadStatus: []
     };
-    
+
     // Filter data cache
     let filterData = {
         importers: {},
@@ -44,6 +45,10 @@ document.addEventListener('DOMContentLoaded', async function() {
             'has_website': 0,
             'verified': 0,
             'no_website': 0
+        },
+        downloadStatus: {
+            'downloaded': 0,
+            'not_downloaded': 0
         }
     };
     
@@ -249,6 +254,15 @@ document.addEventListener('DOMContentLoaded', async function() {
                 }
             }
             
+            // Download status indicator
+            let downloadIndicator = '';
+            if (brand.last_downloaded_at) {
+                const dlDate = new Date(brand.last_downloaded_at).toLocaleDateString('en-US', {
+                    month: 'short', day: 'numeric', year: 'numeric'
+                });
+                downloadIndicator = `<span class="download-indicator downloaded" data-tooltip="Downloaded ${dlDate}">DL'd</span>`;
+            }
+
             // Primary contact display (placeholder for now - will be implemented in next phase)
             let contactDisplay = '❌';
             let contactClass = 'no-contact';
@@ -297,9 +311,12 @@ document.addEventListener('DOMContentLoaded', async function() {
                     </label>
                 </td>
                 <td class="brand-name-cell">
-                    <a href="/brand/${encodeURIComponent(brand.brand_name)}" class="brand-name-link text-ellipsis">
-                        ${brand.brand_name}
-                    </a>
+                    <div class="brand-name-wrapper">
+                        <a href="/brand/${encodeURIComponent(brand.brand_name)}" class="brand-name-link">
+                            ${brand.brand_name}
+                        </a>
+                        ${downloadIndicator}
+                    </div>
                 </td>
                 <td class="countries-cell">
                     <div class="countries-list">
@@ -543,7 +560,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         activeFilters.producers = urlParams.getAll('producers') || [];
         activeFilters.countries = urlParams.getAll('countries') || [];
         activeFilters.websiteStatus = urlParams.getAll('websiteStatus') || [];
-        
+        activeFilters.downloadStatus = urlParams.getAll('downloadStatus') || [];
+
         // Load search term
         const searchParam = urlParams.get('search');
         if (searchParam) {
@@ -571,6 +589,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         url.searchParams.delete('producers');
         url.searchParams.delete('countries');
         url.searchParams.delete('websiteStatus');
+        url.searchParams.delete('downloadStatus');
         url.searchParams.delete('search');
         url.searchParams.delete('page');
         
@@ -600,31 +619,49 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     
     function setupFilterEventListeners() {
-        // Filter toggle (in sidebar)
+        // Filter toggle (close button inside sidebar header)
         const toggleBtn = document.getElementById('toggle-filters');
         if (toggleBtn) {
             toggleBtn.addEventListener('click', toggleFilterSidebar);
         }
-        
-        // Floating toggle button
-        const floatingToggleBtn = document.getElementById('filter-toggle-float');
-        if (floatingToggleBtn) {
-            floatingToggleBtn.addEventListener('click', toggleFilterSidebar);
+
+        // Toolbar "Filters" button
+        const toolbarBtn = document.getElementById('filter-toolbar-btn');
+        if (toolbarBtn) {
+            toolbarBtn.addEventListener('click', toggleFilterSidebar);
         }
-        
+
+        // Backdrop click closes drawer
+        const backdrop = document.getElementById('filter-backdrop');
+        if (backdrop) {
+            backdrop.addEventListener('click', function() {
+                closeFilterSidebar();
+            });
+        }
+
+        // ESC key closes drawer
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const sidebar = document.getElementById('filter-sidebar');
+                if (sidebar && !sidebar.classList.contains('collapsed')) {
+                    closeFilterSidebar();
+                }
+            }
+        });
+
         // Clear all filters
         const clearAllBtn = document.getElementById('clear-all-filters');
         if (clearAllBtn) {
             clearAllBtn.addEventListener('click', clearAllFilters);
         }
-        
+
         // Apply filters button
         const applyBtn = document.querySelector('.apply-filters-btn');
         if (applyBtn) {
             applyBtn.addEventListener('click', function() { window.applyFilters(); });
         }
-        
-        // Reset filters button  
+
+        // Reset filters button
         const resetBtn = document.querySelector('.reset-filters-btn');
         if (resetBtn) {
             resetBtn.addEventListener('click', function() { window.resetFilters(); });
@@ -691,7 +728,10 @@ document.addEventListener('DOMContentLoaded', async function() {
         
         // Update website status counts
         updateWebsiteStatusCounts();
-        
+
+        // Update download status counts
+        updateDownloadStatusCounts();
+
         // Restore selected filters from URL
         restoreSelectedFilters();
         
@@ -707,21 +747,39 @@ document.addEventListener('DOMContentLoaded', async function() {
             'producer': 'producers',
             'country': 'countries'
         };
-        
-        // Restore checkboxes for each section
+
+        // Restore checkboxes and quick toggle states for each section
         Object.entries(sectionMap).forEach(([sectionType, filterKey]) => {
             const activeValues = activeFilters[filterKey] || [];
             activeValues.forEach(value => {
+                // Full list checkbox
                 const checkbox = document.querySelector(`input[type="checkbox"][value="${value.replace(/"/g, '&quot;')}"]`);
                 if (checkbox) {
                     checkbox.checked = true;
                 }
+                // Quick toggle checkbox + active state
+                const quickToggleCheckbox = document.querySelector(`#${sectionType}-quick-toggles input[value="${value.replace(/"/g, '&quot;')}"]`);
+                if (quickToggleCheckbox) {
+                    quickToggleCheckbox.checked = true;
+                    const quickToggleItem = quickToggleCheckbox.closest('.quick-toggle-item');
+                    if (quickToggleItem) {
+                        quickToggleItem.classList.add('active');
+                    }
+                }
             });
         });
-        
+
         // Restore website status filters
         activeFilters.websiteStatus.forEach(value => {
             const checkbox = document.querySelector(`input[type="checkbox"][value="${value}"]`);
+            if (checkbox) {
+                checkbox.checked = true;
+            }
+        });
+
+        // Restore download status filters
+        activeFilters.downloadStatus.forEach(value => {
+            const checkbox = document.querySelector(`#download-filters input[type="checkbox"][value="${value}"]`);
             if (checkbox) {
                 checkbox.checked = true;
             }
@@ -739,10 +797,9 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Sort by count (descending)
         const sortedEntries = Object.entries(data).sort((a, b) => b[1] - a[1]);
         
-        // Update section count (total brands, not unique options)
+        // Update section count (unique options)
         if (countElement) {
-            const totalBrands = sortedEntries.reduce((total, [name, count]) => total + count, 0);
-            countElement.textContent = totalBrands;
+            countElement.textContent = sortedEntries.length;
         }
         
         // Populate Quick Toggles (Top 10)
@@ -780,28 +837,47 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     function updateWebsiteStatusCounts() {
         const counts = filterData.websiteStatus || {};
-        
+
+        // has_website already includes verified (verified is a subset)
+        const hasWebsiteTotal = counts.has_website || 0;
+        const noWebsiteTotal = counts.no_website || 0;
+
+        const hasWebsiteEl = document.getElementById('has-website-count');
+        if (hasWebsiteEl) hasWebsiteEl.textContent = hasWebsiteTotal;
+
+        const noWebsiteEl = document.getElementById('no-website-count');
+        if (noWebsiteEl) noWebsiteEl.textContent = noWebsiteTotal;
+
+        // Update website section count
+        const websiteCount = document.getElementById('website-count');
+        if (websiteCount) {
+            websiteCount.textContent = hasWebsiteTotal + noWebsiteTotal;
+        }
+    }
+
+    function updateDownloadStatusCounts() {
+        const counts = filterData.downloadStatus || {};
+
         const elements = {
-            'has-website-count': counts.has_website || 0,
-            'verified-count': counts.verified || 0,
-            'no-website-count': counts.no_website || 0
+            'downloaded-count': counts.downloaded || 0,
+            'not-downloaded-count': counts.not_downloaded || 0
         };
-        
+
         Object.entries(elements).forEach(([id, count]) => {
             const element = document.getElementById(id);
             if (element) {
                 element.textContent = count;
             }
         });
-        
-        // Update website section count
-        const websiteCount = document.getElementById('website-count');
-        if (websiteCount) {
-            const totalWebsiteStatusBrands = Object.values(elements).reduce((total, count) => total + count, 0);
-            websiteCount.textContent = totalWebsiteStatusBrands;
+
+        // Update download section count
+        const downloadCount = document.getElementById('download-count');
+        if (downloadCount) {
+            const total = Object.values(elements).reduce((t, c) => t + c, 0);
+            downloadCount.textContent = total;
         }
     }
-    
+
     // Global functions for HTML event handlers
     window.toggleFilterSection = function(sectionId) {
         const content = document.getElementById(sectionId);
@@ -821,21 +897,27 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     };
     
-    window.filterOptions = function(sectionType) {
-        const searchInput = document.getElementById(`${sectionType}-search`);
-        const optionsContainer = document.getElementById(`${sectionType}-options`);
-        
-        if (!searchInput || !optionsContainer) return;
-        
-        const searchTerm = searchInput.value.toLowerCase();
-        const options = optionsContainer.querySelectorAll('.filter-option');
-        
-        options.forEach(option => {
-            const text = option.textContent.toLowerCase();
-            const matches = text.includes(searchTerm);
-            option.style.display = matches ? 'flex' : 'none';
-        });
-    };
+    window.filterOptions = (function() {
+        let debounceTimer = null;
+        return function(sectionType) {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(function() {
+                const searchInput = document.getElementById(`${sectionType}-search`);
+                const optionsContainer = document.getElementById(`${sectionType}-options`);
+
+                if (!searchInput || !optionsContainer) return;
+
+                const searchTerm = searchInput.value.toLowerCase();
+                const options = optionsContainer.querySelectorAll('.filter-option');
+
+                options.forEach(option => {
+                    const text = option.textContent.toLowerCase();
+                    const matches = text.includes(searchTerm);
+                    option.style.display = matches ? 'flex' : 'none';
+                });
+            }, 200);
+        };
+    })();
     
     window.updateFilterSelection = function(sectionType, checkbox) {
         const value = checkbox.value;
@@ -881,42 +963,18 @@ document.addEventListener('DOMContentLoaded', async function() {
     };
     
     window.applyFilters = async function() {
-        // Clear current filters
-        activeFilters = {
-            importers: [],
-            alcoholTypes: [],
-            producers: [],
-            countries: [],
-            websiteStatus: []
-        };
-        
-        // Collect all checked filter values
-        
-        // Importers
-        document.querySelectorAll('#importer-filters input[type="checkbox"]:checked').forEach(checkbox => {
-            activeFilters.importers.push(checkbox.value);
-        });
-        
-        // Alcohol Types
-        document.querySelectorAll('#alcohol-filters input[type="checkbox"]:checked').forEach(checkbox => {
-            activeFilters.alcoholTypes.push(checkbox.value);
-        });
-        
-        // Producers
-        document.querySelectorAll('#producer-filters input[type="checkbox"]:checked').forEach(checkbox => {
-            activeFilters.producers.push(checkbox.value);
-        });
-        
-        // Countries
-        document.querySelectorAll('#country-filters input[type="checkbox"]:checked').forEach(checkbox => {
-            activeFilters.countries.push(checkbox.value);
-        });
-        
-        // Website Status
+        // Re-scan DOM only for websiteStatus/downloadStatus (they bypass updateFilterSelection flow)
+        activeFilters.websiteStatus = [];
+        activeFilters.downloadStatus = [];
+
         document.querySelectorAll('#website-filters input[type="checkbox"]:checked').forEach(checkbox => {
             activeFilters.websiteStatus.push(checkbox.value);
         });
-        
+
+        document.querySelectorAll('#download-filters input[type="checkbox"]:checked').forEach(checkbox => {
+            activeFilters.downloadStatus.push(checkbox.value);
+        });
+
         console.log('Applying filters:', activeFilters);
         
         currentPage = 1;
@@ -932,7 +990,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             alcoholTypes: [],
             producers: [],
             countries: [],
-            websiteStatus: []
+            websiteStatus: [],
+            downloadStatus: []
         };
         
         // Uncheck all checkboxes
@@ -965,24 +1024,27 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     function toggleFilterSidebar() {
         const sidebar = document.getElementById('filter-sidebar');
-        const floatingBtn = document.getElementById('filter-toggle-float');
-        const toggleIcon = document.querySelector('.toggle-icon');
-        
-        if (sidebar) {
-            const isCollapsed = sidebar.classList.contains('collapsed');
-            
-            if (isCollapsed) {
-                // Expanding sidebar
-                sidebar.classList.remove('collapsed');
-                if (floatingBtn) floatingBtn.style.display = 'none';
-                if (toggleIcon) toggleIcon.textContent = '◀';
-            } else {
-                // Collapsing sidebar
-                sidebar.classList.add('collapsed');
-                if (floatingBtn) floatingBtn.style.display = 'block';
-                if (toggleIcon) toggleIcon.textContent = '▶';
-            }
+        if (!sidebar) return;
+
+        if (sidebar.classList.contains('collapsed')) {
+            openFilterSidebar();
+        } else {
+            closeFilterSidebar();
         }
+    }
+
+    function openFilterSidebar() {
+        const sidebar = document.getElementById('filter-sidebar');
+        const backdrop = document.getElementById('filter-backdrop');
+        if (sidebar) sidebar.classList.remove('collapsed');
+        if (backdrop) backdrop.classList.remove('hidden');
+    }
+
+    function closeFilterSidebar() {
+        const sidebar = document.getElementById('filter-sidebar');
+        const backdrop = document.getElementById('filter-backdrop');
+        if (sidebar) sidebar.classList.add('collapsed');
+        if (backdrop) backdrop.classList.add('hidden');
     }
     
     function clearAllFilters() {
@@ -1006,11 +1068,15 @@ document.addEventListener('DOMContentLoaded', async function() {
         
         if (allActiveFilters.length === 0) {
             activeFiltersContainer.style.display = 'none';
+            updateFilterCount();
             return;
         }
         
         activeFiltersContainer.style.display = 'block';
-        
+
+        // Keep toolbar badge in sync
+        updateFilterCount();
+
         // Generate filter tags
         const tagsHTML = allActiveFilters.map(filter => `
             <span class="filter-tag">
@@ -1026,22 +1092,42 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (activeFilters[filterType]) {
             activeFilters[filterType] = activeFilters[filterType].filter(item => item !== value);
         }
-        
-        // Uncheck corresponding checkbox
-        const checkbox = document.querySelector(`input[type="checkbox"][value="${value.replace(/"/g, '&quot;')}"]`);
-        if (checkbox) {
+
+        // Uncheck ALL corresponding checkboxes (full list + quick toggles)
+        const checkboxes = document.querySelectorAll(`input[type="checkbox"][value="${value.replace(/"/g, '&quot;')}"]`);
+        checkboxes.forEach(checkbox => {
             checkbox.checked = false;
-        }
-        
+            // Also remove .active from parent quick-toggle-item if present
+            const quickToggleItem = checkbox.closest('.quick-toggle-item');
+            if (quickToggleItem) {
+                quickToggleItem.classList.remove('active');
+            }
+        });
+
         updateActiveFiltersDisplay();
         applyFilters();
     };
     
     function updateFilterCount() {
+        const totalFilters = Object.values(activeFilters).reduce((total, filters) => total + filters.length, 0);
+
         const filterCountElement = document.getElementById('filter-count');
         if (filterCountElement) {
-            const totalFilters = Object.values(activeFilters).reduce((total, filters) => total + filters.length, 0);
             filterCountElement.textContent = totalFilters;
+        }
+
+        // Update toolbar badge
+        const badge = document.getElementById('filter-toolbar-badge');
+        const btn = document.getElementById('filter-toolbar-btn');
+        if (badge && btn) {
+            if (totalFilters > 0) {
+                badge.textContent = totalFilters;
+                badge.style.display = '';
+                btn.classList.add('has-active');
+            } else {
+                badge.style.display = 'none';
+                btn.classList.remove('has-active');
+            }
         }
     }
     
@@ -1079,7 +1165,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     };
     
     window.handleQuickToggle = function(sectionType, checkbox) {
-        const filterKey = sectionType + 's'; // Convert to plural
+        const sectionMap = { 'importer': 'importers', 'alcohol': 'alcoholTypes', 'producer': 'producers', 'country': 'countries' };
+        const filterKey = sectionMap[sectionType];
+        if (!filterKey) return;
         const filterValue = checkbox.value;
         const quickToggleItem = checkbox.closest('.quick-toggle-item');
         
@@ -1130,35 +1218,94 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
     };
     
-    // Update restoreSelectedFilters to include quick toggles
-    const originalRestoreSelectedFilters = restoreSelectedFilters;
-    restoreSelectedFilters = function() {
-        // Call original function
-        originalRestoreSelectedFilters();
-        
-        // Restore quick toggle states
-        const sectionMap = {
-            'importer': 'importers',
-            'alcohol': 'alcoholTypes',
-            'producer': 'producers',
-            'country': 'countries'
-        };
-        
-        Object.entries(sectionMap).forEach(([sectionType, filterKey]) => {
-            const activeValues = activeFilters[filterKey] || [];
-            activeValues.forEach(value => {
-                const quickToggleCheckbox = document.querySelector(`#${sectionType}-quick-toggles input[value="${value.replace(/"/g, '&quot;')}"]`);
-                if (quickToggleCheckbox) {
-                    quickToggleCheckbox.checked = true;
-                    const quickToggleItem = quickToggleCheckbox.closest('.quick-toggle-item');
-                    if (quickToggleItem) {
-                        quickToggleItem.classList.add('active');
-                    }
+    // Make download function available globally
+    window.downloadFilteredBrands = async function(format) {
+        try {
+            const params = new URLSearchParams();
+            params.append('format', format || 'csv');
+            params.append('enrichmentStatus', 'not_enriched');
+
+            if (currentSearch) {
+                params.append('search', currentSearch);
+            }
+
+            // Map activeFilters to endpoint params
+            if (activeFilters.importers && activeFilters.importers.length) {
+                params.append('importers', activeFilters.importers.join(','));
+            }
+            if (activeFilters.countries && activeFilters.countries.length) {
+                params.append('countries', activeFilters.countries.join(','));
+            }
+            if (activeFilters.alcoholTypes && activeFilters.alcoholTypes.length) {
+                params.append('classTypes', activeFilters.alcoholTypes.join(','));
+            }
+
+            // Download status filter
+            if (activeFilters.downloadStatus && activeFilters.downloadStatus.length) {
+                params.append('downloadStatus', activeFilters.downloadStatus.join(','));
+            }
+
+            // If "no_website" is in websiteStatus filters, keep enrichmentStatus as not_enriched
+            // If "has_website" is selected, switch to enriched
+            if (activeFilters.websiteStatus && activeFilters.websiteStatus.length) {
+                if (activeFilters.websiteStatus.includes('has_website')) {
+                    params.set('enrichmentStatus', 'enriched');
                 }
-            });
-        });
+                if (activeFilters.websiteStatus.includes('no_website')) {
+                    params.set('enrichmentStatus', 'not_enriched');
+                }
+                // If both are checked, get all
+                if (activeFilters.websiteStatus.includes('has_website') && activeFilters.websiteStatus.includes('no_website')) {
+                    params.set('enrichmentStatus', 'all');
+                }
+            }
+
+            // Match status from importers filter presence
+            if (activeFilters.importers && activeFilters.importers.length) {
+                params.append('matchStatus', 'matched');
+            }
+
+            const response = await fetch(`/export_brands_needing_urls?${params.toString()}`);
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Export failed');
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+
+            const contentDisposition = response.headers.get('Content-Disposition');
+            const filename = contentDisposition ?
+                contentDisposition.split('filename=')[1].replace(/"/g, '') :
+                `brands_filtered_${new Date().toISOString().split('T')[0]}.${format || 'csv'}`;
+
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+
+            // Show a brief success message
+            const msgEl = document.createElement('div');
+            msgEl.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;background:#10b981;color:white;padding:12px 20px;border-radius:8px;font-weight:600;';
+            msgEl.textContent = 'Filtered brands downloaded!';
+            document.body.appendChild(msgEl);
+            setTimeout(() => msgEl.remove(), 3000);
+
+            // Refresh brands list and filter counts to reflect download status
+            await loadFilterData();
+            updateDownloadStatusCounts();
+            await loadBrands(currentPage, currentSearch, currentPerPage, currentSort, sortDirection, activeFilters);
+
+        } catch (error) {
+            console.error('Download filtered brands error:', error);
+            alert(`Download failed: ${error.message}`);
+        }
     };
-    
+
     } catch (error) {
         console.error('💥 Error initializing brands page:', error);
         // Show error message to user

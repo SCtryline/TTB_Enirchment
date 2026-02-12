@@ -5,26 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Review Enrichment - {{ brand_name }} | TTB Enrichment</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/enrichment_review.css') }}">
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-left">
-                <a href="{{ url_for('index') }}" class="nav-brand">TTB Enrichment</a>
-                <div class="nav-links">
-                    <a href="{{ url_for('dashboard_page') }}">Dashboard</a>
-                    <a href="{{ url_for('brands_page') }}" class="nav-active">Brands</a>
-                    <a href="{{ url_for('importers_page') }}">Importers</a>
-                    <a href="{{ url_for('producers_page') }}">Producers</a>
-                    <a href="{{ url_for('data_page') }}">Data</a>
-                </div>
-            </div>
-        </div>
-    </nav>
+    {% from 'includes/icons.html' import icon %}
+    <div class="app-layout">
+    {% include 'includes/sidebar.html' %}
+    <div class="main-content-area">
 
     <!-- Main Content -->
     <div class="main-content">
@@ -33,7 +22,7 @@
             <div class="header-content">
                 <div class="header-left">
                     <h1 class="page-title">
-                        <i class="fas fa-search-plus"></i>
+                        {{ icon('search', 16) }}
                         Review Enrichment
                     </h1>
                     <div class="breadcrumb">
@@ -58,16 +47,16 @@
             <!-- Left Panel: Original TTB Data -->
             <div class="review-panel original-data">
                 <div class="panel-header">
-                    <h2><i class="fas fa-database"></i> TTB Registry Data</h2>
+                    <h2>{{ icon('database', 16) }} TTB Registry Data</h2>
                     <span class="data-source">Source: TTB COLA Database</span>
                 </div>
-                
+
                 <div class="data-section">
                     <div class="data-item">
                         <label>Brand Name:</label>
                         <div class="data-value">{{ brand_name }}</div>
                     </div>
-                    
+
                     {% if original_data.class_types %}
                     <div class="data-item">
                         <label>Product Types:</label>
@@ -78,7 +67,7 @@
                         </div>
                     </div>
                     {% endif %}
-                    
+
                     {% if original_data.countries %}
                     <div class="data-item">
                         <label>Countries:</label>
@@ -89,12 +78,12 @@
                         </div>
                     </div>
                     {% endif %}
-                    
+
                     <div class="data-item">
                         <label>SKUs:</label>
                         <div class="data-value">{{ original_data.sku_count }} registered products</div>
                     </div>
-                    
+
                     {% if original_data.importers %}
                     <div class="data-item">
                         <label>Importers:</label>
@@ -114,7 +103,7 @@
             <!-- Right Panel: Enrichment Data -->
             <div class="review-panel enrichment-data">
                 <div class="panel-header">
-                    <h2><i class="fas fa-globe"></i> Discovered Data</h2>
+                    <h2>{{ icon('globe', 16) }} Discovered Data</h2>
                     <span class="data-source">Source: Web Search & Analysis</span>
                 </div>
 
@@ -122,11 +111,11 @@
                     <!-- Brand Verification -->
                     <div class="enrichment-item">
                         <div class="item-header">
-                            <h3><i class="fas fa-check-circle"></i> Brand Verification</h3>
+                            <h3>{{ icon('check-circle', 16) }} Brand Verification</h3>
                             {% if enrichment.get('founders') or enrichment.get('website') %}
-                                <span class="verification-status verified">✅ Verified</span>
+                                <span class="verification-status verified">{{ icon('check-circle', 16) }} Verified</span>
                             {% else %}
-                                <span class="verification-status unverified">❌ Not Found</span>
+                                <span class="verification-status unverified">{{ icon('x-circle', 16) }} Not Found</span>
                             {% endif %}
                         </div>
                         <div class="item-content">
@@ -141,10 +130,10 @@
                     <!-- Website -->
                     <div class="enrichment-item" data-field="website">
                         <div class="item-header">
-                            <h3><i class="fas fa-globe"></i> Official Website</h3>
+                            <h3>{{ icon('globe', 16) }} Official Website</h3>
                             {% if enrichment.get('website') %}
                             <button class="edit-btn" onclick="editField('website')">
-                                <i class="fas fa-edit"></i>
+                                {{ icon('pencil', 16) }}
                             </button>
                             {% endif %}
                         </div>
@@ -154,7 +143,7 @@
                                 <div class="display-value">
                                     <strong>{{ enrichment.get('website', {}).get('domain', '') }}</strong>
                                     <a href="{{ enrichment.get('website', {}).get('url', '#') }}" target="_blank" class="external-link">
-                                        <i class="fas fa-external-link-alt"></i>
+                                        {{ icon('external-link', 16) }}
                                     </a>
                                 </div>
                                 <div class="edit-value" style="display: none;">
@@ -171,13 +160,13 @@
                             {% if website_options and website_options.needs_selection %}
                             <div class="website-multi-choice">
                                 <div class="multi-choice-header">
-                                    <i class="fas fa-search-plus"></i>
+                                    {{ icon('search', 16) }}
                                     <div class="header-content">
                                         <h4>Multiple Website Options Found</h4>
                                         <p>The AI found several potential websites. Please select the most appropriate one:</p>
                                     </div>
                                 </div>
-                                
+
                                 <div class="website-options">
                                     {% for option in website_options.options %}
                                     <div class="website-option" data-rank="{{ option.rank }}">
@@ -188,7 +177,7 @@
                                             </div>
                                             <div class="option-domain">
                                                 <a href="{{ option.url }}" target="_blank">{{ option.domain }}</a>
-                                                <i class="fas fa-external-link-alt"></i>
+                                                {{ icon('external-link', 16) }}
                                             </div>
                                         </div>
                                         <div class="option-details">
@@ -198,21 +187,21 @@
                                             </div>
                                         </div>
                                         <div class="option-actions">
-                                            <button onclick="selectWebsiteOption('{{ brand_name }}', '{{ option.url }}', {{ option.rank }})" 
+                                            <button onclick="selectWebsiteOption('{{ brand_name }}', '{{ option.url }}', {{ option.rank }})"
                                                     class="btn btn-sm btn-success">
-                                                <i class="fas fa-check"></i> Select This Website
+                                                {{ icon('check', 16) }} Select This Website
                                             </button>
                                         </div>
                                     </div>
                                     {% endfor %}
                                 </div>
-                                
+
                                 <div class="multi-choice-actions">
                                     <button onclick="rejectAllOptions('{{ brand_name }}')" class="btn btn-secondary">
-                                        <i class="fas fa-times"></i> None of These Are Correct
+                                        {{ icon('x', 16) }} None of These Are Correct
                                     </button>
                                     <button onclick="showManualInput('{{ brand_name }}')" class="btn btn-outline">
-                                        <i class="fas fa-edit"></i> Enter Manually
+                                        {{ icon('pencil', 16) }} Enter Manually
                                     </button>
                                 </div>
                             </div>
@@ -220,7 +209,7 @@
                             {% else %}
                             <div class="website-not-found">
                                 <div class="not-found-message">
-                                    <i class="fas fa-filter"></i>
+                                    {{ icon('filter', 16) }}
                                     <div class="message-content">
                                         <h4>No Suitable Website Found</h4>
                                         <p>Search completed but results were filtered out as irrelevant (Wikipedia, historical content, etc.). The intelligent search system found search results but they were not related to the brand's business website.</p>
@@ -252,9 +241,9 @@
                     {% if enrichment.get('founders') %}
                     <div class="enrichment-item editable" data-field="founders">
                         <div class="item-header">
-                            <h3><i class="fas fa-users"></i> Founders & Leadership</h3>
+                            <h3>{{ icon('users', 16) }} Founders & Leadership</h3>
                             <button class="edit-btn" onclick="editField('founders')">
-                                <i class="fas fa-edit"></i>
+                                {{ icon('pencil', 16) }}
                             </button>
                         </div>
                         <div class="item-content">
@@ -292,7 +281,7 @@
                     {% if enrichment.get('linkedin_profiles') %}
                     <div class="enrichment-item">
                         <div class="item-header">
-                            <h3><i class="fab fa-linkedin"></i> LinkedIn Profiles</h3>
+                            <h3>{{ icon('linkedin', 16) }} LinkedIn Profiles</h3>
                         </div>
                         <div class="item-content">
                             {% for profile in enrichment.get('linkedin_profiles', []) %}
@@ -300,7 +289,7 @@
                                 <div class="profile-name">{{ profile['name'] if profile is mapping else profile.name }}</div>
                                 <div class="profile-title">{{ (profile['title'] if profile is mapping else profile.title) or 'Executive' }}</div>
                                 <a href="{{ profile['url'] if profile is mapping else profile.url }}" target="_blank" class="profile-link">
-                                    View Profile <i class="fas fa-external-link-alt"></i>
+                                    View Profile {{ icon('external-link', 16) }}
                                 </a>
                             </div>
                             {% endfor %}
@@ -312,7 +301,7 @@
                     {% if enrichment.get('apollo_contacts') %}
                     <div class="enrichment-item">
                         <div class="item-header">
-                            <h3><i class="fas fa-address-book"></i> Contact Information</h3>
+                            <h3>{{ icon('book-open', 16) }} Contact Information</h3>
                             <span class="premium-badge">Apollo.io</span>
                         </div>
                         <div class="item-content">
@@ -329,22 +318,22 @@
             <div class="actions-container">
                 <div class="action-group primary-actions">
                     <button id="approve-btn" class="btn btn-success btn-lg" onclick="approveEnrichment()">
-                        <i class="fas fa-check"></i>
+                        {{ icon('check', 16) }}
                         Approve & Save
                     </button>
                     <button id="reject-btn" class="btn btn-danger btn-lg" onclick="rejectEnrichment()">
-                        <i class="fas fa-times"></i>
+                        {{ icon('x', 16) }}
                         Reject
                     </button>
                 </div>
-                
+
                 <div class="action-group secondary-actions">
                     <button class="btn btn-secondary" onclick="researchBrand()">
-                        <i class="fas fa-redo"></i>
+                        {{ icon('refresh-cw', 16) }}
                         Re-search
                     </button>
                     <a href="{{ url_for('brands_page') }}" class="btn btn-outline">
-                        <i class="fas fa-arrow-left"></i>
+                        {{ icon('arrow-left', 16) }}
                         Back to Brands
                     </a>
                 </div>
@@ -353,7 +342,7 @@
             <!-- Notes Section -->
             <div class="notes-section">
                 <label for="review-notes">Review Notes (Optional):</label>
-                <textarea id="review-notes" class="form-input" rows="3" 
+                <textarea id="review-notes" class="form-input" rows="3"
                           placeholder="Add any notes about this enrichment review..."></textarea>
             </div>
         </div>
@@ -367,6 +356,8 @@
             <p id="loading-message">Saving your review...</p>
         </div>
     </div>
+
+    </div></div>
 
     <script>
         // Pass data to JavaScript

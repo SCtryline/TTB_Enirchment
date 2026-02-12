@@ -90,27 +90,26 @@ async function loadMatchedFiles() {
             return;
         }
         
-        // Display upload history with better formatting
+        // Display upload history
         container.innerHTML = `
-            <div style="max-height: 300px; overflow-y: auto;">
+            <div class="history-scroll">
                 ${data.files.map(file => `
-                    <div style="margin-bottom: 15px; padding: 10px; border: 1px solid #e1e5e9; border-radius: 8px; background: #f8f9fa;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                            <span style="font-weight: 600; color: #2c3e50;">📊 ${file.filename}</span>
-                            <span style="font-size: 0.85rem; color: #6c757d;">${file.created ? new Date(file.created).toLocaleDateString() : ''}</span>
+                    <div class="history-item">
+                        <div class="history-item-header">
+                            <span class="history-item-name">${file.filename}</span>
+                            <span class="history-item-date">${file.created ? new Date(file.created).toLocaleDateString() : ''}</span>
                         </div>
-                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 0.85rem; color: #495057;">
-                            <span>📝 Total: ${file.rows} records</span>
-                            <span>🔗 Matched: ${file.matched || 0}</span>
-                            <span>🏷️ New Brands: ${file.new_brands || 0}</span>
-                            <span>📦 New SKUs: ${file.new_skus || 0}</span>
+                        <div class="history-item-stats">
+                            <span>Total: ${file.rows} records</span>
+                            <span>Matched: ${file.matched || 0}</span>
+                            <span>New Brands: ${file.new_brands || 0}</span>
+                            <span>New SKUs: ${file.new_skus || 0}</span>
                         </div>
                     </div>
                 `).join('')}
             </div>
-            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #dee2e6;">
-                <button class="export-btn" onclick="window.location.href='/dashboard'" style="width: 100%; background: #2563eb; color: white; font-weight: 600;">
-                    <span class="btn-icon">📊</span>
+            <div class="history-footer">
+                <button class="export-btn blue" onclick="window.location.href='/dashboard'" style="width: 100%;">
                     Go to Dashboard for Advanced Exports
                 </button>
             </div>
@@ -132,13 +131,13 @@ function setupFileInputs() {
         input.addEventListener('change', function() {
             const label = this.nextElementSibling;
             if (this.files.length > 0) {
-                label.textContent = `📁 Selected: ${this.files[0].name}`;
-                label.style.borderColor = '#667eea';
-                label.style.backgroundColor = '#f0f4ff';
+                label.textContent = `Selected: ${this.files[0].name}`;
+                label.style.borderColor = 'var(--primary-color)';
+                label.style.backgroundColor = 'var(--primary-light)';
             } else {
-                label.textContent = label.getAttribute('data-original') || '📁 Choose File';
-                label.style.borderColor = '#dee2e6';
-                label.style.backgroundColor = '#f8f9fa';
+                label.textContent = label.getAttribute('data-original') || 'Choose File';
+                label.style.borderColor = 'var(--gray-300)';
+                label.style.backgroundColor = 'var(--gray-50)';
             }
         });
         
@@ -180,29 +179,30 @@ async function handleUpload(fileInputId, resultsId, endpoint) {
     const fileInput = document.getElementById(fileInputId);
     const resultsDiv = document.getElementById(resultsId);
     const submitBtn = fileInput.closest('form').querySelector('button[type="submit"]');
-    
+    const originalText = submitBtn.textContent;
+
     // Validate file selection
     if (!fileInput.files || fileInput.files.length === 0) {
         showResult(resultsDiv, 'error', 'Please select a file to upload');
         return;
     }
-    
+
     // Show loading state
     submitBtn.disabled = true;
     submitBtn.textContent = 'Uploading...';
     showResult(resultsDiv, 'info', 'Uploading file, please wait...');
-    
+
     try {
         const formData = new FormData();
         formData.append('file', fileInput.files[0]);
-        
+
         const response = await fetch(endpoint, {
             method: 'POST',
             body: formData
         });
-        
+
         const result = await response.json();
-        
+
         if (response.ok) {
             showResult(resultsDiv, 'success', result.message);
             // Refresh system status after successful upload
@@ -213,15 +213,13 @@ async function handleUpload(fileInputId, resultsId, endpoint) {
         } else {
             showResult(resultsDiv, 'error', result.error || 'Upload failed');
         }
-        
+
     } catch (error) {
         console.error('Upload error:', error);
         showResult(resultsDiv, 'error', `Upload failed: ${error.message}`);
     } finally {
-        // Reset button state
         submitBtn.disabled = false;
-        submitBtn.textContent = submitBtn.textContent.replace('Uploading...', 
-            submitBtn.id === 'importers-submit' ? 'Upload Importers' : 'Process COLA Data');
+        submitBtn.textContent = originalText;
     }
 }
 
@@ -247,7 +245,7 @@ async function exportData(exportType) {
     const originalText = exportBtn.textContent;
     
     exportBtn.disabled = true;
-    exportBtn.innerHTML = '<span class="btn-icon">⏳</span> Generating...';
+    exportBtn.innerHTML = 'Generating...';
     
     try {
         let endpoint;
@@ -359,7 +357,7 @@ async function refreshStatus() {
     const refreshBtn = event.target;
     const originalIcon = refreshBtn.querySelector('.action-icon').textContent;
     
-    refreshBtn.querySelector('.action-icon').textContent = '⏳';
+    refreshBtn.querySelector('.action-icon').textContent = '';
     refreshBtn.disabled = true;
     
     try {
@@ -415,7 +413,7 @@ async function resetDatabase() {
     const originalText = resetBtn.textContent;
     
     resetBtn.disabled = true;
-    resetBtn.innerHTML = '<span class="action-icon">⏳</span> Resetting...';
+    resetBtn.textContent = 'Resetting...';
     
     try {
         const response = await fetch('/reset_database', {
@@ -484,15 +482,15 @@ function initializeDragDrop() {
         
         ['dragenter', 'dragover'].forEach(eventName => {
             label.addEventListener(eventName, () => {
-                label.style.borderColor = '#667eea';
-                label.style.backgroundColor = '#f0f4ff';
+                label.style.borderColor = 'var(--primary-color)';
+                label.style.backgroundColor = 'var(--primary-light)';
             }, false);
         });
         
         ['dragleave', 'drop'].forEach(eventName => {
             label.addEventListener(eventName, () => {
-                label.style.borderColor = '#dee2e6';
-                label.style.backgroundColor = '#f8f9fa';
+                label.style.borderColor = 'var(--gray-300)';
+                label.style.backgroundColor = 'var(--gray-50)';
             }, false);
         });
         
@@ -500,9 +498,9 @@ function initializeDragDrop() {
             const files = e.dataTransfer.files;
             if (files.length > 0) {
                 input.files = files;
-                label.textContent = `📁 Selected: ${files[0].name}`;
-                label.style.borderColor = '#667eea';
-                label.style.backgroundColor = '#f0f4ff';
+                label.textContent = `Selected: ${files[0].name}`;
+                label.style.borderColor = 'var(--primary-color)';
+                label.style.backgroundColor = 'var(--primary-light)';
             }
         }, false);
     });
@@ -520,41 +518,35 @@ async function loadApolloStatus() {
         const statusEl = document.getElementById('apollo-status');
         if (statusEl) {
             statusEl.innerHTML = `
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 0.875rem;">
+                <div class="summary-grid cols-2">
                     <div>
-                        <span style="color: #6b7280;">Total Brands:</span>
-                        <strong style="color: #111827;">${data.total_brands}</strong>
+                        <span class="summary-label">Total Brands:</span>
+                        <strong>${data.total_brands}</strong>
                     </div>
                     <div>
-                        <span style="color: #6b7280;">Enriched:</span>
-                        <strong style="color: #10b981;">${data.enriched_brands}</strong>
+                        <span class="summary-label">Enriched:</span>
+                        <strong>${data.enriched_brands}</strong>
                     </div>
                     <div>
-                        <span style="color: #6b7280;">With Websites:</span>
-                        <strong style="color: #2563eb;">${data.brands_with_websites}</strong>
+                        <span class="summary-label">With Websites:</span>
+                        <strong>${data.brands_with_websites}</strong>
                     </div>
                     <div>
-                        <span style="color: #6b7280;">Progress:</span>
-                        <strong style="color: ${data.enrichment_percentage > 50 ? '#10b981' : '#f59e0b'};">
-                            ${data.enrichment_percentage}%
-                        </strong>
+                        <span class="summary-label">Progress:</span>
+                        <strong>${data.enrichment_percentage}%</strong>
                     </div>
                 </div>
                 ${data.brands_with_websites > 0 ? `
-                    <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e5e7eb;">
-                        <span style="color: #10b981; font-size: 0.875rem;">
-                            ✅ ${data.brands_with_websites} brands ready for Apollo campaigns
-                        </span>
+                    <div class="summary-note success">
+                        ${data.brands_with_websites} brands ready for Apollo campaigns
                     </div>
                 ` : `
-                    <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e5e7eb;">
-                        <span style="color: #f59e0b; font-size: 0.875rem;">
-                            ⚠️ No enriched brands yet. Follow steps 1-3 to enrich your data.
-                        </span>
+                    <div class="summary-note warning">
+                        No enriched brands yet. Follow steps 1-3 to enrich your data.
                     </div>
                 `}
             `;
-            
+
             // Enable/disable final export button based on status
             const finalBtn = document.getElementById('apollo-final-btn');
             if (finalBtn) {
@@ -593,7 +585,7 @@ async function exportApollo() {
         
         // Show instructions
         alert(
-            '✅ Apollo export completed!\n\n' +
+            'Apollo export completed!\n\n' +
             'Next steps:\n' +
             '1. Go to Apollo.io → Data Enrichment\n' +
             '2. Upload this CSV file\n' +
@@ -636,7 +628,7 @@ async function exportApolloFinal() {
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
         
-        showTemporaryMessage('✅ Apollo-ready file exported successfully!', 'success');
+        showTemporaryMessage('Apollo-ready file exported successfully!', 'success');
         
     } catch (error) {
         console.error('Apollo final export error:', error);
@@ -666,7 +658,7 @@ function setupApolloImportHandler() {
         const submitBtn = form.querySelector('button[type="submit"]');
         const originalText = submitBtn.innerHTML;
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '⏳ Importing...';
+        submitBtn.textContent = 'Importing...';
         
         try {
             const response = await fetch('/import_apollo_enriched', {
@@ -678,7 +670,7 @@ function setupApolloImportHandler() {
             
             if (response.ok) {
                 alert(
-                    `✅ Apollo data imported successfully!\n\n` +
+                    `Apollo data imported successfully!\n\n` +
                     `Processed: ${result.total_processed} records\n` +
                     `Updated brands: ${result.updated_brands}\n` +
                     `Websites added: ${result.websites_added}\n` +
@@ -688,7 +680,7 @@ function setupApolloImportHandler() {
                 
                 // Reset form and reload status
                 form.reset();
-                document.querySelector('label[for="apolloFile"]').textContent = '📁 Choose Apollo Enriched CSV';
+                document.querySelector('label[for="apolloFile"]').textContent = 'Choose Apollo Enriched CSV';
                 await loadApolloStatus();
                 
             } else {
@@ -710,7 +702,7 @@ function setupApolloImportHandler() {
         fileInput.addEventListener('change', function() {
             const label = document.querySelector('label[for="apolloFile"]');
             if (this.files.length > 0) {
-                label.textContent = `📁 Selected: ${this.files[0].name}`;
+                label.textContent = `Selected: ${this.files[0].name}`;
             }
         });
     }
@@ -760,65 +752,64 @@ async function loadApolloFilterOptions() {
         const countriesDiv = document.getElementById('countries-filter');
         if (apolloFilterOptions.countries.length > 0) {
             countriesDiv.innerHTML = apolloFilterOptions.countries.map(country => `
-                <label style="display: block; padding: 4px; cursor: pointer;">
+                <label>
                     <input type="checkbox" value="${country}" class="country-filter" onchange="updateFilterStats()">
-                    <span style="margin-left: 5px;">${country}</span>
+                    <span>${country}</span>
                 </label>
             `).join('');
         } else {
-            countriesDiv.innerHTML = '<div style="color: #6b7280;">No countries available</div>';
+            countriesDiv.innerHTML = '<span class="placeholder">No countries available</span>';
         }
-        
+
         // Populate class types
         const classTypesDiv = document.getElementById('class-types-filter');
         if (apolloFilterOptions.class_types.length > 0) {
-            // Show first 20 class types with a show more option
             const displayTypes = apolloFilterOptions.class_types.slice(0, 20);
             classTypesDiv.innerHTML = displayTypes.map(type => `
-                <label style="display: block; padding: 4px; cursor: pointer;">
+                <label>
                     <input type="checkbox" value="${type}" class="class-type-filter" onchange="updateFilterStats()">
-                    <span style="margin-left: 5px; font-size: 0.875rem;">${type}</span>
+                    <span>${type}</span>
                 </label>
             `).join('');
-            
+
             if (apolloFilterOptions.class_types.length > 20) {
                 classTypesDiv.innerHTML += `
                     <div style="padding: 8px; text-align: center;">
-                        <button onclick="showAllClassTypes()" style="color: #2563eb; text-decoration: underline; border: none; background: none; cursor: pointer;">
+                        <button onclick="showAllClassTypes()" style="color: var(--primary-color); text-decoration: underline; border: none; background: none; cursor: pointer; font-size: 0.8125rem;">
                             Show all ${apolloFilterOptions.class_types.length} types
                         </button>
                     </div>
                 `;
             }
         } else {
-            classTypesDiv.innerHTML = '<div style="color: #6b7280;">No class types available</div>';
+            classTypesDiv.innerHTML = '<span class="placeholder">No class types available</span>';
         }
-        
+
         // Populate importers
         const importersDiv = document.getElementById('importers-filter');
         if (apolloFilterOptions.importers.length > 0) {
             importersDiv.innerHTML = apolloFilterOptions.importers.map(importer => `
-                <label style="display: block; padding: 4px; cursor: pointer;">
+                <label>
                     <input type="checkbox" value="${importer}" class="importer-filter" onchange="updateFilterStats()">
-                    <span style="margin-left: 5px; font-size: 0.875rem;">${importer}</span>
+                    <span>${importer}</span>
                 </label>
             `).join('');
         } else {
-            importersDiv.innerHTML = '<div style="color: #6b7280;">No importers with brands available</div>';
+            importersDiv.innerHTML = '<span class="placeholder">No importers with brands available</span>';
         }
-        
+
     } catch (error) {
         console.error('Failed to load filter options:', error);
-        alert('Failed to load filter options. Please try again.');
+        showTemporaryMessage('Failed to load filter options. Please try again.', 'error');
     }
 }
 
 window.showAllClassTypes = function showAllClassTypes() {
     const classTypesDiv = document.getElementById('class-types-filter');
     classTypesDiv.innerHTML = apolloFilterOptions.class_types.map(type => `
-        <label style="display: block; padding: 4px; cursor: pointer;">
+        <label>
             <input type="checkbox" value="${type}" class="class-type-filter" onchange="updateFilterStats()">
-            <span style="margin-left: 5px; font-size: 0.875rem;">${type}</span>
+            <span>${type}</span>
         </label>
     `).join('');
 }
@@ -953,12 +944,12 @@ window.exportFilteredApollo = async function exportFilteredApollo() {
         closeApolloFilterModal();
         
         // Show success message
-        showTemporaryMessage('✅ Filtered Apollo export completed!', 'success');
+        showTemporaryMessage('Filtered Apollo export completed!', 'success');
         
         // Show instructions
         setTimeout(() => {
             alert(
-                '✅ Filtered Apollo export completed!\n\n' +
+                'Filtered Apollo export completed!\n\n' +
                 'Next steps:\n' +
                 '1. Go to Apollo.io → Data Enrichment\n' +
                 '2. Upload this CSV file\n' +
@@ -991,18 +982,18 @@ async function loadUrlResearchStatus() {
         if (statusEl && data.stats) {
             const needingUrls = data.stats.not_enriched;
             statusEl.innerHTML = `
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; font-size: 0.875rem;">
+                <div class="summary-grid cols-3">
                     <div>
-                        <span style="color: #6b7280;">Total Brands:</span>
-                        <strong style="color: #111827;">${data.stats.total_brands}</strong>
+                        <span class="summary-label">Total Brands:</span>
+                        <strong>${data.stats.total_brands}</strong>
                     </div>
                     <div>
-                        <span style="color: #6b7280;">Have URLs:</span>
-                        <strong style="color: #10b981;">${data.stats.enriched_brands}</strong>
+                        <span class="summary-label">Have URLs:</span>
+                        <strong>${data.stats.enriched_brands}</strong>
                     </div>
                     <div>
-                        <span style="color: #6b7280;">Need URLs:</span>
-                        <strong style="color: #f59e0b;">${needingUrls}</strong>
+                        <span class="summary-label">Need URLs:</span>
+                        <strong>${needingUrls}</strong>
                     </div>
                 </div>
             `;
@@ -1210,3 +1201,14 @@ window.onclick = function(event) {
         urlResearchMode = false;
     }
 }
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const modal = document.getElementById('apollo-filter-modal');
+        if (modal && modal.style.display === 'block') {
+            closeApolloFilterModal();
+            urlResearchMode = false;
+        }
+    }
+});

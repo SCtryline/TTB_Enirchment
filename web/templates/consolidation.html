@@ -7,34 +7,22 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/consolidation.css') }}">
 </head>
 <body>
-    <header class="header">
-        <div class="header-content">
-            <div class="header-left">
-                <h1 class="logo">TTB COLA Registry</h1>
-                <span class="page-title">Brand Consolidation</span>
-            </div>
-            <nav class="header-nav">
-                <a href="/" class="nav-link">Home</a>
-                <a href="/dashboard" class="nav-link">Dashboard</a>
-                <a href="/brands" class="nav-link">Brands</a>
-                <a href="/importers" class="nav-link">Importers</a>
-                <a href="/producers" class="nav-link">Producers</a>
-                <a href="/consolidation" class="nav-link active">Consolidation</a>
-                <a href="/data" class="nav-link">Data</a>
-            </nav>
-        </div>
-    </header>
+    {% from 'includes/icons.html' import icon %}
+    <div class="app-layout">
+    {% include 'includes/sidebar.html' %}
+    <div class="main-content-area">
 
     <main class="main-content">
         <div class="container">
             <!-- System Status Card -->
             <div class="consolidation-header">
                 <div class="status-card">
-                    <h2>🔍 Brand Consolidation System</h2>
+                    <h2>{{ icon('search', 16) }} Brand Consolidation System</h2>
                     <p>Intelligent brand grouping with white label protection and producer awareness</p>
                     <div class="status-indicators">
                         <div class="status-indicator">
@@ -78,7 +66,7 @@
                 <!-- Consolidation Groups -->
                 <div class="results-card" id="consolidation-results" style="display: none;">
                     <div class="card-header">
-                        <h3>🎯 Consolidation Groups Found</h3>
+                        <h3>{{ icon('target', 16) }} Consolidation Groups Found</h3>
                         <div class="summary-stats">
                             <span id="groups-count">0 groups</span>
                             <span id="brands-affected">0 brands affected</span>
@@ -94,7 +82,7 @@
                 <!-- Brand Extraction Results -->
                 <div class="results-card" id="extraction-results" style="display: none;">
                     <div class="card-header">
-                        <h3>🔤 Brand Extraction Analysis</h3>
+                        <h3>{{ icon('file-text', 16) }} Brand Extraction Analysis</h3>
                         <div class="summary-stats">
                             <span id="extraction-count">0 brands analyzed</span>
                         </div>
@@ -122,7 +110,7 @@
                 <!-- White Label Analysis -->
                 <div class="results-card" id="white-label-results" style="display: none;">
                     <div class="card-header">
-                        <h3>🏪 White Label Analysis</h3>
+                        <h3>{{ icon('tag', 16) }} White Label Analysis</h3>
                         <div class="summary-stats">
                             <span id="white-label-count">0 white label brands</span>
                             <span id="white-label-percentage">0%</span>
@@ -149,7 +137,7 @@
                 <!-- Consolidation Proposals -->
                 <div class="results-card" id="proposals-results" style="display: none;">
                     <div class="card-header">
-                        <h3>📋 Consolidation Proposals</h3>
+                        <h3>{{ icon('clipboard-list', 16) }} Consolidation Proposals</h3>
                         <div class="summary-stats">
                             <span id="proposals-count">0 proposals</span>
                             <span id="auto-approve-count">0 auto-approve</span>
@@ -177,7 +165,7 @@
             <!-- Confidence Checker -->
             <div class="tools-section">
                 <div class="tool-card">
-                    <h3>🎯 Confidence Checker</h3>
+                    <h3>{{ icon('target', 16) }} Confidence Checker</h3>
                     <p>Check consolidation confidence between two specific brands</p>
                     <div class="confidence-form">
                         <div class="form-group">
@@ -197,6 +185,9 @@
             </div>
         </div>
     </main>
+
+    </div><!-- .main-content-area -->
+    </div><!-- .app-layout -->
 
     <script src="{{ url_for('static', filename='js/consolidation.js') }}"></script>
 </body>

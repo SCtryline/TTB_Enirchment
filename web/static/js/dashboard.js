@@ -1,25 +1,11 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize dashboard
     loadDashboardData();
     loadMarketInsights();
     setupCharts();
     loadRecentActivity();
     loadTopBrands();
     loadImporterLeaderboard();
-    updateSystemHealth();
-    
-    // Setup PDF export with a small delay to ensure DOM is ready
     setTimeout(setupPDFExport, 100);
-    
-    // Also add event delegation as fallback
-    document.body.addEventListener('click', function(e) {
-        if (e.target && e.target.id === 'export-pdf') {
-            console.log('PDF export clicked via delegation');
-            handlePDFExport();
-        }
-    });
-    
-    // Auto-refresh every 5 minutes
     setInterval(loadDashboardData, 300000);
 });
 
@@ -28,35 +14,24 @@ async function loadDashboardData() {
     try {
         const response = await fetch('/get_database_stats');
         const stats = await response.json();
-        
-        console.log('Dashboard stats:', stats);
-        
-        // Update metrics with animation
+
         animateCounter('dashboard-brands', stats.total_brands || 0);
         animateCounter('dashboard-skus', stats.total_skus || 0);
         animateCounter('dashboard-importers', stats.total_importers || 0);
-        
-        // Calculate and display match rate
-        await calculateMatchRate();
-        
-        // Update last updated time
-        document.getElementById('last-updated').textContent = 
-            `Last updated: ${new Date().toLocaleString()}`;
-            
+
+        // Real enriched percentage
+        var totalBrands = stats.total_brands || 0;
+        var enriched = stats.brands_with_websites || 0;
+        var pct = totalBrands > 0 ? Math.round((enriched / totalBrands) * 100) : 0;
+        var enrichedEl = document.getElementById('dashboard-enriched');
+        var detailEl = document.getElementById('enriched-detail');
+        if (enrichedEl) enrichedEl.textContent = pct + '%';
+        if (detailEl) detailEl.textContent = enriched.toLocaleString() + ' brands with websites';
+
+        document.getElementById('last-updated').textContent =
+            'Updated ' + new Date().toLocaleTimeString();
     } catch (error) {
         console.error('Failed to load dashboard data:', error);
-    }
-}
-
-// Calculate match rate from recent uploads
-async function calculateMatchRate() {
-    try {
-        // This would ideally come from the backend, for now we'll simulate
-        const matchRate = 85; // Placeholder
-        document.getElementById('dashboard-matches').textContent = matchRate + '%';
-        document.getElementById('matches-change').textContent = 'Quality Score';
-    } catch (error) {
-        console.error('Failed to calculate match rate:', error);
     }
 }
 
@@ -102,7 +77,6 @@ async function setupCountryChart() {
         const response = await fetch('/get_all_brands?per_page=50000');  // Get ALL brands (sufficient for complete dataset)
         const data = await response.json();
         
-        console.log('Brands data for charts:', data);
         
         if (!data.brands || data.brands.length === 0) {
             document.getElementById('countryChart').parentElement.innerHTML = 
@@ -113,7 +87,6 @@ async function setupCountryChart() {
         // Store brands data globally
         brandsData = data.brands;
         
-        console.log(`Setting up charts with ${brandsData.length} brands`);
         
         // Initial chart setup
         updateLocationChart();
@@ -491,7 +464,7 @@ async function loadRecentActivity() {
         if (!data.files || data.files.length === 0) {
             activityList.innerHTML = `
                 <div class="activity-item">
-                    <div class="activity-icon">📋</div>
+                    <div class="activity-dot"></div>
                     <div class="activity-content">
                         <div class="activity-title">No recent activity</div>
                         <div class="activity-time">Upload files to see activity</div>
@@ -500,14 +473,14 @@ async function loadRecentActivity() {
             `;
             return;
         }
-        
-        const recentFiles = data.files.slice(0, 5); // Show last 5 files
+
+        const recentFiles = data.files.slice(0, 5);
         activityList.innerHTML = recentFiles.map(file => `
             <div class="activity-item">
-                <div class="activity-icon">📄</div>
+                <div class="activity-dot"></div>
                 <div class="activity-content">
-                    <div class="activity-title">Processed: ${file.filename}</div>
-                    <div class="activity-time">${file.created} • ${file.rows} records</div>
+                    <div class="activity-title">${file.filename}</div>
+                    <div class="activity-time">${file.created} &middot; ${file.rows} records</div>
                 </div>
             </div>
         `).join('');
@@ -609,13 +582,6 @@ function changeBrandsPage(direction) {
     updateBrandsTable();
 }
 
-// Update system health
-function updateSystemHealth() {
-    // This would normally check actual system status
-    document.getElementById('data-quality').textContent = '✓ Good';
-    document.getElementById('last-backup').textContent = new Date().toLocaleDateString();
-}
-
 // Refresh activity
 function refreshActivity() {
     const btn = document.querySelector('.refresh-btn');
@@ -711,227 +677,6 @@ async function performQuickSearch(query) {
     }
 }
 
-// Export data functionality - open modal
-function exportData() {
-    document.getElementById('export-modal').style.display = 'block';
-}
-
-// Close export modal
-function closeExportModal() {
-    document.getElementById('export-modal').style.display = 'none';
-}
-
-// Update export options based on type
-function updateExportOptions() {
-    const exportType = document.getElementById('export-type').value;
-    const importerSection = document.getElementById('importer-filter-section');
-    const statusSection = document.getElementById('status-filter-section');
-    const additionalFilters = document.getElementById('additional-filters');
-    
-    // Show/hide sections based on export type
-    switch(exportType) {
-        case 'brands':
-        case 'skus':
-            importerSection.style.display = 'block';
-            statusSection.style.display = 'block';
-            additionalFilters.style.display = 'block';
-            break;
-        case 'importers':
-            importerSection.style.display = 'none';
-            statusSection.style.display = 'none';
-            additionalFilters.style.display = 'block';
-            break;
-        case 'matched':
-        case 'unmatched':
-            importerSection.style.display = 'block';
-            statusSection.style.display = 'none';
-            additionalFilters.style.display = 'block';
-            break;
-    }
-}
-
-// Update date range inputs
-function updateDateRange() {
-    const selectedRange = document.querySelector('input[name="date-range"]:checked').value;
-    const dateInputs = document.getElementById('date-inputs');
-    const yearSelect = document.getElementById('year-select');
-    const monthSelect = document.getElementById('month-select');
-    const customInputs = document.getElementById('custom-date-inputs');
-    
-    // Hide all first
-    dateInputs.style.display = 'none';
-    yearSelect.style.display = 'none';
-    monthSelect.style.display = 'none';
-    customInputs.style.display = 'none';
-    
-    switch(selectedRange) {
-        case 'year':
-            dateInputs.style.display = 'block';
-            yearSelect.style.display = 'block';
-            break;
-        case 'month':
-            dateInputs.style.display = 'block';
-            yearSelect.style.display = 'inline-block';
-            monthSelect.style.display = 'inline-block';
-            break;
-        case 'custom':
-            dateInputs.style.display = 'block';
-            customInputs.style.display = 'flex';
-            break;
-    }
-}
-
-// Update importer filter
-document.addEventListener('DOMContentLoaded', function() {
-    const importerFilter = document.getElementById('importer-filter');
-    if (importerFilter) {
-        importerFilter.addEventListener('change', function() {
-            const specificInput = document.getElementById('specific-importer');
-            if (this.value === 'specific') {
-                specificInput.style.display = 'block';
-            } else {
-                specificInput.style.display = 'none';
-            }
-        });
-    }
-});
-
-// Perform the export
-async function performExport() {
-    const exportBtn = document.querySelector('.export-btn.primary');
-    const btnText = document.getElementById('export-btn-text');
-    
-    // Get all filter values
-    const filters = {
-        type: document.getElementById('export-type').value,
-        dateRange: document.querySelector('input[name="date-range"]:checked').value,
-        year: document.getElementById('year-select').value,
-        month: document.getElementById('month-select').value,
-        startDate: document.getElementById('start-date').value,
-        endDate: document.getElementById('end-date').value,
-        importerFilter: document.getElementById('importer-filter').value,
-        specificImporter: document.getElementById('specific-importer').value,
-        statusFilter: document.getElementById('status-filter').value,
-        includeSkus: document.getElementById('include-skus').checked,
-        includeImporters: document.getElementById('include-importers').checked,
-        includeCountries: document.getElementById('include-countries').checked,
-        includeClassTypes: document.getElementById('include-class-types').checked,
-        format: document.getElementById('export-format').value
-    };
-    
-    // Show loading state
-    exportBtn.disabled = true;
-    btnText.textContent = 'Preparing Export...';
-    
-    try {
-        // Build query parameters
-        const params = new URLSearchParams();
-        for (const [key, value] of Object.entries(filters)) {
-            if (value !== '' && value !== 'all') {
-                params.append(key, value);
-            }
-        }
-        
-        // Call the appropriate export endpoint
-        let endpoint = '';
-        switch(filters.type) {
-            case 'brands':
-                endpoint = '/export_filtered_brands';
-                break;
-            case 'importers':
-                endpoint = '/export_filtered_importers';
-                break;
-            case 'skus':
-                endpoint = '/export_filtered_skus';
-                break;
-            case 'matched':
-                endpoint = '/export_matched_data';
-                break;
-            case 'unmatched':
-                endpoint = '/export_unmatched_data';
-                break;
-        }
-        
-        // Download the file
-        const response = await fetch(`${endpoint}?${params.toString()}`);
-        
-        if (!response.ok) {
-            throw new Error('Export failed');
-        }
-        
-        // Get the filename from the Content-Disposition header
-        const contentDisposition = response.headers.get('Content-Disposition');
-        let filename = 'export.csv';
-        if (contentDisposition) {
-            const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-            if (filenameMatch && filenameMatch[1]) {
-                filename = filenameMatch[1].replace(/['"]/g, '');
-            }
-        }
-        
-        // Create blob and download
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-        
-        // Close modal
-        closeExportModal();
-        
-        // Show success message (optional)
-        console.log('Export completed successfully');
-        
-    } catch (error) {
-        console.error('Export failed:', error);
-        alert('Export failed. Please try again.');
-    } finally {
-        // Reset button state
-        exportBtn.disabled = false;
-        btnText.textContent = 'Export Data';
-    }
-}
-
-// Show system info
-function showSystemInfo() {
-    const choice = confirm(`TTB COLA Registry System\n\nVersion: 1.0.0\nLast Updated: ${new Date().toLocaleDateString()}\nStatus: Operational\n\nWould you like to reset the brands/COLA database? (This will keep importers but clear all brand/SKU data)\n\nClick OK to reset, Cancel to just view info.`);
-    
-    if (choice) {
-        resetDatabase();
-    }
-}
-
-// Reset database function
-async function resetDatabase() {
-    const confirm_reset = confirm('Are you SURE you want to reset the database?\n\nThis will:\n✓ Clear all brands and SKUs\n✓ Clear upload history\n✓ Keep importer data\n\nYou will need to re-upload your COLA CSV files.\n\nThis cannot be undone!');
-    
-    if (!confirm_reset) return;
-    
-    try {
-        const response = await fetch('/reset_database', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        const result = await response.json();
-        
-        if (response.ok) {
-            alert(`Database reset successful!\n\n${result.message}\n\nRemaining importers: ${result.remaining.master_importers}\n\nPage will reload now.`);
-            window.location.reload();
-        } else {
-            alert(`Reset failed: ${result.error}`);
-        }
-    } catch (error) {
-        alert(`Reset failed: ${error.message}`);
-    }
-}
-
 // Store metrics globally for sorting
 let globalImporterMetrics = null;
 let globalBrandsData = null;
@@ -954,7 +699,6 @@ async function loadImporterLeaderboard() {
         const response = await fetch('/get_importer_metrics');
         const data = await response.json();
         
-        console.log('Real-time importer metrics:', data);
         
         const tbody = document.getElementById('importer-leaderboard-body');
         
@@ -977,7 +721,6 @@ async function loadImporterLeaderboard() {
             brandCount: metric.brand_count
         }));
         
-        console.log(`Loaded ${allImporterMetrics.length} importers with real-time brand counts`);
         
         // Initial display
         updateImporterLeaderboard();
@@ -998,33 +741,18 @@ function getRankClass(rank) {
     }
 }
 
-// Get rank emoji
+// Get rank display text
 function getRankEmoji(rank) {
-    switch (rank) {
-        case 1: return '🥇';
-        case 2: return '🥈';
-        case 3: return '🥉';
-        default: return rank;
-    }
+    return rank;
 }
 
 // Updated updateImporterLeaderboard to use global metrics
 function updateImporterLeaderboard() {
     if (!allImporterMetrics) {
-        console.log('No metrics data, loading...');
         loadImporterLeaderboard();
         return;
     }
     
-    console.log('Updating leaderboard with', allImporterMetrics.length, 'total importers');
-    
-    // Debug: Show distribution of brand counts
-    const brandCountDistribution = {};
-    allImporterMetrics.forEach(imp => {
-        const count = imp.brandCount || 0;
-        brandCountDistribution[count] = (brandCountDistribution[count] || 0) + 1;
-    });
-    console.log('Brand count distribution:', brandCountDistribution);
     
     // Apply sorting based on current settings
     applySortingToImporters();
@@ -1083,11 +811,6 @@ function applySortingToImporters() {
     // Reset to page 1 when sorting changes
     importersCurrentPage = 1;
     
-    console.log(`Sorted ${globalImporterMetrics.length} importers by ${importerSortField} (${importerSortDirection})`);
-    if (globalImporterMetrics.length > 0) {
-        console.log('Top importers after sorting:', globalImporterMetrics.slice(0, 5).map(i => 
-            `${i.owner_name || i.operating_name}: ${i.brandCount} brands`));
-    }
 }
 
 // Update importer table with pagination
@@ -1206,97 +929,7 @@ async function loadMarketInsights() {
     }
 }
 
-// Handle PDF export - make it global so it can be called from onclick
-window.handlePDFExport = async function handlePDFExport() {
-    const exportBtn = document.getElementById('export-pdf');
-    if (!exportBtn) {
-        console.error('Export button not found');
-        return;
-    }
-
-    try {
-        // Show loading state
-        exportBtn.disabled = true;
-        exportBtn.innerHTML = '⏳ Generating PDF...';
-
-        // Build query parameters based on current date filters if export modal is open
-        const params = new URLSearchParams();
-
-        // Check if we have date filters from the export modal
-        const dateRangeRadio = document.querySelector('input[name="date-range"]:checked');
-        if (dateRangeRadio) {
-            const dateRange = dateRangeRadio.value;
-
-            if (dateRange === 'year') {
-                const yearSelect = document.getElementById('year-select');
-                if (yearSelect && yearSelect.value) {
-                    params.append('start_date', `${yearSelect.value}-01-01`);
-                    params.append('end_date', `${yearSelect.value}-12-31`);
-                }
-            } else if (dateRange === 'month') {
-                const yearSelect = document.getElementById('year-select');
-                const monthSelect = document.getElementById('month-select');
-                if (yearSelect && monthSelect && yearSelect.value && monthSelect.value) {
-                    const year = yearSelect.value;
-                    const month = monthSelect.value;
-                    const lastDay = new Date(year, parseInt(month), 0).getDate();
-                    params.append('start_date', `${year}-${month}-01`);
-                    params.append('end_date', `${year}-${month}-${lastDay.toString().padStart(2, '0')}`);
-                }
-            } else if (dateRange === 'custom') {
-                const startDate = document.getElementById('start-date');
-                const endDate = document.getElementById('end-date');
-                if (startDate && endDate && startDate.value && endDate.value) {
-                    params.append('start_date', startDate.value);
-                    params.append('end_date', endDate.value);
-                }
-            }
-            // If 'all' is selected or no valid dates, don't add parameters (gets all data)
-        }
-
-        // Build the URL with parameters
-        const fetchUrl = params.toString() ? `/api/dashboard/export_pdf?${params.toString()}` : '/api/dashboard/export_pdf';
-
-        // Fetch PDF
-        const response = await fetch(fetchUrl);
-
-        if (!response.ok) {
-            throw new Error('Failed to generate PDF');
-        }
-
-        // Get the blob
-        const blob = await response.blob();
-
-        // Create download link
-        const downloadUrl = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = downloadUrl;
-        a.download = `TTB_Market_Insights_${new Date().toISOString().split('T')[0]}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-
-        // Clean up
-        window.URL.revokeObjectURL(downloadUrl);
-        
-        // Reset button
-        exportBtn.disabled = false;
-        exportBtn.innerHTML = '📄 Export PDF Report';
-        
-        // Show success message
-        showNotification('PDF report downloaded successfully!', 'success');
-        
-    } catch (error) {
-        console.error('PDF export failed:', error);
-        if (exportBtn) {
-            exportBtn.disabled = false;
-            exportBtn.innerHTML = '📄 Export PDF Report';
-        }
-        showNotification('Failed to generate PDF report', 'error');
-    }
-}
-
-// New function to handle PDF export with simple date filter
+// Handle PDF export with date filter
 window.handlePDFExportWithFilter = async function handlePDFExportWithFilter() {
     const exportBtn = document.getElementById('export-pdf');
     if (!exportBtn) {
@@ -1307,7 +940,7 @@ window.handlePDFExportWithFilter = async function handlePDFExportWithFilter() {
     try {
         // Show loading state
         exportBtn.disabled = true;
-        exportBtn.innerHTML = '⏳ Generating PDF...';
+        exportBtn.textContent = 'Generating PDF...';
 
         // Build query parameters based on the simple date filter
         const params = new URLSearchParams();
@@ -1377,7 +1010,7 @@ window.handlePDFExportWithFilter = async function handlePDFExportWithFilter() {
 
         // Reset button
         exportBtn.disabled = false;
-        exportBtn.innerHTML = '📄 Export PDF Report';
+        exportBtn.textContent = 'Export PDF';
 
         // Show success message
         showNotification('PDF report downloaded successfully!', 'success');
@@ -1386,34 +1019,19 @@ window.handlePDFExportWithFilter = async function handlePDFExportWithFilter() {
         console.error('PDF export failed:', error);
         if (exportBtn) {
             exportBtn.disabled = false;
-            exportBtn.innerHTML = '📄 Export PDF Report';
+            exportBtn.textContent = 'Export PDF';
         }
         showNotification('Failed to generate PDF report', 'error');
     }
 }
 
-// Setup PDF export functionality
+// Setup PDF date filter toggle
 function setupPDFExport() {
-    const exportBtn = document.getElementById('export-pdf');
-    console.log('Setting up PDF export, button found:', exportBtn);
-    if (exportBtn) {
-        console.log('Adding click listener to PDF export button');
-        // Remove any existing listeners first
-        exportBtn.onclick = null;
-        exportBtn.addEventListener('click', async function(e) {
-            e.preventDefault();
-            console.log('PDF export button clicked');
-            handlePDFExport();
-        });
-    }
-
-    // Setup date filter change handler
-    const dateFilter = document.getElementById('pdf-date-filter');
+    var dateFilter = document.getElementById('pdf-date-filter');
     if (dateFilter) {
         dateFilter.addEventListener('change', function() {
-            const startDateInput = document.getElementById('pdf-start-date');
-            const endDateInput = document.getElementById('pdf-end-date');
-
+            var startDateInput = document.getElementById('pdf-start-date');
+            var endDateInput = document.getElementById('pdf-end-date');
             if (this.value === 'custom') {
                 startDateInput.style.display = 'inline-block';
                 endDateInput.style.display = 'inline-block';
@@ -1453,12 +1071,3 @@ function showNotification(message, type = 'info') {
     }, 3000);
 }
 
-// Close quick search
-function closeQuickSearch() {
-    const container = document.getElementById('quick-search-container');
-    if (container) {
-        container.classList.remove('active');
-        document.getElementById('search-input').value = '';
-        document.getElementById('search-results').innerHTML = '';
-    }
-}

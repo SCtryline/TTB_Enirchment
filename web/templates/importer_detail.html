@@ -7,27 +7,19 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/importer_detail.css') }}">
 </head>
 <body>
+    {% from 'includes/icons.html' import icon %}
+    <div class="app-layout">
+    {% include 'includes/sidebar.html' %}
+    <div class="main-content-area">
     <div class="container">
-        <!-- Navigation Header -->
-        <header>
-            <div class="nav-brand">
-                <h1><a href="/">TTB COLA Registry System</a></h1>
-            </div>
-            <div class="nav-links">
-                <a href="/">Home</a>
-                <a href="/dashboard">Dashboard</a>
-                <a href="/data">Data</a>
-                <a href="/brands">Brands</a>
-                <a href="/importers">Importers</a>
-            </div>
-        </header>
 
         <!-- Breadcrumb Navigation -->
         <nav class="breadcrumb">
-            <a href="/importers" class="breadcrumb-link">🏢 Importers</a>
+            <a href="/importers" class="breadcrumb-link">{{ icon('building-2', 14) }} Importers</a>
             <span class="breadcrumb-separator">›</span>
             <span class="breadcrumb-current">{{ importer.owner_name or importer.operating_name or 'Unknown Importer' }}</span>
         </nav>
@@ -40,18 +32,18 @@
                     <div class="importer-subtitle">Operating as: {{ importer.operating_name }}</div>
                 {% endif %}
                 <div class="importer-badges">
-                    <span class="badge-permit">🆔 {{ permit_number }}</span>
+                    <span class="badge-permit">{{ icon('tag', 14) }} {{ permit_number }}</span>
                     {% if importer.brands %}
-                        <span class="badge-brands">🏷️ {{ importer.brands|length }} Brands</span>
-                        <span class="badge-active">✅ Active</span>
+                        <span class="badge-brands">{{ icon('tag', 14) }} {{ importer.brands|length }} Brands</span>
+                        <span class="badge-active">{{ icon('check-circle', 14) }} Active</span>
                     {% else %}
-                        <span class="badge-inactive">⚠️ No Brands</span>
+                        <span class="badge-inactive">{{ icon('alert-triangle', 14) }} No Brands</span>
                     {% endif %}
                 </div>
             </div>
             <div class="importer-actions">
-                <button class="btn btn-primary" onclick="window.history.back()">← Back to Importers</button>
-                <button class="btn btn-secondary" onclick="exportImporterData()">📄 Export Data</button>
+                <button class="btn btn-primary" onclick="window.history.back()">{{ icon('arrow-left', 14) }} Back to Importers</button>
+                <button class="btn btn-secondary" onclick="exportImporterData()">{{ icon('file-text', 14) }} Export Data</button>
             </div>
         </section>
 
@@ -61,7 +53,7 @@
                 <!-- Company Information -->
                 <div class="detail-card">
                     <div class="card-header">
-                        <h3>🏢 Company Information</h3>
+                        <h3>{{ icon('building-2', 16) }} Company Information</h3>
                     </div>
                     <div class="card-content">
                         <div class="info-row">
@@ -100,7 +92,7 @@
                 <!-- Location Information -->
                 <div class="detail-card">
                     <div class="card-header">
-                        <h3>📍 Location Information</h3>
+                        <h3>{{ icon('globe', 16) }} Location Information</h3>
                     </div>
                     <div class="card-content">
                         {% if importer.address %}
@@ -133,7 +125,7 @@
                 <!-- Activity Summary -->
                 <div class="detail-card">
                     <div class="card-header">
-                        <h3>📊 Activity Summary</h3>
+                        <h3>{{ icon('bar-chart-3', 16) }} Activity Summary</h3>
                     </div>
                     <div class="card-content">
                         <div class="info-row">
@@ -144,9 +136,9 @@
                             <span class="info-label">Status:</span>
                             <span class="info-value">
                                 {% if importer.brands and importer.brands|length > 0 %}
-                                    <span class="status-active">✅ Active</span>
+                                    <span class="status-active">{{ icon('check-circle', 14) }} Active</span>
                                 {% else %}
-                                    <span class="status-inactive">⚠️ No Activity</span>
+                                    <span class="status-inactive">{{ icon('alert-triangle', 14) }} No Activity</span>
                                 {% endif %}
                             </span>
                         </div>
@@ -159,9 +151,9 @@
         {% if importer.brands and importer.brands|length > 0 %}
         <section class="brands-section">
             <div class="section-header">
-                <h2>🏷️ Associated Brands</h2>
+                <h2>{{ icon('tag', 16) }} Associated Brands</h2>
                 <div class="section-controls">
-                    <button class="toggle-btn" onclick="toggleView()" id="view-toggle">📋 Switch to Table View</button>
+                    <button class="toggle-btn" onclick="toggleView()" id="view-toggle">{{ icon('clipboard-list', 14) }} Switch to Table View</button>
                 </div>
             </div>
 
@@ -198,7 +190,7 @@
                                     <a href="/brand/{{ brand|urlencode }}" class="brand-link">{{ brand }}</a>
                                 </td>
                                 <td>
-                                    <a href="/brand/{{ brand|urlencode }}" class="action-btn">👁️ View</a>
+                                    <a href="/brand/{{ brand|urlencode }}" class="action-btn">{{ icon('external-link', 14) }} View</a>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -210,13 +202,13 @@
         {% else %}
         <section class="empty-brands-section">
             <div class="empty-state">
-                <div class="empty-icon">📭</div>
+                <div class="empty-icon">{{ icon('tag', 32) }}</div>
                 <h3>No Associated Brands</h3>
                 <p>This importer is not currently associated with any brands in the system.</p>
             </div>
         </section>
         {% endif %}
-    </div>
+    </div></div></div>
 
     <script>
         // Toggle between grid and table view
@@ -224,15 +216,15 @@
             const gridView = document.getElementById('brands-grid');
             const tableView = document.getElementById('brands-table');
             const toggleBtn = document.getElementById('view-toggle');
-            
+
             if (gridView.style.display === 'none') {
                 gridView.style.display = 'block';
                 tableView.style.display = 'none';
-                toggleBtn.innerHTML = '📋 Switch to Table View';
+                toggleBtn.innerHTML = '{{ icon('clipboard-list', 14) }} Switch to Table View';
             } else {
                 gridView.style.display = 'none';
                 tableView.style.display = 'block';
-                toggleBtn.innerHTML = '🎨 Switch to Grid View';
+                toggleBtn.innerHTML = '{{ icon('layers', 14) }} Switch to Grid View';
             }
         }
 

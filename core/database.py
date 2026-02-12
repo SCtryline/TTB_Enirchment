@@ -62,6 +62,7 @@ class BrandDatabaseV2:
                 brand_permits TEXT DEFAULT '[]', -- JSON array of brand's own permits
                 enrichment_data TEXT, -- JSON object (website, founders, etc)
                 website TEXT, -- Legacy website field (for compatibility)
+                last_downloaded_at TEXT, -- ISO timestamp of last CSV/Excel export
                 updated_at TEXT DEFAULT CURRENT_TIMESTAMP
             );
             
@@ -160,6 +161,11 @@ class BrandDatabaseV2:
         
         try:
             self.conn.execute('ALTER TABLE brands ADD COLUMN brand_permits TEXT DEFAULT "[]"')
+        except sqlite3.OperationalError:
+            pass  # Column already exists
+
+        try:
+            self.conn.execute('ALTER TABLE brands ADD COLUMN last_downloaded_at TEXT')
         except sqlite3.OperationalError:
             pass  # Column already exists
         
@@ -770,7 +776,7 @@ class BrandDatabaseV2:
         """Get a list of all brands with summary info"""
         cursor = self.conn.execute('''
             SELECT b.brand_name, b.countries, b.class_types, b.importers, b.producers, b.brand_permits,
-                   b.enrichment_data, b.website,
+                   b.enrichment_data, b.website, b.last_downloaded_at,
                    COUNT(s.ttb_id) as sku_count
             FROM brands b
             LEFT JOIN skus s ON b.brand_name = s.brand_name
@@ -839,14 +845,15 @@ class BrandDatabaseV2:
                 'importers': importer_objects,
                 'producers': producer_objects,
                 'brand_permits': brand_permits,
-                'total_skus': row['sku_count'] or 0
+                'total_skus': row['sku_count'] or 0,
+                'last_downloaded_at': row['last_downloaded_at']
             }
-            
+
             if enrichment:
                 brand_data['enrichment'] = enrichment
-            
+
             brands_list.append(brand_data)
-        
+
         return brands_list
     
     def get_filtered_brands(self, search='', filters=None, page=1, per_page=24, sort='name', direction='asc'):
@@ -868,8 +875,9 @@ class BrandDatabaseV2:
         
         # Build the base query with JOINs
         base_query = '''
-            SELECT DISTINCT b.brand_name, b.countries, b.class_types, b.importers, 
+            SELECT DISTINCT b.brand_name, b.countries, b.class_types, b.importers,
                    b.producers, b.brand_permits, b.enrichment_data, b.website,
+                   b.last_downloaded_at,
                    COUNT(DISTINCT s.ttb_id) as sku_count
             FROM brands b
             LEFT JOIN skus s ON b.brand_name = s.brand_name
@@ -927,7 +935,18 @@ class BrandDatabaseV2:
                     )""")
             if website_conditions:
                 where_clauses.append(f"({' OR '.join(website_conditions)})")
-        
+
+        # Download status filter
+        if filters.get('downloadStatus'):
+            download_conditions = []
+            for status in filters['downloadStatus']:
+                if status == 'downloaded':
+                    download_conditions.append("b.last_downloaded_at IS NOT NULL")
+                elif status == 'not_downloaded':
+                    download_conditions.append("b.last_downloaded_at IS NULL")
+            if download_conditions:
+                where_clauses.append(f"({' OR '.join(download_conditions)})")
+
         # Importers filter - check JSON field
         if filters.get('importers'):
             importer_conditions = []
@@ -1027,7 +1046,8 @@ class BrandDatabaseV2:
                 'brand_permits': brand_permits,
                 'sku_count': row['sku_count'],
                 'enrichment': json.loads(row['enrichment_data'] or '{}'),
-                'website': row['website']
+                'website': row['website'],
+                'last_downloaded_at': row['last_downloaded_at']
             }
             brands_list.append(brand_data)
         
@@ -1060,12 +1080,16 @@ class BrandDatabaseV2:
                 'has_website': 0,
                 'verified': 0,
                 'no_website': 0
+            },
+            'downloadStatus': {
+                'downloaded': 0,
+                'not_downloaded': 0
             }
         }
         
         # Get all brands data in one query
         cursor = self.conn.execute('''
-            SELECT brand_name, countries, class_types, importers, website, enrichment_data
+            SELECT brand_name, countries, class_types, importers, website, enrichment_data, last_downloaded_at
             FROM brands
         ''')
         
@@ -1123,7 +1147,13 @@ class BrandDatabaseV2:
                     filter_counts['websiteStatus']['verified'] += 1
             else:
                 filter_counts['websiteStatus']['no_website'] += 1
-        
+
+            # Count download status
+            if row['last_downloaded_at']:
+                filter_counts['downloadStatus']['downloaded'] += 1
+            else:
+                filter_counts['downloadStatus']['not_downloaded'] += 1
+
         # Count producers from SKUs table - producers are identified by non-importer permit types
         producer_cursor = self.conn.execute('''
             SELECT permit_no, brand_name, COUNT(*) as brand_count
@@ -1168,7 +1198,21 @@ class BrandDatabaseV2:
             filter_counts['producers'][producer_name] = filter_counts['producers'].get(producer_name, 0) + brand_count
         
         return filter_counts
-    
+
+    def mark_brands_downloaded(self, brand_names):
+        """Mark a list of brands as downloaded with the current timestamp"""
+        if not brand_names:
+            return 0
+
+        timestamp = datetime.now().isoformat()
+        placeholders = ','.join(['?' for _ in brand_names])
+        cursor = self.conn.execute(
+            f'UPDATE brands SET last_downloaded_at = ? WHERE brand_name IN ({placeholders})',
+            [timestamp] + list(brand_names)
+        )
+        self.conn.commit()
+        return cursor.rowcount
+
     def get_master_importer(self, permit_number):
         """Get master importer data by permit number"""
         cursor = self.conn.execute('''
@@ -1371,12 +1415,20 @@ class BrandDatabaseV2:
         ''')
         stats['active_importers'] = cursor.fetchone()[0]
         
-        # Count brands with websites (all enriched brands now have consistent structure)
+        # Count brands with websites - check all storage locations
+        # (enrichment_data.url, enrichment_data.website.url, legacy website column)
         cursor = self.conn.execute('''
             SELECT COUNT(*) FROM brands
-            WHERE enrichment_data IS NOT NULL
-            AND json_extract(enrichment_data, '$.url') IS NOT NULL
-            AND json_extract(enrichment_data, '$.url') != ''
+            WHERE (
+                (enrichment_data IS NOT NULL AND (
+                    (json_extract(enrichment_data, '$.url') IS NOT NULL
+                     AND json_extract(enrichment_data, '$.url') != '')
+                    OR json_extract(enrichment_data, '$.source') = 'manual_override'
+                    OR (json_extract(enrichment_data, '$.website.url') IS NOT NULL
+                        AND json_extract(enrichment_data, '$.website.url') != '')
+                ))
+                OR (website IS NOT NULL AND website != '' AND website != '{}')
+            )
         ''')
         stats['brands_with_websites'] = cursor.fetchone()[0]
         

@@ -4,13 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Data Audit Dashboard - TTB COLA Registry</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/audit.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+    {% from 'includes/icons.html' import icon %}
+    <div class="app-layout">
+    {% include 'includes/sidebar.html' %}
+    <div class="main-content-area">
     <div class="container">
-        <!-- Unified Navigation -->
-        {% include 'includes/navigation.html' %}
 
         <!-- Page Header -->
         <header class="header">
@@ -22,11 +25,11 @@
         <!-- Enhanced Data Health Dashboard -->
         <section class="health-dashboard">
             <div class="dashboard-header">
-                <h2>📊 Enhanced Database Health & Rankings Overview</h2>
+                <h2>{{ icon('bar-chart-3', 20) }} Enhanced Database Health & Rankings Overview</h2>
                 <div class="refresh-indicator">
                     <span id="last-updated">Loading...</span>
-                    <button id="refresh-health" class="refresh-btn">🔄 Refresh</button>
-                    <a href="/enrichment_rankings" class="view-rankings-btn">📋 View Priority Rankings</a>
+                    <button id="refresh-health" class="refresh-btn">{{ icon('refresh-cw', 16) }} Refresh</button>
+                    <a href="/enrichment_rankings" class="view-rankings-btn">{{ icon('list-ordered', 16) }} View Priority Rankings</a>
                 </div>
             </div>
 
@@ -48,7 +51,7 @@
                 <!-- NEW: Priority Ranking Health Card -->
                 <div class="health-card ranking clickable" data-metric="ranking">
                     <div class="card-header">
-                        <h3>🎯 Priority Rankings</h3>
+                        <h3>{{ icon('target', 16) }} Priority Rankings</h3>
                         <div class="ranking-summary" id="ranking-summary">--</div>
                     </div>
                     <div class="ranking-breakdown" id="ranking-breakdown">
@@ -97,15 +100,15 @@
                     </div>
                     <div class="quality-issues" id="quality-issues">
                         <div class="issue">
-                            <span class="label">🔄 Potential Duplicates</span>
+                            <span class="label">{{ icon('refresh-cw', 16) }} Potential Duplicates</span>
                             <span class="count" id="duplicates-count">--</span>
                         </div>
                         <div class="issue">
-                            <span class="label">⚠️ Missing Critical Data</span>
+                            <span class="label">{{ icon('alert-triangle', 16) }} Missing Critical Data</span>
                             <span class="count" id="missing-data-count">--</span>
                         </div>
                         <div class="issue">
-                            <span class="label">❌ Data Inconsistencies</span>
+                            <span class="label">{{ icon('x-circle', 16) }} Data Inconsistencies</span>
                             <span class="count" id="inconsistencies-count">--</span>
                         </div>
                     </div>
@@ -119,15 +122,15 @@
                     </div>
                     <div class="enrichment-stats" id="enrichment-stats">
                         <div class="stat">
-                            <span class="label">✅ Enriched</span>
+                            <span class="label">{{ icon('check-circle', 16) }} Enriched</span>
                             <span class="value" id="enriched-count">--</span>
                         </div>
                         <div class="stat">
-                            <span class="label">🎯 High Priority</span>
+                            <span class="label">{{ icon('target', 16) }} High Priority</span>
                             <span class="value" id="high-priority-pending">--</span>
                         </div>
                         <div class="stat">
-                            <span class="label">🤖 Apollo Ready</span>
+                            <span class="label">{{ icon('brain', 16) }} Apollo Ready</span>
                             <span class="value" id="apollo-ready-enrichment">--</span>
                         </div>
                     </div>
@@ -137,20 +140,20 @@
                 <!-- NEW: Agentic Learning Insights -->
                 <div class="health-card agentic clickable" data-metric="agentic">
                     <div class="card-header">
-                        <h3>🧠 AI Learning Insights</h3>
+                        <h3>{{ icon('brain', 16) }} AI Learning Insights</h3>
                         <div class="learning-accuracy" id="learning-accuracy">--</div>
                     </div>
                     <div class="learning-stats" id="learning-stats">
                         <div class="stat">
-                            <span class="label">📚 Patterns Learned</span>
+                            <span class="label">{{ icon('layers', 16) }} Patterns Learned</span>
                             <span class="value" id="patterns-learned">--</span>
                         </div>
                         <div class="stat">
-                            <span class="label">🎯 Success Rate</span>
+                            <span class="label">{{ icon('target', 16) }} Success Rate</span>
                             <span class="value" id="success-rate">--</span>
                         </div>
                         <div class="stat">
-                            <span class="label">🔄 Auto Consolidated</span>
+                            <span class="label">{{ icon('refresh-cw', 16) }} Auto Consolidated</span>
                             <span class="value" id="auto-consolidated">--</span>
                         </div>
                     </div>
@@ -162,7 +165,7 @@
         <!-- Consolidation Review Queue -->
         <section class="consolidation-review">
             <div class="review-header">
-                <h2>🤖 AI-Powered Consolidation Review</h2>
+                <h2>{{ icon('brain', 16) }} AI-Powered Consolidation Review</h2>
                 <div class="review-controls">
                     <select id="confidence-filter" class="confidence-select">
                         <option value="0.6">Show 60%+ Confidence</option>
@@ -170,26 +173,26 @@
                         <option value="0.8">Show 80%+ Confidence</option>
                         <option value="0.9">Show 90%+ Confidence</option>
                     </select>
-                    <button id="refresh-queue" class="refresh-btn">🔄 Refresh Queue</button>
+                    <button id="refresh-queue" class="refresh-btn">{{ icon('refresh-cw', 16) }} Refresh Queue</button>
                 </div>
             </div>
 
             <!-- Queue Summary -->
             <div class="queue-summary" id="queue-summary">
                 <div class="summary-stat high-priority">
-                    <span class="label">🔴 High Priority</span>
+                    <span class="label">{{ icon('flag', 16) }} High Priority</span>
                     <span class="count" id="high-priority-count">--</span>
                 </div>
                 <div class="summary-stat medium-priority">
-                    <span class="label">🟡 Medium Priority</span>
+                    <span class="label">{{ icon('flag', 16) }} Medium Priority</span>
                     <span class="count" id="medium-priority-count">--</span>
                 </div>
                 <div class="summary-stat low-priority">
-                    <span class="label">🟢 Low Priority</span>
+                    <span class="label">{{ icon('flag', 16) }} Low Priority</span>
                     <span class="count" id="low-priority-count">--</span>
                 </div>
                 <div class="summary-stat total">
-                    <span class="label">📋 Total Pending</span>
+                    <span class="label">{{ icon('list-ordered', 16) }} Total Pending</span>
                     <span class="count" id="total-pending-count">--</span>
                 </div>
             </div>
@@ -239,11 +242,11 @@
                     <div class="action-form">
                         <label for="action-select">Action:</label>
                         <select id="action-select" class="action-select">
-                            <option value="approve">✅ Approve Consolidation</option>
-                            <option value="reject">❌ Reject Consolidation</option>
-                            <option value="modify">📝 Modify & Approve</option>
+                            <option value="approve">{{ icon('check-circle', 16) }} Approve Consolidation</option>
+                            <option value="reject">{{ icon('x-circle', 16) }} Reject Consolidation</option>
+                            <option value="modify">{{ icon('file-text', 16) }} Modify & Approve</option>
                         </select>
-                        
+
                         <label for="action-reason">Reason (optional):</label>
                         <textarea id="action-reason" class="action-reason" placeholder="Add notes about your decision..."></textarea>
                     </div>
@@ -254,7 +257,8 @@
                 </div>
             </div>
         </div>
-    </div>
+
+    </div></div></div>
 
     <script src="{{ url_for('static', filename='js/audit.js') }}"></script>
     <!-- Cache Buster for Real-time UI Updates -->
