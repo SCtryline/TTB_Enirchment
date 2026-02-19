@@ -158,6 +158,7 @@ class BrandDatabaseV2:
                 email TEXT,
                 phone TEXT,
                 linkedin_url TEXT,
+                website TEXT,
                 source TEXT DEFAULT 'manual_import',
                 notes TEXT,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP,
@@ -235,6 +236,15 @@ class BrandDatabaseV2:
             CREATE UNIQUE INDEX IF NOT EXISTS idx_contacts_company_email ON contacts(company_name, email)
                 WHERE email IS NOT NULL AND email != '';
         ''')
+        self.conn.commit()
+
+        # Migrate: add website column to contacts if missing, then index it
+        try:
+            self.conn.execute('ALTER TABLE contacts ADD COLUMN website TEXT')
+            self.conn.commit()
+        except Exception:
+            pass  # Column already exists
+        self.conn.execute('CREATE INDEX IF NOT EXISTS idx_contacts_website ON contacts(website)')
         self.conn.commit()
     
     def _load_as_dict(self) -> Dict[str, Any]:
@@ -969,6 +979,18 @@ class BrandDatabaseV2:
             if download_conditions:
                 where_clauses.append(f"({' OR '.join(download_conditions)})")
 
+        # Contact status filter - check if brand has contacts (domain match + name containment)
+        if filters.get('contactStatus'):
+            match_sql = self._contact_match_sql()
+            contact_conditions = []
+            for status in filters['contactStatus']:
+                if status == 'has_contacts':
+                    contact_conditions.append(match_sql)
+                elif status == 'no_contacts':
+                    contact_conditions.append(f"NOT {match_sql}")
+            if contact_conditions:
+                where_clauses.append(f"({' OR '.join(contact_conditions)})")
+
         # Importers filter - check JSON field
         if filters.get('importers'):
             importer_conditions = []
@@ -1088,6 +1110,120 @@ class BrandDatabaseV2:
             }
         }
     
+    def _get_brands_with_contacts(self):
+        """
+        Build a set of lowercased brand_names that have matching contacts.
+        Matching strategy:
+          1. Domain match: contact.website domain matches brand enrichment_data domain
+          2. Name containment: brand_name is found within contact.company_name
+        Returns a set of lowercase brand names.
+        """
+        brands_with_contacts = set()
+
+        # Strategy 1: Domain matching (most accurate)
+        # Build a map of domain -> brand_name from brands with enrichment URLs
+        domain_to_brands = {}
+        brand_cursor = self.conn.execute('''
+            SELECT brand_name, enrichment_data FROM brands
+            WHERE enrichment_data IS NOT NULL AND enrichment_data != ''
+        ''')
+        for row in brand_cursor:
+            try:
+                ed = json.loads(row['enrichment_data'] or '{}')
+                domain = (ed.get('domain') or '').strip().lower()
+                if not domain:
+                    url = (ed.get('url') or '').strip().lower()
+                    if url:
+                        # Extract domain from URL
+                        domain = url.replace('https://', '').replace('http://', '').split('/')[0]
+                        domain = domain.replace('www.', '')
+                if domain:
+                    if domain not in domain_to_brands:
+                        domain_to_brands[domain] = set()
+                    domain_to_brands[domain].add(row['brand_name'].strip().lower())
+            except (json.JSONDecodeError, AttributeError):
+                pass
+
+        # Common free email providers to exclude from email domain matching
+        free_email_domains = {
+            'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'aol.com',
+            'icloud.com', 'mail.com', 'protonmail.com', 'zoho.com', 'yandex.com',
+            'live.com', 'msn.com', 'me.com', 'mac.com', 'comcast.net', 'att.net',
+            'verizon.net', 'sbcglobal.net', 'cox.net', 'charter.net',
+        }
+
+        # Get all contact domains from website field + email domain extraction
+        contact_cursor = self.conn.execute('''
+            SELECT DISTINCT website, email FROM contacts
+            WHERE (website IS NOT NULL AND website != '')
+               OR (email IS NOT NULL AND email != '' AND email LIKE '%@%')
+        ''')
+        for row in contact_cursor:
+            # Try website field first
+            contact_url = (row['website'] or '').strip().lower()
+            if contact_url:
+                contact_domain = contact_url.replace('https://', '').replace('http://', '').split('/')[0]
+                contact_domain = contact_domain.replace('www.', '')
+                if contact_domain and contact_domain in domain_to_brands:
+                    brands_with_contacts.update(domain_to_brands[contact_domain])
+                    continue
+
+            # Fallback: extract domain from email address
+            email = (row['email'] or '').strip().lower()
+            if '@' in email:
+                email_domain = email.split('@', 1)[1]
+                if email_domain and email_domain not in free_email_domains and email_domain in domain_to_brands:
+                    brands_with_contacts.update(domain_to_brands[email_domain])
+
+        # Strategy 2: Name containment fallback (for contacts without website or brands without enrichment)
+        name_cursor = self.conn.execute('''
+            SELECT DISTINCT LOWER(TRIM(b.brand_name)) FROM brands b
+            WHERE EXISTS (
+                SELECT 1 FROM contacts c
+                WHERE LOWER(TRIM(c.company_name)) LIKE '%' || LOWER(TRIM(b.brand_name)) || '%'
+                AND LENGTH(TRIM(b.brand_name)) >= 3
+            )
+        ''')
+        for row in name_cursor:
+            brands_with_contacts.add(row[0])
+
+        return brands_with_contacts
+
+    @staticmethod
+    def _contact_match_sql():
+        """SQL subquery for checking if a brand has matching contacts.
+        Uses: 1) name containment, 2) website domain match, 3) email domain match."""
+        # Helper: extract domain from brand enrichment_data
+        brand_domain = """REPLACE(REPLACE(REPLACE(REPLACE(LOWER(
+                    COALESCE(json_extract(b.enrichment_data, '$.domain'),
+                             json_extract(b.enrichment_data, '$.url'), '')),
+                    'https://',''),'http://',''),'www.',''), '/', '')"""
+        return f"""(
+            EXISTS (
+                SELECT 1 FROM contacts c
+                WHERE LOWER(TRIM(c.company_name)) LIKE '%' || LOWER(TRIM(b.brand_name)) || '%'
+                AND LENGTH(TRIM(b.brand_name)) >= 3
+            )
+            OR EXISTS (
+                SELECT 1 FROM contacts c
+                WHERE c.website IS NOT NULL AND c.website != ''
+                AND b.enrichment_data IS NOT NULL AND b.enrichment_data != ''
+                AND REPLACE(REPLACE(REPLACE(REPLACE(LOWER(TRIM(c.website)),
+                    'https://',''),'http://',''),'www.',''), '/', '')
+                  = {brand_domain}
+            )
+            OR EXISTS (
+                SELECT 1 FROM contacts c
+                WHERE c.email IS NOT NULL AND c.email LIKE '%@%'
+                AND b.enrichment_data IS NOT NULL AND b.enrichment_data != ''
+                AND SUBSTR(LOWER(c.email), INSTR(c.email, '@') + 1) = {brand_domain}
+                AND SUBSTR(LOWER(c.email), INSTR(c.email, '@') + 1) NOT IN (
+                    'gmail.com','yahoo.com','hotmail.com','outlook.com','aol.com',
+                    'icloud.com','mail.com','protonmail.com','zoho.com','live.com',
+                    'msn.com','me.com','comcast.net','att.net')
+            )
+        )"""
+
     def get_filter_counts(self):
         """
         Get counts for all filter options - optimized with SQL aggregation
@@ -1106,9 +1242,17 @@ class BrandDatabaseV2:
             'downloadStatus': {
                 'downloaded': 0,
                 'not_downloaded': 0
+            },
+            'contactStatus': {
+                'has_contacts': 0,
+                'no_contacts': 0
             }
         }
-        
+
+        # Build a set of brand names that have contacts
+        # Strategy: domain match (primary) + name containment (fallback)
+        brands_with_contacts = self._get_brands_with_contacts()
+
         # Get all brands data in one query
         cursor = self.conn.execute('''
             SELECT brand_name, countries, class_types, importers, website, enrichment_data, last_downloaded_at
@@ -1176,6 +1320,12 @@ class BrandDatabaseV2:
             else:
                 filter_counts['downloadStatus']['not_downloaded'] += 1
 
+            # Count contact status - check if brand_name has contacts
+            if row['brand_name'].strip().lower() in brands_with_contacts:
+                filter_counts['contactStatus']['has_contacts'] += 1
+            else:
+                filter_counts['contactStatus']['no_contacts'] += 1
+
         # Count producers from SKUs table - producers are identified by non-importer permit types
         producer_cursor = self.conn.execute('''
             SELECT permit_no, brand_name, COUNT(*) as brand_count
@@ -1234,13 +1384,16 @@ class BrandDatabaseV2:
 
         # If no active filters and no search, return global counts
         has_any_filter = any(
-            filters.get(k) for k in ['importers', 'alcoholTypes', 'producers', 'countries', 'websiteStatus', 'downloadStatus']
+            filters.get(k) for k in ['importers', 'alcoholTypes', 'producers', 'countries', 'websiteStatus', 'downloadStatus', 'contactStatus']
         )
         if not has_any_filter and not search:
             return self.get_filter_counts()
 
         # Dimension keys and the filter keys they correspond to
-        dimensions = ['importers', 'alcoholTypes', 'producers', 'countries', 'websiteStatus', 'downloadStatus']
+        dimensions = ['importers', 'alcoholTypes', 'producers', 'countries', 'websiteStatus', 'downloadStatus', 'contactStatus']
+
+        # Build a set of brand names that have contacts
+        brands_with_contacts = self._get_brands_with_contacts()
 
         def _build_where(exclude_dimension=None):
             """Build WHERE clauses applying all filters EXCEPT exclude_dimension."""
@@ -1298,6 +1451,17 @@ class BrandDatabaseV2:
                 if conds:
                     clauses.append(f"({' OR '.join(conds)})")
 
+            if exclude_dimension != 'contactStatus' and filters.get('contactStatus'):
+                match_sql = BrandDatabaseV2._contact_match_sql()
+                conds = []
+                for status in filters['contactStatus']:
+                    if status == 'has_contacts':
+                        conds.append(match_sql)
+                    elif status == 'no_contacts':
+                        conds.append(f"NOT {match_sql}")
+                if conds:
+                    clauses.append(f"({' OR '.join(conds)})")
+
             if exclude_dimension != 'importers' and filters.get('importers'):
                 conds = []
                 for imp in filters['importers']:
@@ -1340,7 +1504,8 @@ class BrandDatabaseV2:
                 'alcoholTypes': {},
                 'countries': {},
                 'websiteStatus': {'has_website': 0, 'verified': 0, 'no_website': 0},
-                'downloadStatus': {'downloaded': 0, 'not_downloaded': 0}
+                'downloadStatus': {'downloaded': 0, 'not_downloaded': 0},
+                'contactStatus': {'has_contacts': 0, 'no_contacts': 0}
             }
 
             for row in rows:
@@ -1395,6 +1560,12 @@ class BrandDatabaseV2:
                     else:
                         counts['downloadStatus']['not_downloaded'] += 1
 
+                if exclude_dimension != 'contactStatus':
+                    if row['brand_name'].strip().lower() in brands_with_contacts:
+                        counts['contactStatus']['has_contacts'] += 1
+                    else:
+                        counts['contactStatus']['no_contacts'] += 1
+
             return counts
 
         def _count_producers(where_sql, params):
@@ -1433,7 +1604,8 @@ class BrandDatabaseV2:
             'producers': {},
             'countries': {},
             'websiteStatus': {'has_website': 0, 'verified': 0, 'no_website': 0},
-            'downloadStatus': {'downloaded': 0, 'not_downloaded': 0}
+            'downloadStatus': {'downloaded': 0, 'not_downloaded': 0},
+            'contactStatus': {'has_contacts': 0, 'no_contacts': 0}
         }
 
         # For each dimension, we need counts with that dimension excluded from filters.
@@ -2520,6 +2692,7 @@ class BrandDatabaseV2:
 
                 title = (row.get('title') or '').strip()
                 linkedin_url = (row.get('linkedin_url') or '').strip()
+                website = (row.get('website') or '').strip()
                 source = (row.get('source') or 'csv_import').strip()
                 notes = (row.get('notes') or '').strip()
 
@@ -2538,21 +2711,22 @@ class BrandDatabaseV2:
                                 title = COALESCE(NULLIF(?, ''), title),
                                 phone = COALESCE(NULLIF(?, ''), phone),
                                 linkedin_url = COALESCE(NULLIF(?, ''), linkedin_url),
+                                website = COALESCE(NULLIF(?, ''), website),
                                 source = ?,
                                 notes = COALESCE(NULLIF(?, ''), notes),
                                 updated_at = ?
                             WHERE id = ?
-                        ''', (contact_name, title, phone, linkedin_url, source, notes, now, existing[0]))
+                        ''', (contact_name, title, phone, linkedin_url, website, source, notes, now, existing[0]))
                         updated += 1
                         continue
 
                 # Insert new record
                 cursor.execute('''
                     INSERT INTO contacts (company_name, contact_name, title, email, phone,
-                                          linkedin_url, source, notes, created_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                          linkedin_url, website, source, notes, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ''', (company, contact_name or None, title or None, email or None,
-                      phone or None, linkedin_url or None, source, notes or None, now, now))
+                      phone or None, linkedin_url or None, website or None, source, notes or None, now, now))
                 inserted += 1
 
             conn.commit()

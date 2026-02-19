@@ -225,6 +225,29 @@
                     </div>
                 </div>
 
+                <!-- Contact Status Filter -->
+                <div class="filter-section">
+                    <div class="filter-section-header" onclick="toggleFilterSection('contact-filters')">
+                        <span>{{ icon('user-check', 14) }} Contact Status</span>
+                        <span class="filter-count" id="contact-count"></span>
+                        <span class="chevron">&#9658;</span>
+                    </div>
+                    <div class="filter-section-content" id="contact-filters">
+                        <div class="filter-options">
+                            <label class="filter-option">
+                                <input type="checkbox" value="has_contacts" onchange="applyFilters()">
+                                <span>Has Contacts</span>
+                                <span class="option-count" id="has-contacts-count"></span>
+                            </label>
+                            <label class="filter-option">
+                                <input type="checkbox" value="no_contacts" onchange="applyFilters()">
+                                <span>No Contacts</span>
+                                <span class="option-count" id="no-contacts-count"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Apply Filters Button -->
                 <div class="filter-actions">
                     <button class="apply-filters-btn" onclick="applyFilters()">Apply Filters</button>

@@ -32,7 +32,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         producers: [],
         countries: [],
         websiteStatus: [],
-        downloadStatus: []
+        downloadStatus: [],
+        contactStatus: []
     };
 
     // Filter data cache
@@ -49,6 +50,10 @@ document.addEventListener('DOMContentLoaded', async function() {
         downloadStatus: {
             'downloaded': 0,
             'not_downloaded': 0
+        },
+        contactStatus: {
+            'has_contacts': 0,
+            'no_contacts': 0
         }
     };
     
@@ -567,6 +572,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         activeFilters.countries = urlParams.getAll('countries') || [];
         activeFilters.websiteStatus = urlParams.getAll('websiteStatus') || [];
         activeFilters.downloadStatus = urlParams.getAll('downloadStatus') || [];
+        activeFilters.contactStatus = urlParams.getAll('contactStatus') || [];
 
         // Load search term
         const searchParam = urlParams.get('search');
@@ -596,6 +602,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         url.searchParams.delete('countries');
         url.searchParams.delete('websiteStatus');
         url.searchParams.delete('downloadStatus');
+        url.searchParams.delete('contactStatus');
         url.searchParams.delete('search');
         url.searchParams.delete('page');
         
@@ -738,6 +745,9 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Update download status counts
         updateDownloadStatusCounts();
 
+        // Update contact status counts
+        updateContactStatusCounts();
+
         // Restore selected filters from URL
         restoreSelectedFilters();
         
@@ -786,6 +796,14 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Restore download status filters
         activeFilters.downloadStatus.forEach(value => {
             const checkbox = document.querySelector(`#download-filters input[type="checkbox"][value="${value}"]`);
+            if (checkbox) {
+                checkbox.checked = true;
+            }
+        });
+
+        // Restore contact status filters
+        activeFilters.contactStatus.forEach(value => {
+            const checkbox = document.querySelector(`#contact-filters input[type="checkbox"][value="${value}"]`);
             if (checkbox) {
                 checkbox.checked = true;
             }
@@ -884,6 +902,21 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     }
 
+    function updateContactStatusCounts() {
+        const counts = filterData.contactStatus || {};
+
+        const hasContactsEl = document.getElementById('has-contacts-count');
+        if (hasContactsEl) hasContactsEl.textContent = counts.has_contacts || 0;
+
+        const noContactsEl = document.getElementById('no-contacts-count');
+        if (noContactsEl) noContactsEl.textContent = counts.no_contacts || 0;
+
+        const contactCount = document.getElementById('contact-count');
+        if (contactCount) {
+            contactCount.textContent = (counts.has_contacts || 0) + (counts.no_contacts || 0);
+        }
+    }
+
     // Global functions for HTML event handlers
     window.toggleFilterSection = function(sectionId) {
         const content = document.getElementById(sectionId);
@@ -969,9 +1002,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     };
     
     window.applyFilters = async function() {
-        // Re-scan DOM only for websiteStatus/downloadStatus (they bypass updateFilterSelection flow)
+        // Re-scan DOM only for websiteStatus/downloadStatus/contactStatus (they bypass updateFilterSelection flow)
         activeFilters.websiteStatus = [];
         activeFilters.downloadStatus = [];
+        activeFilters.contactStatus = [];
 
         document.querySelectorAll('#website-filters input[type="checkbox"]:checked').forEach(checkbox => {
             activeFilters.websiteStatus.push(checkbox.value);
@@ -979,6 +1013,10 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         document.querySelectorAll('#download-filters input[type="checkbox"]:checked').forEach(checkbox => {
             activeFilters.downloadStatus.push(checkbox.value);
+        });
+
+        document.querySelectorAll('#contact-filters input[type="checkbox"]:checked').forEach(checkbox => {
+            activeFilters.contactStatus.push(checkbox.value);
         });
 
         console.log('Applying filters:', activeFilters);
@@ -1000,7 +1038,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             producers: [],
             countries: [],
             websiteStatus: [],
-            downloadStatus: []
+            downloadStatus: [],
+            contactStatus: []
         };
 
         // Uncheck all checkboxes
@@ -1312,6 +1351,15 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (notDlEl) notDlEl.textContent = ds.not_downloaded || 0;
         const downloadCountEl = document.getElementById('download-count');
         if (downloadCountEl) downloadCountEl.textContent = (ds.downloaded || 0) + (ds.not_downloaded || 0);
+
+        // Update contact status counts
+        const cs = data.contactStatus || {};
+        const hasContactsEl = document.getElementById('has-contacts-count');
+        if (hasContactsEl) hasContactsEl.textContent = cs.has_contacts || 0;
+        const noContactsEl = document.getElementById('no-contacts-count');
+        if (noContactsEl) noContactsEl.textContent = cs.no_contacts || 0;
+        const contactCountEl = document.getElementById('contact-count');
+        if (contactCountEl) contactCountEl.textContent = (cs.has_contacts || 0) + (cs.no_contacts || 0);
     }
 
     // === QUICK TOGGLE FUNCTIONS ===

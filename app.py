@@ -1211,7 +1211,8 @@ def get_all_brands():
             'producers': request.args.getlist('producers'),
             'countries': request.args.getlist('countries'),
             'websiteStatus': request.args.getlist('websiteStatus'),
-            'downloadStatus': request.args.getlist('downloadStatus')
+            'downloadStatus': request.args.getlist('downloadStatus'),
+            'contactStatus': request.args.getlist('contactStatus')
         }
         
         # Use optimized database method
@@ -3779,14 +3780,24 @@ def upload_contacts():
         # Normalize column names: lowercase, strip, replace spaces with underscores
         df.columns = [c.strip().lower().replace(' ', '_') for c in df.columns]
 
-        # Flexible column mapping
+        # Apollo CSV: combine first_name + last_name into contact_name if present
+        if 'first_name' in df.columns and 'last_name' in df.columns and 'contact_name' not in df.columns:
+            df['contact_name'] = (
+                df['first_name'].fillna('').astype(str).str.strip()
+                + ' '
+                + df['last_name'].fillna('').astype(str).str.strip()
+            ).str.strip()
+
+        # Flexible column mapping (includes Apollo.io CSV column names)
         column_aliases = {
-            'company_name': ['company', 'importer', 'owner_name', 'company_name'],
-            'contact_name': ['name', 'full_name', 'contact', 'contact_name'],
+            'company_name': ['company_name', 'company', 'importer', 'owner_name', 'organization_name'],
+            'contact_name': ['contact_name', 'name', 'full_name', 'contact'],
             'email': ['email', 'email_address', 'work_email', 'e-mail'],
-            'phone': ['phone', 'phone_number', 'mobile', 'work_phone', 'telephone'],
+            'phone': ['phone', 'phone_number', 'mobile', 'work_phone', 'telephone',
+                       'work_direct_phone', 'mobile_phone', 'corporate_phone', 'home_phone'],
             'title': ['title', 'job_title', 'position', 'role'],
-            'linkedin_url': ['linkedin_url', 'linkedin', 'linkedin_profile'],
+            'linkedin_url': ['linkedin_url', 'linkedin', 'linkedin_profile', 'person_linkedin_url'],
+            'website': ['website', 'company_domain', 'domain', 'url', 'website_url', 'company_url'],
             'source': ['source'],
             'notes': ['notes', 'note', 'comments'],
         }
@@ -3812,6 +3823,13 @@ def upload_contacts():
                 'found_columns': list(df.columns)
             }), 400
 
+        # Auto-detect Apollo CSV and set source if not already mapped
+        is_apollo = 'first_name' in df.columns and 'last_name' in df.columns and 'organization_name' in df.columns
+        if is_apollo and 'source' not in mapped:
+            default_source = 'apollo_import'
+        else:
+            default_source = 'csv_import'
+
         # Build contact_data list
         contact_data = []
         for _, row in df.iterrows():
@@ -3819,6 +3837,8 @@ def upload_contacts():
             for target, col in mapped.items():
                 val = row.get(col)
                 record[target] = str(val).strip() if pd.notna(val) else ''
+            if not record.get('source'):
+                record['source'] = default_source
             contact_data.append(record)
 
         result = brand_db.bulk_import_contacts(contact_data)
