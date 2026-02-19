@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contacts Directory - TTB COLA System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/contacts.css') }}">
+</head>
+<body>
+    {% from 'includes/icons.html' import icon %}
+    <div class="app-layout">
+    {% include 'includes/sidebar.html' %}
+    <div class="main-content-area">
+    <div class="container">
+
+        <!-- Page Header -->
+        <section class="page-header">
+            <h2>{{ icon('users', 24) }} Contacts Directory</h2>
+            <p>Manage company contacts — upload, browse, filter, and export</p>
+        </section>
+
+        <!-- Stats Bar -->
+        <section class="stats-bar">
+            <div class="stat-card">
+                <div class="stat-value" id="stat-total">-</div>
+                <div class="stat-label">Total Contacts</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-companies">-</div>
+                <div class="stat-label">Companies</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-with-email">-</div>
+                <div class="stat-label">With Email</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-with-phone">-</div>
+                <div class="stat-label">With Phone</div>
+            </div>
+        </section>
+
+        <!-- Upload Section -->
+        <section class="upload-section">
+            <h3>{{ icon('upload', 20) }} Import Contacts</h3>
+            <div class="upload-card">
+                <p>Upload a CSV or Excel file with contact data. Required: <strong>company_name</strong> (or company, importer, owner_name) plus at least one of contact_name, email, or phone.</p>
+                <form id="contacts-upload-form" class="upload-form">
+                    <div class="file-input-wrapper">
+                        <input type="file" id="contactsFile" name="file" accept=".csv,.xlsx,.xls">
+                        <label for="contactsFile" class="file-label">
+                            {{ icon('database', 20) }} Choose CSV / Excel File
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="upload-btn">Upload Contacts</button>
+                </form>
+                <div id="upload-results" class="upload-results hidden"></div>
+            </div>
+        </section>
+
+        <!-- Search & Filter Controls -->
+        <section class="filter-section">
+            <h3>{{ icon('search', 20) }} Browse Contacts</h3>
+            <div class="filter-row">
+                <div class="filter-group">
+                    <input type="text" id="search-input" placeholder="Search contacts..." class="filter-input">
+                </div>
+                <div class="filter-group">
+                    <select id="filter-company" class="filter-select">
+                        <option value="">All Companies</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <select id="filter-has-email" class="filter-select">
+                        <option value="">Email: Any</option>
+                        <option value="yes">Has Email</option>
+                        <option value="no">No Email</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <select id="filter-has-phone" class="filter-select">
+                        <option value="">Phone: Any</option>
+                        <option value="yes">Has Phone</option>
+                        <option value="no">No Phone</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <select id="filter-source" class="filter-select">
+                        <option value="">All Sources</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contacts Table -->
+        <section class="table-section">
+            <div class="table-wrapper">
+                <table class="contacts-table" id="contacts-table">
+                    <thead>
+                        <tr>
+                            <th>Company</th>
+                            <th>Contact Name</th>
+                            <th>Title</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Source</th>
+                        </tr>
+                    </thead>
+                    <tbody id="contacts-tbody">
+                        <tr><td colspan="6" class="empty-state">Loading contacts...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination-bar" id="pagination-bar">
+                <div class="pagination-info" id="pagination-info"></div>
+                <div class="pagination-controls" id="pagination-controls"></div>
+            </div>
+        </section>
+
+        <!-- Export Section -->
+        <section class="export-section">
+            <h3>{{ icon('download', 20) }} Export Contacts</h3>
+            <div class="export-buttons">
+                <button class="btn btn-secondary" id="export-csv-btn">
+                    {{ icon('download', 16) }} Export as CSV
+                </button>
+                <button class="btn btn-secondary" id="export-excel-btn">
+                    {{ icon('download', 16) }} Export as Excel
+                </button>
+            </div>
+            <p class="export-note">Exports use the current filters above</p>
+        </section>
+
+    </div>
+    </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/contacts.js') }}"></script>
+</body>
+</html>

@@ -148,6 +148,21 @@ class BrandDatabaseV2:
                 permit_number TEXT PRIMARY KEY,
                 data TEXT -- JSON representation for compatibility
             );
+
+            -- Contacts directory table
+            CREATE TABLE IF NOT EXISTS contacts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                company_name TEXT NOT NULL,
+                contact_name TEXT,
+                title TEXT,
+                email TEXT,
+                phone TEXT,
+                linkedin_url TEXT,
+                source TEXT DEFAULT 'manual_import',
+                notes TEXT,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+            );
         ''')
         self.conn.commit()
     
@@ -212,6 +227,13 @@ class BrandDatabaseV2:
             -- Upload history indexes
             CREATE INDEX IF NOT EXISTS idx_upload_history_date ON upload_history(upload_date);
             CREATE INDEX IF NOT EXISTS idx_upload_history_type ON upload_history(file_type);
+
+            -- Contacts indexes
+            CREATE INDEX IF NOT EXISTS idx_contacts_company_name ON contacts(company_name);
+            CREATE INDEX IF NOT EXISTS idx_contacts_email ON contacts(email);
+            CREATE INDEX IF NOT EXISTS idx_contacts_source ON contacts(source);
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_contacts_company_email ON contacts(company_name, email)
+                WHERE email IS NOT NULL AND email != '';
         ''')
         self.conn.commit()
     
@@ -2464,3 +2486,254 @@ class BrandDatabaseV2:
         except Exception as e:
             logger.error(f"Error getting brands for Apollo enrichment: {e}")
             return []
+
+    # ── Contacts Directory Methods ──────────────────────────────────────
+
+    def bulk_import_contacts(self, contact_data):
+        """
+        Insert or update contacts. Deduplicates by (company_name, email).
+        Returns dict with counts: inserted, updated, skipped.
+        """
+        inserted = 0
+        updated = 0
+        skipped = 0
+        now = datetime.now().isoformat()
+
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+
+            for row in contact_data:
+                company = (row.get('company_name') or '').strip()
+                if not company:
+                    skipped += 1
+                    continue
+
+                email = (row.get('email') or '').strip()
+                contact_name = (row.get('contact_name') or '').strip()
+                phone = (row.get('phone') or '').strip()
+
+                # Must have at least one of contact_name, email, or phone
+                if not contact_name and not email and not phone:
+                    skipped += 1
+                    continue
+
+                title = (row.get('title') or '').strip()
+                linkedin_url = (row.get('linkedin_url') or '').strip()
+                source = (row.get('source') or 'csv_import').strip()
+                notes = (row.get('notes') or '').strip()
+
+                if email:
+                    # Check for existing record by company_name + email
+                    cursor.execute(
+                        'SELECT id FROM contacts WHERE company_name = ? AND email = ?',
+                        (company, email)
+                    )
+                    existing = cursor.fetchone()
+
+                    if existing:
+                        cursor.execute('''
+                            UPDATE contacts SET
+                                contact_name = COALESCE(NULLIF(?, ''), contact_name),
+                                title = COALESCE(NULLIF(?, ''), title),
+                                phone = COALESCE(NULLIF(?, ''), phone),
+                                linkedin_url = COALESCE(NULLIF(?, ''), linkedin_url),
+                                source = ?,
+                                notes = COALESCE(NULLIF(?, ''), notes),
+                                updated_at = ?
+                            WHERE id = ?
+                        ''', (contact_name, title, phone, linkedin_url, source, notes, now, existing[0]))
+                        updated += 1
+                        continue
+
+                # Insert new record
+                cursor.execute('''
+                    INSERT INTO contacts (company_name, contact_name, title, email, phone,
+                                          linkedin_url, source, notes, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (company, contact_name or None, title or None, email or None,
+                      phone or None, linkedin_url or None, source, notes or None, now, now))
+                inserted += 1
+
+            conn.commit()
+            conn.close()
+            return {'inserted': inserted, 'updated': updated, 'skipped': skipped}
+
+        except Exception as e:
+            logger.error(f"Error bulk importing contacts: {e}")
+            raise
+
+    def get_contacts(self, filters=None, page=1, per_page=50):
+        """
+        Get paginated, filtered contacts.
+        filters: dict with optional keys: search, company_name, source, has_email, has_phone
+        Returns dict with items, total, page, per_page, total_pages
+        """
+        filters = filters or {}
+        conditions = []
+        params = []
+
+        if filters.get('search'):
+            search = f"%{filters['search']}%"
+            conditions.append(
+                '(company_name LIKE ? OR contact_name LIKE ? OR email LIKE ? OR phone LIKE ?)'
+            )
+            params.extend([search, search, search, search])
+
+        if filters.get('company_name'):
+            conditions.append('company_name = ?')
+            params.append(filters['company_name'])
+
+        if filters.get('source'):
+            conditions.append('source = ?')
+            params.append(filters['source'])
+
+        if filters.get('has_email') == 'yes':
+            conditions.append("email IS NOT NULL AND email != ''")
+        elif filters.get('has_email') == 'no':
+            conditions.append("(email IS NULL OR email = '')")
+
+        if filters.get('has_phone') == 'yes':
+            conditions.append("phone IS NOT NULL AND phone != ''")
+        elif filters.get('has_phone') == 'no':
+            conditions.append("(phone IS NULL OR phone = '')")
+
+        where = ''
+        if conditions:
+            where = 'WHERE ' + ' AND '.join(conditions)
+
+        try:
+            conn = sqlite3.connect(self.db_path)
+            conn.row_factory = sqlite3.Row
+
+            # Get total count
+            count_sql = f'SELECT COUNT(*) FROM contacts {where}'
+            total = conn.execute(count_sql, params).fetchone()[0]
+
+            # Get page of results
+            offset = (page - 1) * per_page
+            data_sql = f'''
+                SELECT * FROM contacts {where}
+                ORDER BY updated_at DESC
+                LIMIT ? OFFSET ?
+            '''
+            rows = conn.execute(data_sql, params + [per_page, offset]).fetchall()
+            items = [dict(r) for r in rows]
+
+            conn.close()
+
+            total_pages = max(1, (total + per_page - 1) // per_page)
+            return {
+                'items': items,
+                'total': total,
+                'page': page,
+                'per_page': per_page,
+                'total_pages': total_pages
+            }
+
+        except Exception as e:
+            logger.error(f"Error getting contacts: {e}")
+            raise
+
+    def get_contacts_filter_options(self):
+        """Return distinct company names and sources for dropdown filters."""
+        try:
+            conn = sqlite3.connect(self.db_path)
+
+            companies = [r[0] for r in conn.execute(
+                'SELECT DISTINCT company_name FROM contacts ORDER BY company_name'
+            ).fetchall()]
+
+            sources = [r[0] for r in conn.execute(
+                'SELECT DISTINCT source FROM contacts WHERE source IS NOT NULL ORDER BY source'
+            ).fetchall()]
+
+            conn.close()
+            return {'companies': companies, 'sources': sources}
+
+        except Exception as e:
+            logger.error(f"Error getting contacts filter options: {e}")
+            raise
+
+    def get_contacts_stats(self):
+        """Return summary stats for the contacts directory."""
+        try:
+            conn = sqlite3.connect(self.db_path)
+
+            total = conn.execute('SELECT COUNT(*) FROM contacts').fetchone()[0]
+            unique_companies = conn.execute(
+                'SELECT COUNT(DISTINCT company_name) FROM contacts'
+            ).fetchone()[0]
+            with_email = conn.execute(
+                "SELECT COUNT(*) FROM contacts WHERE email IS NOT NULL AND email != ''"
+            ).fetchone()[0]
+            with_phone = conn.execute(
+                "SELECT COUNT(*) FROM contacts WHERE phone IS NOT NULL AND phone != ''"
+            ).fetchone()[0]
+
+            conn.close()
+            return {
+                'total': total,
+                'unique_companies': unique_companies,
+                'with_email': with_email,
+                'with_phone': with_phone
+            }
+
+        except Exception as e:
+            logger.error(f"Error getting contacts stats: {e}")
+            raise
+
+    def export_contacts(self, filters=None):
+        """
+        Export all matching contacts (no pagination) for CSV/Excel export.
+        Same filter logic as get_contacts but returns all rows.
+        """
+        filters = filters or {}
+        conditions = []
+        params = []
+
+        if filters.get('search'):
+            search = f"%{filters['search']}%"
+            conditions.append(
+                '(company_name LIKE ? OR contact_name LIKE ? OR email LIKE ? OR phone LIKE ?)'
+            )
+            params.extend([search, search, search, search])
+
+        if filters.get('company_name'):
+            conditions.append('company_name = ?')
+            params.append(filters['company_name'])
+
+        if filters.get('source'):
+            conditions.append('source = ?')
+            params.append(filters['source'])
+
+        if filters.get('has_email') == 'yes':
+            conditions.append("email IS NOT NULL AND email != ''")
+        elif filters.get('has_email') == 'no':
+            conditions.append("(email IS NULL OR email = '')")
+
+        if filters.get('has_phone') == 'yes':
+            conditions.append("phone IS NOT NULL AND phone != ''")
+        elif filters.get('has_phone') == 'no':
+            conditions.append("(phone IS NULL OR phone = '')")
+
+        where = ''
+        if conditions:
+            where = 'WHERE ' + ' AND '.join(conditions)
+
+        try:
+            conn = sqlite3.connect(self.db_path)
+            conn.row_factory = sqlite3.Row
+
+            rows = conn.execute(
+                f'SELECT * FROM contacts {where} ORDER BY company_name, contact_name',
+                params
+            ).fetchall()
+            items = [dict(r) for r in rows]
+
+            conn.close()
+            return items
+
+        except Exception as e:
+            logger.error(f"Error exporting contacts: {e}")
+            raise

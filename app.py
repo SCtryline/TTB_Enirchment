@@ -3694,5 +3694,179 @@ def export_apollo_filtered():
         return error_response(e)
 
 
+# ── Contacts Directory ────────────────────────────────────────────────
+
+@app.route('/contacts')
+def contacts_page():
+    return render_template('contacts.html')
+
+@app.route('/get_contacts')
+def get_contacts():
+    try:
+        filters = {
+            'search': request.args.get('search', '').strip(),
+            'company_name': request.args.get('company_name', '').strip(),
+            'source': request.args.get('source', '').strip(),
+            'has_email': request.args.get('has_email', '').strip(),
+            'has_phone': request.args.get('has_phone', '').strip(),
+        }
+        # Remove empty filters
+        filters = {k: v for k, v in filters.items() if v}
+
+        page = int(request.args.get('page', 1))
+        per_page = int(request.args.get('per_page', 50))
+
+        result = brand_db.get_contacts(filters=filters, page=page, per_page=per_page)
+        return jsonify(result)
+    except Exception as e:
+        return error_response(e)
+
+@app.route('/contacts_filter_options')
+def contacts_filter_options():
+    try:
+        options = brand_db.get_contacts_filter_options()
+        stats = brand_db.get_contacts_stats()
+        return jsonify({**options, 'stats': stats})
+    except Exception as e:
+        return error_response(e)
+
+@app.route('/upload_contacts', methods=['POST'])
+def upload_contacts():
+    try:
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file provided'}), 400
+
+        file = request.files['file']
+        if not file.filename:
+            return jsonify({'error': 'No file selected'}), 400
+
+        filename = secure_filename(file.filename)
+        ext = os.path.splitext(filename)[1].lower()
+
+        # Read file into DataFrame
+        if ext == '.csv':
+            df = pd.read_csv(file)
+        elif ext in ('.xlsx', '.xls'):
+            df = pd.read_excel(file)
+        else:
+            return jsonify({'error': 'Unsupported file type. Use CSV or Excel.'}), 400
+
+        if df.empty:
+            return jsonify({'error': 'File is empty'}), 400
+
+        # Normalize column names: lowercase, strip, replace spaces with underscores
+        df.columns = [c.strip().lower().replace(' ', '_') for c in df.columns]
+
+        # Flexible column mapping
+        column_aliases = {
+            'company_name': ['company', 'importer', 'owner_name', 'company_name'],
+            'contact_name': ['name', 'full_name', 'contact', 'contact_name'],
+            'email': ['email', 'email_address', 'work_email', 'e-mail'],
+            'phone': ['phone', 'phone_number', 'mobile', 'work_phone', 'telephone'],
+            'title': ['title', 'job_title', 'position', 'role'],
+            'linkedin_url': ['linkedin_url', 'linkedin', 'linkedin_profile'],
+            'source': ['source'],
+            'notes': ['notes', 'note', 'comments'],
+        }
+
+        mapped = {}
+        for target, aliases in column_aliases.items():
+            for alias in aliases:
+                if alias in df.columns:
+                    mapped[target] = alias
+                    break
+
+        if 'company_name' not in mapped:
+            return jsonify({
+                'error': 'Missing required column: company_name (or company, importer, owner_name)',
+                'found_columns': list(df.columns)
+            }), 400
+
+        # Check at least one contact field
+        has_contact_field = any(k in mapped for k in ('contact_name', 'email', 'phone'))
+        if not has_contact_field:
+            return jsonify({
+                'error': 'Need at least one of: contact_name, email, or phone columns',
+                'found_columns': list(df.columns)
+            }), 400
+
+        # Build contact_data list
+        contact_data = []
+        for _, row in df.iterrows():
+            record = {}
+            for target, col in mapped.items():
+                val = row.get(col)
+                record[target] = str(val).strip() if pd.notna(val) else ''
+            contact_data.append(record)
+
+        result = brand_db.bulk_import_contacts(contact_data)
+        invalidate_all_caches()
+
+        return jsonify({
+            'success': True,
+            'filename': filename,
+            'total_rows': len(contact_data),
+            'inserted': result['inserted'],
+            'updated': result['updated'],
+            'skipped': result['skipped'],
+            'mapped_columns': {k: v for k, v in mapped.items()}
+        })
+
+    except Exception as e:
+        logger.error(f"Error uploading contacts: {e}")
+        return error_response(e)
+
+@app.route('/export_contacts')
+def export_contacts():
+    try:
+        filters = {
+            'search': request.args.get('search', '').strip(),
+            'company_name': request.args.get('company_name', '').strip(),
+            'source': request.args.get('source', '').strip(),
+            'has_email': request.args.get('has_email', '').strip(),
+            'has_phone': request.args.get('has_phone', '').strip(),
+        }
+        filters = {k: v for k, v in filters.items() if v}
+
+        fmt = request.args.get('format', 'csv').lower()
+        rows = brand_db.export_contacts(filters=filters)
+
+        if not rows:
+            return jsonify({'error': 'No contacts match the selected filters'}), 404
+
+        # Remove internal fields
+        export_fields = ['company_name', 'contact_name', 'title', 'email', 'phone',
+                         'linkedin_url', 'source', 'notes']
+        clean_rows = [{k: r.get(k, '') for k in export_fields} for r in rows]
+
+        df = pd.DataFrame(clean_rows)
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+
+        if fmt == 'excel':
+            output = io.BytesIO()
+            df.to_excel(output, index=False, engine='openpyxl')
+            output.seek(0)
+            return send_file(
+                output,
+                mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                as_attachment=True,
+                download_name=f'contacts_{timestamp}.xlsx'
+            )
+        else:
+            output = io.StringIO()
+            df.to_csv(output, index=False)
+            output.seek(0)
+            return send_file(
+                io.BytesIO(output.getvalue().encode('utf-8')),
+                mimetype='text/csv',
+                as_attachment=True,
+                download_name=f'contacts_{timestamp}.csv'
+            )
+
+    except Exception as e:
+        logger.error(f"Error exporting contacts: {e}")
+        return error_response(e)
+
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
