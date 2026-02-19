@@ -2563,13 +2563,8 @@ class BrandDatabaseV2:
             logger.error(f"Error bulk importing contacts: {e}")
             raise
 
-    def get_contacts(self, filters=None, page=1, per_page=50):
-        """
-        Get paginated, filtered contacts.
-        filters: dict with optional keys: search, company_name, source, has_email, has_phone
-        Returns dict with items, total, page, per_page, total_pages
-        """
-        filters = filters or {}
+    def _build_contacts_where(self, filters):
+        """Build WHERE clause and params for contacts queries. Shared by get/export/scoped."""
         conditions = []
         params = []
 
@@ -2580,27 +2575,61 @@ class BrandDatabaseV2:
             )
             params.extend([search, search, search, search])
 
-        if filters.get('company_name'):
+        # Multi-value array filters (from drawer)
+        for key, col in [('companies', 'company_name'), ('sources', 'source'), ('titles', 'title')]:
+            vals = filters.get(key, [])
+            if vals:
+                placeholders = ','.join(['?'] * len(vals))
+                conditions.append(f'{col} IN ({placeholders})')
+                params.extend(vals)
+
+        # Legacy single-value filters (backward compat)
+        if filters.get('company_name') and not filters.get('companies'):
             conditions.append('company_name = ?')
             params.append(filters['company_name'])
-
-        if filters.get('source'):
+        if filters.get('source') and not filters.get('sources'):
             conditions.append('source = ?')
             params.append(filters['source'])
 
-        if filters.get('has_email') == 'yes':
-            conditions.append("email IS NOT NULL AND email != ''")
-        elif filters.get('has_email') == 'no':
-            conditions.append("(email IS NULL OR email = '')")
+        # Email status
+        email_status = filters.get('emailStatus', [])
+        if not email_status:
+            # Legacy single value
+            if filters.get('has_email') == 'yes':
+                email_status = ['has_email']
+            elif filters.get('has_email') == 'no':
+                email_status = ['no_email']
+        if email_status:
+            if 'has_email' in email_status and 'no_email' not in email_status:
+                conditions.append("email IS NOT NULL AND email != ''")
+            elif 'no_email' in email_status and 'has_email' not in email_status:
+                conditions.append("(email IS NULL OR email = '')")
 
-        if filters.get('has_phone') == 'yes':
-            conditions.append("phone IS NOT NULL AND phone != ''")
-        elif filters.get('has_phone') == 'no':
-            conditions.append("(phone IS NULL OR phone = '')")
+        # Phone status
+        phone_status = filters.get('phoneStatus', [])
+        if not phone_status:
+            if filters.get('has_phone') == 'yes':
+                phone_status = ['has_phone']
+            elif filters.get('has_phone') == 'no':
+                phone_status = ['no_phone']
+        if phone_status:
+            if 'has_phone' in phone_status and 'no_phone' not in phone_status:
+                conditions.append("phone IS NOT NULL AND phone != ''")
+            elif 'no_phone' in phone_status and 'has_phone' not in phone_status:
+                conditions.append("(phone IS NULL OR phone = '')")
 
         where = ''
         if conditions:
             where = 'WHERE ' + ' AND '.join(conditions)
+        return where, params
+
+    def get_contacts(self, filters=None, page=1, per_page=50):
+        """
+        Get paginated, filtered contacts.
+        Returns dict with items, total, page, per_page, total_pages
+        """
+        filters = filters or {}
+        where, params = self._build_contacts_where(filters)
 
         try:
             conn = sqlite3.connect(self.db_path)
@@ -2655,6 +2684,162 @@ class BrandDatabaseV2:
             logger.error(f"Error getting contacts filter options: {e}")
             raise
 
+    def get_contacts_filter_counts(self):
+        """
+        Return global filter option counts for the contacts filter drawer.
+        Returns: {companies: {name: count}, sources: {name: count},
+                  titles: {name: count}, emailStatus: {...}, phoneStatus: {...}}
+        """
+        try:
+            conn = sqlite3.connect(self.db_path)
+
+            # Company counts
+            companies = {}
+            for r in conn.execute(
+                'SELECT company_name, COUNT(*) FROM contacts GROUP BY company_name ORDER BY COUNT(*) DESC'
+            ).fetchall():
+                companies[r[0]] = r[1]
+
+            # Source counts
+            sources = {}
+            for r in conn.execute(
+                "SELECT source, COUNT(*) FROM contacts WHERE source IS NOT NULL AND source != '' GROUP BY source ORDER BY COUNT(*) DESC"
+            ).fetchall():
+                sources[r[0]] = r[1]
+
+            # Title counts
+            titles = {}
+            for r in conn.execute(
+                "SELECT title, COUNT(*) FROM contacts WHERE title IS NOT NULL AND title != '' GROUP BY title ORDER BY COUNT(*) DESC"
+            ).fetchall():
+                titles[r[0]] = r[1]
+
+            # Email status
+            has_email = conn.execute(
+                "SELECT COUNT(*) FROM contacts WHERE email IS NOT NULL AND email != ''"
+            ).fetchone()[0]
+            no_email = conn.execute(
+                "SELECT COUNT(*) FROM contacts WHERE email IS NULL OR email = ''"
+            ).fetchone()[0]
+
+            # Phone status
+            has_phone = conn.execute(
+                "SELECT COUNT(*) FROM contacts WHERE phone IS NOT NULL AND phone != ''"
+            ).fetchone()[0]
+            no_phone = conn.execute(
+                "SELECT COUNT(*) FROM contacts WHERE phone IS NULL OR phone = ''"
+            ).fetchone()[0]
+
+            conn.close()
+            return {
+                'companies': companies,
+                'sources': sources,
+                'titles': titles,
+                'emailStatus': {'has_email': has_email, 'no_email': no_email},
+                'phoneStatus': {'has_phone': has_phone, 'no_phone': no_phone}
+            }
+
+        except Exception as e:
+            logger.error(f"Error getting contacts filter counts: {e}")
+            raise
+
+    def get_contacts_scoped_filter_counts(self, search='', filters=None):
+        """
+        Return scoped (faceted) filter counts — each dimension is scoped by
+        all OTHER active filters but not itself.
+        """
+        filters = filters or {}
+        try:
+            conn = sqlite3.connect(self.db_path)
+
+            def build_where_excluding(exclude_key):
+                """Build WHERE clause excluding one filter dimension."""
+                conds = []
+                prms = []
+                if search:
+                    s = f"%{search}%"
+                    conds.append('(company_name LIKE ? OR contact_name LIKE ? OR email LIKE ? OR phone LIKE ?)')
+                    prms.extend([s, s, s, s])
+                for key, col in [('companies', 'company_name'), ('sources', 'source'), ('titles', 'title')]:
+                    if key == exclude_key:
+                        continue
+                    vals = filters.get(key, [])
+                    if vals:
+                        ph = ','.join(['?'] * len(vals))
+                        conds.append(f'{col} IN ({ph})')
+                        prms.extend(vals)
+                es = filters.get('emailStatus', [])
+                if exclude_key != 'emailStatus' and es:
+                    if 'has_email' in es and 'no_email' not in es:
+                        conds.append("email IS NOT NULL AND email != ''")
+                    elif 'no_email' in es and 'has_email' not in es:
+                        conds.append("(email IS NULL OR email = '')")
+                ps = filters.get('phoneStatus', [])
+                if exclude_key != 'phoneStatus' and ps:
+                    if 'has_phone' in ps and 'no_phone' not in ps:
+                        conds.append("phone IS NOT NULL AND phone != ''")
+                    elif 'no_phone' in ps and 'has_phone' not in ps:
+                        conds.append("(phone IS NULL OR phone = '')")
+                w = ''
+                if conds:
+                    w = 'WHERE ' + ' AND '.join(conds)
+                return w, prms
+
+            # Company counts scoped by everything except companies
+            w, p = build_where_excluding('companies')
+            companies = {}
+            for r in conn.execute(
+                f'SELECT company_name, COUNT(*) FROM contacts {w} GROUP BY company_name ORDER BY COUNT(*) DESC', p
+            ).fetchall():
+                companies[r[0]] = r[1]
+
+            # Source counts
+            w, p = build_where_excluding('sources')
+            sources = {}
+            for r in conn.execute(
+                f"SELECT source, COUNT(*) FROM contacts {w} {'AND' if w else 'WHERE'} source IS NOT NULL AND source != '' GROUP BY source ORDER BY COUNT(*) DESC", p
+            ).fetchall():
+                sources[r[0]] = r[1]
+
+            # Title counts
+            w, p = build_where_excluding('titles')
+            titles = {}
+            for r in conn.execute(
+                f"SELECT title, COUNT(*) FROM contacts {w} {'AND' if w else 'WHERE'} title IS NOT NULL AND title != '' GROUP BY title ORDER BY COUNT(*) DESC", p
+            ).fetchall():
+                titles[r[0]] = r[1]
+
+            # Email status counts
+            w, p = build_where_excluding('emailStatus')
+            has_email = conn.execute(
+                f"SELECT COUNT(*) FROM contacts {w} {'AND' if w else 'WHERE'} email IS NOT NULL AND email != ''", p
+            ).fetchone()[0]
+            no_email = conn.execute(
+                f"SELECT COUNT(*) FROM contacts {w} {'AND' if w else 'WHERE'} (email IS NULL OR email = '')", p
+            ).fetchone()[0]
+
+            # Phone status counts
+            w, p = build_where_excluding('phoneStatus')
+            has_phone = conn.execute(
+                f"SELECT COUNT(*) FROM contacts {w} {'AND' if w else 'WHERE'} phone IS NOT NULL AND phone != ''", p
+            ).fetchone()[0]
+            no_phone = conn.execute(
+                f"SELECT COUNT(*) FROM contacts {w} {'AND' if w else 'WHERE'} (phone IS NULL OR phone = '')", p
+            ).fetchone()[0]
+
+            conn.close()
+            return {
+                'companies': companies,
+                'sources': sources,
+                'titles': titles,
+                'emailStatus': {'has_email': has_email, 'no_email': no_email},
+                'phoneStatus': {'has_phone': has_phone, 'no_phone': no_phone}
+            }
+
+        except Exception as e:
+            logger.error(f"Error getting contacts scoped filter counts: {e}")
+            raise
+
     def get_contacts_stats(self):
         """Return summary stats for the contacts directory."""
         try:
@@ -2689,37 +2874,7 @@ class BrandDatabaseV2:
         Same filter logic as get_contacts but returns all rows.
         """
         filters = filters or {}
-        conditions = []
-        params = []
-
-        if filters.get('search'):
-            search = f"%{filters['search']}%"
-            conditions.append(
-                '(company_name LIKE ? OR contact_name LIKE ? OR email LIKE ? OR phone LIKE ?)'
-            )
-            params.extend([search, search, search, search])
-
-        if filters.get('company_name'):
-            conditions.append('company_name = ?')
-            params.append(filters['company_name'])
-
-        if filters.get('source'):
-            conditions.append('source = ?')
-            params.append(filters['source'])
-
-        if filters.get('has_email') == 'yes':
-            conditions.append("email IS NOT NULL AND email != ''")
-        elif filters.get('has_email') == 'no':
-            conditions.append("(email IS NULL OR email = '')")
-
-        if filters.get('has_phone') == 'yes':
-            conditions.append("phone IS NOT NULL AND phone != ''")
-        elif filters.get('has_phone') == 'no':
-            conditions.append("(phone IS NULL OR phone = '')")
-
-        where = ''
-        if conditions:
-            where = 'WHERE ' + ' AND '.join(conditions)
+        where, params = self._build_contacts_where(filters)
 
         try:
             conn = sqlite3.connect(self.db_path)

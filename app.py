@@ -3703,14 +3703,17 @@ def contacts_page():
 @app.route('/get_contacts')
 def get_contacts():
     try:
-        filters = {
-            'search': request.args.get('search', '').strip(),
-            'company_name': request.args.get('company_name', '').strip(),
-            'source': request.args.get('source', '').strip(),
-            'has_email': request.args.get('has_email', '').strip(),
-            'has_phone': request.args.get('has_phone', '').strip(),
-        }
-        # Remove empty filters
+        filters = {'search': request.args.get('search', '').strip()}
+        # Multi-value array filters from drawer
+        for key in ('companies', 'sources', 'titles', 'emailStatus', 'phoneStatus'):
+            vals = request.args.getlist(key)
+            if vals:
+                filters[key] = vals
+        # Legacy single-value (backward compat)
+        for key in ('company_name', 'source', 'has_email', 'has_phone'):
+            v = request.args.get(key, '').strip()
+            if v:
+                filters[key] = v
         filters = {k: v for k, v in filters.items() if v}
 
         page = int(request.args.get('page', 1))
@@ -3727,6 +3730,25 @@ def contacts_filter_options():
         options = brand_db.get_contacts_filter_options()
         stats = brand_db.get_contacts_stats()
         return jsonify({**options, 'stats': stats})
+    except Exception as e:
+        return error_response(e)
+
+@app.route('/contacts_filter_data')
+def contacts_filter_data():
+    try:
+        data = brand_db.get_contacts_filter_counts()
+        return jsonify(data)
+    except Exception as e:
+        return error_response(e)
+
+@app.route('/contacts_scoped_filter_counts', methods=['POST'])
+def contacts_scoped_filter_counts():
+    try:
+        body = request.get_json(force=True)
+        search = body.get('search', '')
+        filters = body.get('filters', {})
+        data = brand_db.get_contacts_scoped_filter_counts(search=search, filters=filters)
+        return jsonify(data)
     except Exception as e:
         return error_response(e)
 
@@ -3819,13 +3841,15 @@ def upload_contacts():
 @app.route('/export_contacts')
 def export_contacts():
     try:
-        filters = {
-            'search': request.args.get('search', '').strip(),
-            'company_name': request.args.get('company_name', '').strip(),
-            'source': request.args.get('source', '').strip(),
-            'has_email': request.args.get('has_email', '').strip(),
-            'has_phone': request.args.get('has_phone', '').strip(),
-        }
+        filters = {'search': request.args.get('search', '').strip()}
+        for key in ('companies', 'sources', 'titles', 'emailStatus', 'phoneStatus'):
+            vals = request.args.getlist(key)
+            if vals:
+                filters[key] = vals
+        for key in ('company_name', 'source', 'has_email', 'has_phone'):
+            v = request.args.get(key, '').strip()
+            if v:
+                filters[key] = v
         filters = {k: v for k, v in filters.items() if v}
 
         fmt = request.args.get('format', 'csv').lower()

@@ -15,128 +15,252 @@
     <div class="app-layout">
     {% include 'includes/sidebar.html' %}
     <div class="main-content-area">
-    <div class="container">
 
-        <!-- Page Header -->
-        <section class="page-header">
-            <h2>{{ icon('users', 24) }} Contacts Directory</h2>
-            <p>Manage company contacts — upload, browse, filter, and export</p>
-        </section>
+    <!-- Fixed Header -->
+    <header class="page-header">
+        <h1>{{ icon('users', 22) }} Contacts Directory</h1>
+    </header>
 
-        <!-- Stats Bar -->
-        <section class="stats-bar">
-            <div class="stat-card">
-                <div class="stat-value" id="stat-total">-</div>
-                <div class="stat-label">Total Contacts</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="stat-companies">-</div>
-                <div class="stat-label">Companies</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="stat-with-email">-</div>
-                <div class="stat-label">With Email</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="stat-with-phone">-</div>
-                <div class="stat-label">With Phone</div>
-            </div>
-        </section>
+    <!-- Filter Drawer Backdrop -->
+    <div class="filter-backdrop hidden" id="filter-backdrop"></div>
 
-        <!-- Upload Section -->
-        <section class="upload-section">
-            <h3>{{ icon('upload', 20) }} Import Contacts</h3>
-            <div class="upload-card">
-                <p>Upload a CSV or Excel file with contact data. Required: <strong>company_name</strong> (or company, importer, owner_name) plus at least one of contact_name, email, or phone.</p>
-                <form id="contacts-upload-form" class="upload-form">
-                    <div class="file-input-wrapper">
-                        <input type="file" id="contactsFile" name="file" accept=".csv,.xlsx,.xls">
-                        <label for="contactsFile" class="file-label">
-                            {{ icon('database', 20) }} Choose CSV / Excel File
+    <!-- Advanced Filter Sidebar (drawer overlay, starts collapsed) -->
+    <div class="filter-sidebar collapsed" id="filter-sidebar">
+        <div class="filter-header">
+            <h3>Advanced Filters</h3>
+            <button class="filter-toggle" id="toggle-filters">
+                <span class="toggle-icon">&#9664;</span>
+            </button>
+        </div>
+
+        <div class="filter-content">
+            <!-- Active Filters Display -->
+            <div class="active-filters" id="active-filters" style="display: none;">
+                <div class="active-filters-header">
+                    <span>Active Filters</span>
+                    <button class="clear-all-btn" id="clear-all-filters">Clear All</button>
+                </div>
+                <div class="active-filter-tags" id="active-filter-tags"></div>
+            </div>
+
+            <!-- Company Filter -->
+            <div class="filter-section">
+                <div class="filter-section-header" onclick="toggleFilterSection('company-filters')">
+                    <span>{{ icon('building-2', 14) }} Company</span>
+                    <span class="filter-count" id="company-count"></span>
+                    <span class="chevron">&#9658;</span>
+                </div>
+                <div class="filter-section-content" id="company-filters">
+                    <div class="filter-search-section">
+                        <input type="text" class="filter-search" placeholder="Search companies..."
+                               id="company-search" onkeyup="filterOptions('company')">
+                    </div>
+                    <div class="quick-toggles">
+                        <div class="quick-toggles-header">
+                            <span>Top 10 Companies</span>
+                            <button class="toggle-all-btn" onclick="toggleAllQuick('company')">Toggle All</button>
+                        </div>
+                        <div class="quick-toggle-grid" id="company-quick-toggles"></div>
+                    </div>
+                    <div class="full-list-section">
+                        <div class="filter-options" id="company-options" style="max-height: 300px; overflow-y: auto;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Title/Role Filter -->
+            <div class="filter-section">
+                <div class="filter-section-header" onclick="toggleFilterSection('title-filters')">
+                    <span>{{ icon('user', 14) }} Title / Role</span>
+                    <span class="filter-count" id="title-count"></span>
+                    <span class="chevron">&#9658;</span>
+                </div>
+                <div class="filter-section-content" id="title-filters">
+                    <div class="filter-search-section">
+                        <input type="text" class="filter-search" placeholder="Search titles..."
+                               id="title-search" onkeyup="filterOptions('title')">
+                    </div>
+                    <div class="quick-toggles">
+                        <div class="quick-toggles-header">
+                            <span>Top 10 Titles</span>
+                            <button class="toggle-all-btn" onclick="toggleAllQuick('title')">Toggle All</button>
+                        </div>
+                        <div class="quick-toggle-grid" id="title-quick-toggles"></div>
+                    </div>
+                    <div class="full-list-section">
+                        <div class="filter-options" id="title-options" style="max-height: 300px; overflow-y: auto;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Source Filter -->
+            <div class="filter-section">
+                <div class="filter-section-header" onclick="toggleFilterSection('source-filters')">
+                    <span>{{ icon('database', 14) }} Source</span>
+                    <span class="filter-count" id="source-count"></span>
+                    <span class="chevron">&#9658;</span>
+                </div>
+                <div class="filter-section-content" id="source-filters">
+                    <div class="quick-toggles">
+                        <div class="quick-toggles-header">
+                            <span>All Sources</span>
+                            <button class="toggle-all-btn" onclick="toggleAllQuick('source')">Toggle All</button>
+                        </div>
+                        <div class="quick-toggle-grid" id="source-quick-toggles"></div>
+                    </div>
+                    <div class="full-list-section">
+                        <div class="filter-options" id="source-options" style="max-height: 300px; overflow-y: auto;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Email Status Filter -->
+            <div class="filter-section">
+                <div class="filter-section-header" onclick="toggleFilterSection('email-filters')">
+                    <span>{{ icon('mail', 14) }} Email Status</span>
+                    <span class="filter-count" id="email-count"></span>
+                    <span class="chevron">&#9658;</span>
+                </div>
+                <div class="filter-section-content" id="email-filters">
+                    <div class="filter-options">
+                        <label class="filter-option">
+                            <input type="checkbox" value="has_email" onchange="applyFilters()">
+                            <span>Has Email</span>
+                            <span class="option-count" id="has-email-count"></span>
+                        </label>
+                        <label class="filter-option">
+                            <input type="checkbox" value="no_email" onchange="applyFilters()">
+                            <span>No Email</span>
+                            <span class="option-count" id="no-email-count"></span>
                         </label>
                     </div>
-                    <button type="submit" class="btn btn-primary" id="upload-btn">Upload Contacts</button>
-                </form>
-                <div id="upload-results" class="upload-results hidden"></div>
+                </div>
             </div>
-        </section>
 
-        <!-- Search & Filter Controls -->
-        <section class="filter-section">
-            <h3>{{ icon('search', 20) }} Browse Contacts</h3>
-            <div class="filter-row">
-                <div class="filter-group">
-                    <input type="text" id="search-input" placeholder="Search contacts..." class="filter-input">
+            <!-- Phone Status Filter -->
+            <div class="filter-section">
+                <div class="filter-section-header" onclick="toggleFilterSection('phone-filters')">
+                    <span>{{ icon('phone', 14) }} Phone Status</span>
+                    <span class="filter-count" id="phone-count"></span>
+                    <span class="chevron">&#9658;</span>
                 </div>
-                <div class="filter-group">
-                    <select id="filter-company" class="filter-select">
-                        <option value="">All Companies</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <select id="filter-has-email" class="filter-select">
-                        <option value="">Email: Any</option>
-                        <option value="yes">Has Email</option>
-                        <option value="no">No Email</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <select id="filter-has-phone" class="filter-select">
-                        <option value="">Phone: Any</option>
-                        <option value="yes">Has Phone</option>
-                        <option value="no">No Phone</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <select id="filter-source" class="filter-select">
-                        <option value="">All Sources</option>
-                    </select>
+                <div class="filter-section-content" id="phone-filters">
+                    <div class="filter-options">
+                        <label class="filter-option">
+                            <input type="checkbox" value="has_phone" onchange="applyFilters()">
+                            <span>Has Phone</span>
+                            <span class="option-count" id="has-phone-count"></span>
+                        </label>
+                        <label class="filter-option">
+                            <input type="checkbox" value="no_phone" onchange="applyFilters()">
+                            <span>No Phone</span>
+                            <span class="option-count" id="no-phone-count"></span>
+                        </label>
+                    </div>
                 </div>
             </div>
-        </section>
+
+            <!-- Apply / Reset Buttons -->
+            <div class="filter-actions">
+                <button class="apply-filters-btn" onclick="applyFilters()">Apply Filters</button>
+                <button class="reset-filters-btn" onclick="resetFilters()">Reset All</button>
+            </div>
+
+            <!-- Export from drawer -->
+            <div class="filter-actions-export">
+                <button class="export-btn" onclick="exportContacts('csv')">
+                    {{ icon('download', 14) }} Download Filtered (CSV)
+                </button>
+                <button class="export-btn export-excel" onclick="exportContacts('xlsx')">
+                    {{ icon('download', 14) }} Download Filtered (Excel)
+                </button>
+            </div>
+
+            <!-- Upload Section in drawer -->
+            <div class="filter-section-upload">
+                <div class="upload-section-header">Import Contacts</div>
+                <p class="upload-help-text">Upload CSV/Excel with company_name + contact info</p>
+                <form id="contacts-upload-form" enctype="multipart/form-data">
+                    <label class="upload-file-label" for="contactsFile">
+                        {{ icon('upload', 14) }} Choose File
+                    </label>
+                    <input type="file" id="contactsFile" accept=".csv,.xlsx,.xls" hidden>
+                    <span class="upload-file-name" id="upload-file-name">No file chosen</span>
+                    <button type="submit" class="upload-submit-btn" id="upload-btn" disabled>
+                        Upload
+                    </button>
+                </form>
+                <div class="upload-result" id="upload-results" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-label">Showing</span>
+                <span class="stat-value" id="filtered-contacts">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">of</span>
+                <span class="stat-value" id="total-contacts">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Companies</span>
+                <span class="stat-value" id="stat-companies">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Active Filters</span>
+                <span class="stat-value" id="filter-count">0</span>
+            </div>
+        </div>
+
+        <div class="search-controls">
+            <div class="search-group">
+                <button class="filter-toolbar-btn" id="filter-toolbar-btn" title="Toggle advanced filters">
+                    {{ icon('sliders-horizontal', 14) }} Filters
+                    <span class="filter-toolbar-badge" id="filter-toolbar-badge" style="display: none;">0</span>
+                </button>
+                <input type="text" id="search-input" placeholder="Quick search contacts..." class="search-input">
+                <button id="search-btn" class="search-btn">{{ icon('search', 14) }} Search</button>
+            </div>
+            <div class="view-controls">
+                <label for="per-page-select">Show:</label>
+                <select id="per-page-select">
+                    <option value="25">25 per page</option>
+                    <option value="50" selected>50 per page</option>
+                    <option value="100">100 per page</option>
+                </select>
+            </div>
+        </div>
 
         <!-- Contacts Table -->
-        <section class="table-section">
-            <div class="table-wrapper">
-                <table class="contacts-table" id="contacts-table">
-                    <thead>
-                        <tr>
-                            <th>Company</th>
-                            <th>Contact Name</th>
-                            <th>Title</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                            <th>Source</th>
-                        </tr>
-                    </thead>
-                    <tbody id="contacts-tbody">
-                        <tr><td colspan="6" class="empty-state">Loading contacts...</td></tr>
-                    </tbody>
-                </table>
-            </div>
+        <div class="table-wrapper">
+            <table class="contacts-table" id="contacts-table">
+                <thead>
+                    <tr>
+                        <th>Company</th>
+                        <th>Contact Name</th>
+                        <th>Title</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Source</th>
+                    </tr>
+                </thead>
+                <tbody id="contacts-tbody">
+                    <tr><td colspan="6" class="empty-state">Loading contacts...</td></tr>
+                </tbody>
+            </table>
+        </div>
 
-            <!-- Pagination -->
-            <div class="pagination-bar" id="pagination-bar">
-                <div class="pagination-info" id="pagination-info"></div>
-                <div class="pagination-controls" id="pagination-controls"></div>
-            </div>
-        </section>
-
-        <!-- Export Section -->
-        <section class="export-section">
-            <h3>{{ icon('download', 20) }} Export Contacts</h3>
-            <div class="export-buttons">
-                <button class="btn btn-secondary" id="export-csv-btn">
-                    {{ icon('download', 16) }} Export as CSV
-                </button>
-                <button class="btn btn-secondary" id="export-excel-btn">
-                    {{ icon('download', 16) }} Export as Excel
-                </button>
-            </div>
-            <p class="export-note">Exports use the current filters above</p>
-        </section>
-
+        <!-- Pagination -->
+        <div class="pagination-bar" id="pagination-bar">
+            <div class="pagination-info" id="pagination-info"></div>
+            <div class="pagination-controls" id="pagination-controls"></div>
+        </div>
     </div>
+
     </div>
     </div>
 
