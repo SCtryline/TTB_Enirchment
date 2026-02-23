@@ -1110,6 +1110,28 @@ class BrandDatabaseV2:
             }
         }
     
+    @staticmethod
+    def _extract_brand_domain(enrichment_json):
+        """Extract domain from enrichment_data JSON string, checking all known structures."""
+        try:
+            ed = json.loads(enrichment_json or '{}')
+        except (json.JSONDecodeError, TypeError):
+            return None
+        # Check top-level domain
+        domain = (ed.get('domain') or '').strip().lower()
+        if not domain:
+            # Check top-level url
+            url = (ed.get('url') or '').strip().lower()
+            if not url:
+                # Check nested website.url structure
+                website = ed.get('website')
+                if isinstance(website, dict):
+                    url = (website.get('url') or '').strip().lower()
+            if url:
+                domain = url.replace('https://', '').replace('http://', '').split('/')[0]
+                domain = domain.replace('www.', '')
+        return domain if domain else None
+
     def _get_brands_with_contacts(self):
         """
         Build a set of lowercased brand_names that have matching contacts.
@@ -1128,21 +1150,11 @@ class BrandDatabaseV2:
             WHERE enrichment_data IS NOT NULL AND enrichment_data != ''
         ''')
         for row in brand_cursor:
-            try:
-                ed = json.loads(row['enrichment_data'] or '{}')
-                domain = (ed.get('domain') or '').strip().lower()
-                if not domain:
-                    url = (ed.get('url') or '').strip().lower()
-                    if url:
-                        # Extract domain from URL
-                        domain = url.replace('https://', '').replace('http://', '').split('/')[0]
-                        domain = domain.replace('www.', '')
-                if domain:
-                    if domain not in domain_to_brands:
-                        domain_to_brands[domain] = set()
-                    domain_to_brands[domain].add(row['brand_name'].strip().lower())
-            except (json.JSONDecodeError, AttributeError):
-                pass
+            domain = self._extract_brand_domain(row['enrichment_data'])
+            if domain:
+                if domain not in domain_to_brands:
+                    domain_to_brands[domain] = set()
+                domain_to_brands[domain].add(row['brand_name'].strip().lower())
 
         # Common free email providers to exclude from email domain matching
         free_email_domains = {
@@ -1201,15 +1213,7 @@ class BrandDatabaseV2:
         ).fetchone()
         brand_domain = None
         if brand_row and brand_row['enrichment_data']:
-            try:
-                ed = json.loads(brand_row['enrichment_data'] or '{}')
-                brand_domain = (ed.get('domain') or '').strip().lower()
-                if not brand_domain:
-                    url = (ed.get('url') or '').strip().lower()
-                    if url:
-                        brand_domain = url.replace('https://', '').replace('http://', '').split('/')[0].replace('www.', '')
-            except (json.JSONDecodeError, AttributeError):
-                pass
+            brand_domain = self._extract_brand_domain(brand_row['enrichment_data'])
 
         free_email_domains = {
             'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'aol.com',
@@ -1263,10 +1267,11 @@ class BrandDatabaseV2:
     def _contact_match_sql():
         """SQL subquery for checking if a brand has matching contacts.
         Uses: 1) name containment, 2) website domain match, 3) email domain match."""
-        # Helper: extract domain from brand enrichment_data
+        # Helper: extract domain from brand enrichment_data (checks $.domain, $.url, $.website.url)
         brand_domain = """REPLACE(REPLACE(REPLACE(REPLACE(LOWER(
                     COALESCE(json_extract(b.enrichment_data, '$.domain'),
-                             json_extract(b.enrichment_data, '$.url'), '')),
+                             json_extract(b.enrichment_data, '$.url'),
+                             json_extract(b.enrichment_data, '$.website.url'), '')),
                     'https://',''),'http://',''),'www.',''), '/', '')"""
         return f"""(
             EXISTS (
