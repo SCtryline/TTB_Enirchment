@@ -1189,6 +1189,76 @@ class BrandDatabaseV2:
 
         return brands_with_contacts
 
+    def get_contacts_for_brand(self, brand_name):
+        """Get all contacts matching a specific brand using three-tier matching.
+        Returns list of contact dicts."""
+        contacts = []
+        seen_ids = set()
+
+        # Get brand's enrichment domain
+        brand_row = self.conn.execute(
+            'SELECT enrichment_data FROM brands WHERE brand_name = ?', (brand_name,)
+        ).fetchone()
+        brand_domain = None
+        if brand_row and brand_row['enrichment_data']:
+            try:
+                ed = json.loads(brand_row['enrichment_data'] or '{}')
+                brand_domain = (ed.get('domain') or '').strip().lower()
+                if not brand_domain:
+                    url = (ed.get('url') or '').strip().lower()
+                    if url:
+                        brand_domain = url.replace('https://', '').replace('http://', '').split('/')[0].replace('www.', '')
+            except (json.JSONDecodeError, AttributeError):
+                pass
+
+        free_email_domains = {
+            'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'aol.com',
+            'icloud.com', 'mail.com', 'protonmail.com', 'zoho.com', 'yandex.com',
+            'live.com', 'msn.com', 'me.com', 'mac.com', 'comcast.net', 'att.net',
+            'verizon.net', 'sbcglobal.net', 'cox.net', 'charter.net',
+        }
+
+        # Strategy 1: Domain match via website field
+        if brand_domain:
+            rows = self.conn.execute('''
+                SELECT * FROM contacts
+                WHERE website IS NOT NULL AND website != ''
+            ''').fetchall()
+            for row in rows:
+                contact_url = (row['website'] or '').strip().lower()
+                contact_domain = contact_url.replace('https://', '').replace('http://', '').split('/')[0].replace('www.', '')
+                if contact_domain == brand_domain and row['id'] not in seen_ids:
+                    seen_ids.add(row['id'])
+                    contacts.append(dict(row))
+
+            # Strategy 2: Domain match via email domain
+            rows = self.conn.execute('''
+                SELECT * FROM contacts
+                WHERE email IS NOT NULL AND email != '' AND email LIKE '%@%'
+            ''').fetchall()
+            for row in rows:
+                if row['id'] in seen_ids:
+                    continue
+                email = (row['email'] or '').strip().lower()
+                if '@' in email:
+                    email_domain = email.split('@', 1)[1]
+                    if email_domain == brand_domain and email_domain not in free_email_domains:
+                        seen_ids.add(row['id'])
+                        contacts.append(dict(row))
+
+        # Strategy 3: Name containment fallback
+        if len(brand_name.strip()) >= 3:
+            rows = self.conn.execute('''
+                SELECT * FROM contacts
+                WHERE LOWER(TRIM(company_name)) LIKE '%' || ? || '%'
+            ''', (brand_name.strip().lower(),)).fetchall()
+            for row in rows:
+                if row['id'] not in seen_ids:
+                    seen_ids.add(row['id'])
+                    contacts.append(dict(row))
+
+        return contacts
+
     @staticmethod
     def _contact_match_sql():
         """SQL subquery for checking if a brand has matching contacts.

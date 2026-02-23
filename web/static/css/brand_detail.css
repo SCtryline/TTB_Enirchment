@@ -2505,3 +2505,84 @@
         align-items: flex-start;
     }
 }
+
+/* Uploaded Contacts Table */
+.contacts-table-container {
+    overflow-x: auto;
+}
+
+.contacts-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.contacts-table thead th {
+    background: var(--gray-50);
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: var(--gray-700);
+    border-bottom: 2px solid var(--gray-200);
+    white-space: nowrap;
+}
+
+.contacts-table tbody td {
+    padding: 0.625rem 1rem;
+    border-bottom: 1px solid var(--gray-100);
+    color: var(--gray-800);
+    vertical-align: middle;
+}
+
+.contacts-table tbody tr:hover {
+    background: var(--gray-50);
+}
+
+.contact-name-cell {
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.linkedin-link {
+    color: var(--primary-color);
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.linkedin-link:hover {
+    opacity: 1;
+}
+
+.contact-email-link,
+.contact-phone-link {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.contact-email-link:hover,
+.contact-phone-link:hover {
+    text-decoration: underline;
+}
+
+.source-badge {
+    display: inline-block;
+    padding: 0.125rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background: var(--gray-100);
+    color: var(--gray-600);
+}
+
+@media (max-width: 768px) {
+    .contacts-table {
+        font-size: 0.8125rem;
+    }
+
+    .contacts-table thead th,
+    .contacts-table tbody td {
+        padding: 0.5rem 0.625rem;
+    }
+}

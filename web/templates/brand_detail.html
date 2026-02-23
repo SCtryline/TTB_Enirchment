@@ -488,6 +488,65 @@
                 </div>
             </div>
 
+            <!-- Uploaded Contacts Card -->
+            {% if brand_contacts %}
+            <div class="info-card" id="uploaded-contacts">
+                <div class="card-header">
+                    <div class="header-title-section">
+                        <h2>{{ icon('users', 14) }} Contacts ({{ brand_contacts|length }})</h2>
+                    </div>
+                    <div class="card-actions">
+                        <a href="/contacts" class="btn btn-secondary">{{ icon('external-link', 14) }} View All Contacts</a>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="contacts-table-container">
+                        <table class="contacts-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Title</th>
+                                    <th>Company</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Source</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for contact in brand_contacts %}
+                                <tr>
+                                    <td class="contact-name-cell">
+                                        {{ contact.contact_name or '—' }}
+                                        {% if contact.linkedin_url %}
+                                            <a href="{{ contact.linkedin_url }}" target="_blank" class="linkedin-link" title="LinkedIn">{{ icon('link', 12) }}</a>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ contact.title or '—' }}</td>
+                                    <td>{{ contact.company_name or '—' }}</td>
+                                    <td>
+                                        {% if contact.email %}
+                                            <a href="mailto:{{ contact.email }}" class="contact-email-link">{{ contact.email }}</a>
+                                        {% else %}
+                                            —
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if contact.phone %}
+                                            <a href="tel:{{ contact.phone }}" class="contact-phone-link">{{ contact.phone }}</a>
+                                        {% else %}
+                                            —
+                                        {% endif %}
+                                    </td>
+                                    <td><span class="source-badge">{{ contact.source or 'unknown' }}</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
             <!-- Countries and Class Types Card (Combined) -->
             <div class="info-card">
                 <div class="card-header">

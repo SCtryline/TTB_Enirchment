@@ -696,7 +696,10 @@ def brand_detail(brand_name):
                 'updated_date': enrichment_data.get('updated_date', '')
             }
         
-        return render_template('brand_detail.html', brand_name=brand_name, brand=brand_data, automatic_website=automatic_website)
+        # Get matching contacts from the contacts table
+        brand_contacts = brand_db.get_contacts_for_brand(brand_name)
+
+        return render_template('brand_detail.html', brand_name=brand_name, brand=brand_data, automatic_website=automatic_website, brand_contacts=brand_contacts)
     except Exception as e:
         logger.error(f"Error loading brand detail for {brand_name}: {e}")
         return render_template('404.html', message='Brand not found'), 404
